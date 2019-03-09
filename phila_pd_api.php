@@ -1,106 +1,116 @@
 <?php
 
-	 
-	   // MySQL Server Settings
-	 
-//         define("MYSQL_SERVER", 'localhost');
-//         define("MYSQL_USERNAME", 'username');
-//         define("MYSQL_PASSWORD", 'password');
-//         define("MYSQL_DATABASE", 'PhillyPolice');
 
-
-            define("MYSQL_SERVER", 'localhost');
-            define("MYSQL_USERNAME", 'username');
-            define("MYSQL_PASSWORD", 'password');
-            define("MYSQL_DATABASE", 'PhillyPolice');
+        //INCLUDE NEWSOBJECT CLASS
+        include('NewsObject.php');
+    
+	    // MySQL Server Settings
+        define("MYSQL_SERVER", 'localhost');
+        define("MYSQL_USERNAME", 'user');
+        define("MYSQL_PASSWORD", 'password');
+        define("MYSQL_DATABASE",'database');
+       
+        define('R_MD5_MATCH', '/^[a-f0-9]{32}$/i'); //MD5 REGEX CHECKER
+        define('NUM_ONLY', '/^\d{1,6}$/');
+        $IP = $_SERVER['REMOTE_ADDR'];
+        $PROTO1 = "http://phillypd.info/api/v1/"; //URL PREFIX
+        $IMG_DIR = "http://10.20.30.10/phillyPD/images/"; // IMAGE DIRECTORY
+        $data = json_decode(file_get_contents('php://input'),true);
         
+        // ERRORS MESSAGES
         $NO_DATABASE = json_encode(array("error"=>"true","msg"=>"Database Does Not Exist"));
         $NO_CONNECTION = json_encode(array("error"=>"true","msg"=>"Could Not Connect To Database"));
+        $MYSQL_ERROR = json_encode(array("error"=>"true","msg"=>mysql_error()));
+        $INVALID_DEVICE_ID = json_encode(array("error"=>"true","msg"=>"INVALID DEVICE ID"));
+        $INVALID_DEVICE = json_encode(array("error"=>"true","msg"=>"INVALID DEVICE BEING USED"));
+        $ZERO_HASH_KEYS = json_encode(array("error"=>"true","msg"=>"NO HASH KEYS FOUND"));
         
-        mysql_connect(MYSQL_SERVER, MYSQL_USERNAME, MYSQL_PASSWORD)
-        or 
-        die($NO_CONNECTION. header('HTTP/1.1 403 Forbidden'));
         
-        mysql_select_db(MYSQL_DATABASE)
-        or 
-        die($NO_DATABASE. header('HTTP/1.1 403 Forbidden'));
+        ///
+        
+        //Attaempt Connect to database 
+        $CONN = mysqli_connect(MYSQL_SERVER,MYSQL_USERNAME,MYSQL_PASSWORD,MYSQL_DATABASE);
+        
+        if(mysqli_connect_errno()){
+            die($NO_CONNECTION. header('HTTP/1.1 403 Forbidden'));
+        }
+        
+        
+        ///////FUNCTIONS/////////////////////
+        ////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////
+    	
+			function convertdiv($distNum){
 
-	
+			    $div = null;
 
-    	define('R_MD5_MATCH', '/^[a-f0-9]{32}$/i'); //MD5 REGEX CHECKER
-    	$ip = $_SERVER['REMOTE_ADDR'];
-    	$PROTO1 = "http://phillypd.info/api/v1/";
-    	$IMG_DIR = "http://10.20.30.10/phillyPD/images/";
-    	$data = json_decode(file_get_contents('php://input'),true);
-    	
-    	
-    				function convertdiv($distNum){
-    	
-    				    $div = null;
-    	
-    				    $south = array("17","3","1");
-    				    $cen = array("22","6","9");
-    				    $east = array("25","24","26");
-    				    $norE = array("15","2","7","8");
-    				    $norW = array("39","35","14","5");
-    				    $souW = array("19","16","12","18");
-    	
-    				    if(in_array($distNum,$south)){
-    				        $div = "South";
-    				    }else if(in_array($distNum,$cen)){
-    				        $div = "Central";
-    				    }else if(in_array($distNum,$east)){
-    				        $div = "East";
-    				    }else if(in_array($distNum,$norE)){
-    				        $div = "Northeast";
-    				    }else if(in_array($distNum,$norW)){
-    				        $div = "Northwest";
-    				    }else if(in_array($distNum,$souW)){
-    				        $div = "Southwest";
-    				    }
-    	
-    				    return $div;
-    	
-    				}
+			    $south = array("17","3","1");
+			    $cen = array("22","6","9");
+			    $east = array("25","24","26");
+			    $norE = array("15","2","7","8");
+			    $norW = array("39","35","14","5");
+			    $souW = array("19","16","12","18");
+
+			    if(in_array($distNum,$south)){
+			        $div = "South";
+			    }else if(in_array($distNum,$cen)){
+			        $div = "Central";
+			    }else if(in_array($distNum,$east)){
+			        $div = "East";
+			    }else if(in_array($distNum,$norE)){
+			        $div = "Northeast";
+			    }else if(in_array($distNum,$norW)){
+			        $div = "Northwest";
+			    }else if(in_array($distNum,$souW)){
+			        $div = "Southwest";
+			    }
+
+			    return $div;
+
+			}
     				
     				
-    				function cleanUpHTML($ret){ // USED TO TRIM (HTML) THE DESCRIPTION OF THE NEW STORY
-    				    
-    				    $fire = $ret;
-    				    
-    				    if(strpos($fire,"&#8217;") >=1){
-    				        $fire = str_replace("&#8217;","'",$fire);
-    				    }
-    				    
-    				    if(strpos($fire,"&#8243;") >=1){
-    				        $fire = str_replace("&#8243;","'",$fire);
-    				    }
-    				    if(strpos($fire,"&#8220;") >=1){
-    				        $fire = str_replace("&#8220;","'",$fire);
-    				    }
-    				    
-    				    if(strpos($fire,"&#8221;") >=1){
-    				        $fire = str_replace("&#8221;","'",$fire);
-    				    }
-    				    if(strpos($fire,"&#8242;") >=1){
-    				        $fire = str_replace("&#8242;","'",$fire);
-    				    }
-    				    if(strpos($fire,"&#039;") >=1){
-    				        $fire = str_replace("&#039;","′",$fire);
-    				    }
-    				    if(strpos($fire,"&amp;") >=1){
-    				        $fire = str_replace("&amp;","&",$fire);
-    				    }
-    				    if(strpos($fire,"&#215;") >=1){
-    				        $fire = str_replace("&#215;","X",$fire);
-    				    }
-    				    if(strpos($fire,"&#8211;") >=1){
-    				    $fire = str_replace("&#8211;","–",$fire);
-    				    }
-    				    
-    				    return $fire;
-    				}
+			function cleanUpHTML($ret){ // USED TO TRIM (HTML) THE DESCRIPTION OF THE NEW STORY
+			    
+			    $fire = $ret;
+			    
+			    if(strpos($fire,"&#8217;") >=1){
+			        $fire = str_replace("&#8217;","'",$fire);
+			    }
+			    
+			    if(strpos($fire,"&#8243;") >=1){
+			        $fire = str_replace("&#8243;","'",$fire);
+			    }
+			    if(strpos($fire,"&#8220;") >=1){
+			        $fire = str_replace("&#8220;","'",$fire);
+			    }
+			    
+			    if(strpos($fire,"&#8221;") >=1){
+			        $fire = str_replace("&#8221;","'",$fire);
+			    }
+			    if(strpos($fire,"&#8242;") >=1){
+			        $fire = str_replace("&#8242;","'",$fire);
+			    }
+			    if(strpos($fire,"&#039;") >=1){
+			        $fire = str_replace("&#039;","′",$fire);
+			    }
+			    if(strpos($fire,"&amp;") >=1){
+			        $fire = str_replace("&amp;","&",$fire);
+			    }
+			    if(strpos($fire,"&#215;") >=1){
+			        $fire = str_replace("&#215;","X",$fire);
+			    }
+			    if(strpos($fire,"&#8211;") >=1){
+			    $fire = str_replace("&#8211;","–",$fire);
+			    }
+			    
+			    return $fire;
+			}
 	
+			///////END of FUNCTIONS/////////////////////
+			////////////////////////////////////////////////////////////
+			////////////////////////////////////////////////////////////////////////////////
+			
 
 		
 //////////////////////////////////////////////// START CLIENT KEY EXCHANGE//////////////////////////////////////////////////////////////		
@@ -109,9 +119,9 @@
     	if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['Update'] == "true" || $_SERVER['REQUEST_METHOD'] == 'POST' && $data['Update'] == "true"){
 				
 			// CHECK THE HASH FOR A MD5 HASH  
-    		if(preg_match(R_MD5_MATCH, $data['DeviceID']) || preg_match(R_MD5_MATCH, $_GET['DeviceID'])){
+    		if(preg_match(R_MD5_MATCH, $data['DeviceID']) || preg_match(R_MD5_MATCH, $_GET['DeviceID'])){  //CHECK FOR VALID HASH
 				
-				$devID = mysql_escape_string($data['DeviceID']);
+    		    $devID = mysqli_real_escape_string($data['DeviceID']); // ESCAPE MALFORM STRING
 				
     				if(!empty($data['DeviceID'])){
     				    $devID = $data['DeviceID'];
@@ -119,26 +129,24 @@
     				    $devID = $_GET['DeviceID'];
     				}
     				
-    				
-				
 				$isDev = "SELECT `DeviceID` FROM `Devices` WHERE `DeviceID` = '$devID'";
-				$is_res = mysql_query($isDev) or die(json_encode(array("error"=>"true","mysql_Error"=>mysql_error())));
+				$is_res = mysqli_query($CONN, $isDev) or die($MYSQL_ERROR. header('HTTP/1.1 403 Forbidden'));
 				
 					// IF THE DEVICE EXIST ALREDY IN THE DATABASE; UPDATE THE TIMESTAMP AND IP
-					if(mysql_num_rows($is_res) >=1){
+					if(mysqli_num_rows($is_res) >=1){
 							
-						$up_res = "UPDATE `Devices` SET `TimeStamp` = NOW(), `LastRequestIP` = '$ip' WHERE `DeviceID` = '$devID'";
-						$in_rec = mysql_query($up_res);
+						$up_res = "UPDATE `Devices` SET `TimeStamp` = NOW(), `LastRequestIP` = '$IP' WHERE `DeviceID` = '$devID'";
+						$in_rec = mysqli_query($CONN, $up_res);
 							
 							if($in_rec){
 								/// FETCH THE NEW HASHES
 								$array = array();
 								$get_nHash = "SELECT `HashName`, `Hash` FROM `CurrentHash`";
-								$h_res = mysql_query($get_nHash);
+								$h_res = mysqli_query($CONN, $get_nHash);
 									
-									if(mysql_num_rows($h_res) >=1){
+									if(mysqli_num_rows($h_res) >=1){
 											
-										while($row = mysql_fetch_array($h_res)){
+										while($row = mysqli_fetch_array($h_res)){
 											
 											$hashName = $row['HashName'];
 											$HASH = $row['Hash'];
@@ -151,25 +159,25 @@
 										
 									}else{
 										// FAILED TO GET HASH KEYS
-										echo json_encode(array("error"=>true,"msg"=>mysql_error()));
+									    echo $ZERO_HASH_KEYS;
 									}
 								
 								
 								
 							}else{
 								// UPDATE DEVICE EXHNACGE FAILED
-								echo json_encode(array("error"=>true,"msg"=>mysql_error()));
+							    echo $MYSQL_ERROR;
 							}
 					
 					}else{
 						// COULD NOT FIND THE DEVICE ID OF DEVICE
-						echo json_encode(array("error"=>true,"msg"=>"INVALID DEVICE"));	
+					    echo $INVALID_DEVICE;
 					}
 		
 
 			}else{
 				// NOT A VAILD HASHTAG SENT TO SERVER 
-				echo json_encode(array("error"=>"true","msg"=>"NOT A VALID DEVICE BEING USED !"));
+			    echo $INVALID_DEVICE_ID;
 			}
 		
 		
@@ -188,6 +196,9 @@
 	
 
 		if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['LatestNews'] == 'true' || $_SERVER['REQUEST_METHOD'] == 'POST' && $data['LatestNews'] == 'true'){
+		   
+		    if(preg_match(NUM_ONLY, $data['Start']) && preg_match(NUM_ONLY, $data['End'])|| preg_match(NUM_ONLY, $_GET['Start']) && preg_match(NUM_ONLY, $_GET['End'])){  //CHECK FOR NEWSOBJECT NUMBER
+
 		    
 		    if(!empty($_GET['Start']) && !empty($_GET['End'])){
 		        $srt = $_GET['Start'];
@@ -203,24 +214,38 @@
     		    $NEW_HASH = 0;
     		    
     		    
-    		    
-    		    
     		    $get_sql = "SELECT `Hash` FROM `CurrentHash` WHERE `HashName` = 'NewsStory'";
-    		    $res = mysql_query($get_sql);
+    		    $res = mysqli_query($CONN, $get_sql);
     		    
-    		    if(mysql_num_rows($res) >=1){
+    		    if(mysqli_num_rows($res) >=1){
     		        
-    		        $row = mysql_fetch_array($res);
+    		        $row = mysqli_fetch_array($res);
     		        $NEW_HASH = $row['Hash'];
     		        
     		        $array = array();
     		        $query = "SELECT SQL_CALC_FOUND_ROWS `ID`,`Category`,`PubDate`,`StoryAuthor`,`Title`,`Description`,`ImageURL`,`TubeURL` FROM `NewsStory` WHERE `ScrapeHash` = '$NEW_HASH' ORDER BY `PubDate` DESC LIMIT $srt,$end";
     		        $cquery = "SELECT FOUND_ROWS() AS ROWS";
-    		        $result = mysql_query($query);
-    		        $cresult = mysql_query($cquery);
-    		        $cat = mysql_fetch_array($cresult);
+    		        $result = mysqli_query($CONN, $query);
+    		        $cresult = mysqli_query($CONN, $cquery);
+    		        $cat = mysqli_fetch_array($cresult);
     		        
-    		        while($row = mysql_fetch_array($result)){
+    		        while($row = mysqli_fetch_array($result)){
+    		            
+//     		            $newzObj = new NewsObject();
+//     		            $newzObj->set_category($row['Category']);
+//     		            $newzObj->set_pubDate(date('M j, g:i A',strtotime($row['PubDate'])));
+//     		            $newzObj->set_storyAuthor($row['StoryAuthor']);
+//     		            $newzObj->set_id($row['ID']);
+//     		            $newzObj->set_title($row['Title']);
+//    		            $newzObj->set_imageURL($row['ImageURL']);
+//     		            if(empty($row['TubeURL'])){
+//     		                $newzObj->set_tubeURL("No Video");
+//     		            }else{
+//     		               $newzObj->set_tubeURL($row['TubeURL']);
+//    		        }
+
+    		            
+
     		            
     		            $alType = $row['Category'];
     		            $stDate = date('M j, g:i A',strtotime($row['PubDate']));
@@ -236,9 +261,9 @@
     		            $stIMG = $row['ImageURL'];
     		            
     		            $sel = "SELECT `LocalImageURL` FROM `Images` WHERE `RemoteImageURL` = '$stIMG'";
-    		            $r_Q = mysql_query($sel);
-    		            if(mysql_num_rows($r_Q) >=1){
-    		                $roww = mysql_fetch_array($r_Q);
+    		            $r_Q = mysqli_query($CONN, $sel);
+    		            if(mysqli_num_rows($r_Q) >=1){
+    		                $roww = mysqli_fetch_array($r_Q);
     		                $pre = $roww['LocalImageURL'];
     		                $stIMG = $IMG_DIR.$pre;
     		            }
@@ -255,10 +280,10 @@
     		        
     		        
     		    }else{
-    		        echo json_encode(array("error"=>true,"msg"=>"NO CURRENT HASH AVAILABLE"));	
+    		        echo $ZERO_HASH_KEYS;
     		    }
 		    
-		    
+		}
 		    
 		    }
 		    
@@ -292,9 +317,9 @@
 		        //$query2 = "SELECT * FROM `DistrictCalendar` WHERE `DistrictNumber` = '$dist_num' AND `DistrictDate` > DATE_FORMAT(NOW(), '%b %e, %Y %h :%i %p') LIMIT 0,3";
 		        $query2 = "SELECT * FROM `Calendar` WHERE `DistrictNumber` = '$dist_num' ORDER BY `Calendar`.`TimeStamp` DESC LIMIT 0,7";
 		        
-		        $result = mysql_query($query)or die('Bad Query '.mysql_error());
-		        if(mysql_num_rows($result) >0){
-		            $row = mysql_fetch_array($result);
+		        $result = mysqli_query($CONN, $query)or die('Bad Query '.mysql_error());
+		        if(mysqli_num_rows($result) >0){
+		            $row = mysqli_fetch_array($result);
 		            $dnum = $row['DistrictNumber'];
 		            $dadd = $row['LocationAddress'];
 		            $cname = $row['CaptainName'];
@@ -312,8 +337,8 @@
 		        // ,"CaptainImageURL"=>"None","DistrictEmail"=>"None","DistrictPhone"=>"None");
 		        // }
 		        
-		        $result1 = mysql_query($query1) or die('Bad query 1');
-		        while($row1 = mysql_fetch_array($result1)){
+		        $result1 = mysqli_query($CONN, $query1) or die('Bad query 1');
+		        while($row1 = mysqli_fetch_array($result1)){
 		            $area = $row1['PSAAreaNum'];
 		            $LTName =$row1['LieutenantName'];
 		            $email = $row1['Email'];
@@ -323,8 +348,8 @@
 		        
 		        
 		        
-		        $result2 = mysql_query($query2)or die('Bad query2');
-		        while($row2 = mysql_fetch_array($result2)){
+		        $result2 = mysqli_query($CONN, $query2)or die('Bad query2');
+		        while($row2 = mysqli_fetch_array($result2)){
 		            $meetName = $row2['Title'];
 		            $disDate = $row2['MeetDate'];
 		            $m_loc = $row2['MeetLocation'];
@@ -378,19 +403,19 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                     $query = "SELECT SQL_CALC_FOUND_ROWS * FROM `NewsStory` WHERE `DistrictNumber` = $district ORDER BY `TimeStamp` DESC LIMIT $srt,$end";
                     $cquery = "SELECT FOUND_ROWS() AS ROWS";
                     
-                    $result = mysql_query($query) or die('Bad Query '.mysql_error());
-                    $cresult = mysql_query($cquery);
+                    $result = mysqli_query($CONN, $query) or die('Bad Query '.mysql_error());
+                    $cresult = mysqli_query($CONN, $cquery);
                     
-                    $ct = mysql_fetch_array($cresult);
-                    while($row = mysql_fetch_array($result)){
+                    $ct = mysqli_fetch_array($cresult);
+                    while($row = mysqli_fetch_array($result)){
                         $title = $row['Title'];
                         $captionURL = $row['ImageURL'];
                         
                         
                         $sel = "SELECT `LocalImageURL` FROM `Images` WHERE `RemoteImageURL` = '$captionURL'";
-                        $r_Q = mysql_query($sel);
-                        if(mysql_num_rows($r_Q) >=1){
-                            $rowz = mysql_fetch_array($r_Q);
+                        $r_Q = mysqli_query($CONN, $sel);
+                        if(mysqli_num_rows($r_Q) >=1){
+                            $rowz = mysqli_fetch_array($r_Q);
                             $pre = $rowz['LocalImageURL'];
                             $captionURL = $IMG_DIR.$pre;
                         }
@@ -454,15 +479,15 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 				if(preg_match(R_MD5_MATCH, $devID)){
 					
 					$q = "SELECT `DeviceID` FROM `Devices` WHERE `DeviceID` = '$devID'";
-					$res1 = mysql_query($q);
+					$res1 = mysqli_query($CONN, $q);
 						
-						if(mysql_num_rows($res1) >=1){
+						if(mysqli_num_rows($res1) >=1){
 							// record already exist
 							echo json_encode(array("error"=>"false","msg"=>"success"));
 						}else{
 							// No Record exist please input
-							$in = "INSERT INTO `Devices` (`DeviceID`,`LastRequestIP`)VALUES('$devID','$ip')";
-							$res = mysql_query($in) or die(json_encode(array("error"=>mysql_error())));
+							$in = "INSERT INTO `Devices` (`DeviceID`,`LastRequestIP`)VALUES('$devID','$IP')";
+							$res = mysqli_query($CONN, $in) or die($MYSQL_ERROR. header('HTTP/1.1 403 Forbidden'));
 						
 								if($res){
 									echo json_encode(array("error"=>"false","msg"=>"success"));
@@ -497,9 +522,9 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 					if(preg_match(R_MD5_MATCH, $devID)){
 						
 						$q = "SELECT `DeviceID` FROM `Devices` WHERE `DeviceID` = '$devID'";
-						$res = mysql_query($q) or die(json_encode(array("error"=>"true","msg"=>mysql_error())));
+						$res = mysqli_query($CONN, $q) or die($MYSQL_ERROR. header('HTTP/1.1 403 Forbidden'));
 							
-							if(mysql_num_rows($res) >=1 ){
+							if(mysqli_num_rows($res) >=1 ){
 								
 								if(!is_null($hash_T) && !is_null($dis_arr)){
 									
@@ -512,17 +537,17 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 									$gqq1 = "SELECT FOUND_ROWS() AS ROWS";
 									$timeSTP = "";
 									
-									$rqq = mysql_query($gq);
-									$rq2 = mysql_query($gq1);
-									$nob = mysql_fetch_array($rq2);
+									$rqq = mysqli_query($CONN, $gq);
+									$rq2 = mysqli_query($CONN, $gq1);
+									$nob = mysqli_fetch_array($rq2);
 									
-									$rqqq = mysql_query($gqq);
-									$rqq2 = mysql_query($gqq1);
-									$vob = mysql_fetch_array($rqq2);
+									$rqqq = mysqli_query($CONN, $gqq);
+									$rqq2 = mysqli_query($CONN, $gqq1);
+									$vob = mysqli_fetch_array($rqq2);
 										
-										if(mysql_num_rows($rqq) >=1){
+										if(mysqli_num_rows($rqq) >=1){
 												
-											while($rop = mysql_fetch_array($rqq)){
+											while($rop = mysqli_fetch_array($rqq)){
 												$dist = $rop['DistrictNumber'];
 												$title = $rop['Title'];
 												$desc = utf8_encode($rop['Description']);
@@ -532,9 +557,9 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 												$img = $rop['ImageURL'];
 												
 												$sel = "SELECT `LocalImageURL` FROM `Images` WHERE `RemoteImageURL` = '$img'";
-												$r_Q = mysql_query($sel);
-												if(mysql_num_rows($r_Q) >=1){
-												    $roq = mysql_fetch_array($r_Q);
+												$r_Q = mysqli_query($CONN, $sel);
+												if(mysqli_num_rows($r_Q) >=1){
+												    $roq = mysqli_fetch_array($r_Q);
 												    $pre = $roq['LocalImageURL'];
 												    $img = $PROTO1."images/".$pre;
 												}
@@ -553,9 +578,9 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 											/// NO NEWS STORIES
 										}
 										
-										if(mysql_num_rows($rqqq) >=1){
+										if(mysqli_num_rows($rqqq) >=1){
 											
-											while($rog = mysql_fetch_array($rqqq)){
+											while($rog = mysqli_fetch_array($rqqq)){
 												$id = $rog['ID'];
 												$vidT = $rog['VideoTitle'];
 												$des = $rog['Description'];
@@ -583,11 +608,11 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 									if($is_Vid == "false"){
 											
 										$query = "SELECT `Hash` FROM `CurrentHash` WHERE `HashName` = 'NewsStory'";
-										$r_hash = mysql_query($query);
+										$r_hash = mysqli_query($CONN, $query);
 										
-											if(mysql_num_rows($r_hash) >=1){
+											if(mysqli_num_rows($r_hash) >=1){
 													
-												$var = mysql_fetch_array($r_hash);
+												$var = mysqli_fetch_array($r_hash);
 												$hash = $var['Hash'];
 											
 											}else{
@@ -598,13 +623,13 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 											$tall = join("', '", $dis_arr);
 											$sql = "SELECT SQL_CALC_FOUND_ROWS * FROM `NewsStory` WHERE `ScrapeHash` = '$hash' AND `DistrictNumber` IN ('$tall')";
 											$sql1 = "SELECT FOUND_ROWS() AS ROWS";
-											$res1 = mysql_query($sql);
-											$res2 = mysql_query($sql1);
-											$ct = mysql_fetch_array($res2);
+											$res1 = mysqli_query($CONN, $sql);
+											$res2 = mysqli_query($CONN, $sql1);
+											$ct = mysqli_fetch_array($res2);
 											$obj_array = array();	
 											$timeSTP = "";
 											
-												while($row = mysql_fetch_array($res1)){
+												while($row = mysqli_fetch_array($res1)){
 														
 													$dist = $row['DistrictNumber'];
 													$title = $row['Title'];
@@ -615,9 +640,9 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 													$img = $row['ImageURL'];
 													
 													$sel = "SELECT `LocalImageURL` FROM `Images` WHERE `RemoteImageURL` = '$img'";
-													$r_Q = mysql_query($sel);
-												if(mysql_num_rows($r_Q) >=1){
-												    $roww = mysql_fetch_array($r_Q);
+													$r_Q = mysqli_query($CONN, $sel);
+												if(mysqli_num_rows($r_Q) >=1){
+												    $roww = mysqli_fetch_array($r_Q);
 												    $pre = $roww['LocalImageURL'];
 												    $img = $PROTO1."images/".$pre;
 												}
@@ -648,12 +673,12 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 										$ns_hash = 0;
 										$obj_array = array();
 										$obj_array1 = array();
-										$r_hash2 = mysql_query($query2);
-										$r_hash3 = mysql_query($query3);
+										$r_hash2 = mysqli_query($CONN, $query2);
+										$r_hash3 = mysqli_query($CONN, $query3);
 											
-											if(mysql_num_rows($r_hash2) >=1){
+											if(mysqli_num_rows($r_hash2) >=1){
 													
-												$var2 = mysql_fetch_array($r_hash2);
+												$var2 = mysqli_fetch_array($r_hash2);
 												$uc_hash = $var2['Hash'];
 											
 											}else{
@@ -662,9 +687,9 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 											}
 											
 											
-											if(mysql_num_rows($r_hash3) >=1 ){
+											if(mysqli_num_rows($r_hash3) >=1 ){
 													
-												$var3 = mysql_fetch_array($r_hash3);
+												$var3 = mysqli_fetch_array($r_hash3);
 												$ns_hash = $var3['Hash'];
 											
 											}else{
@@ -675,12 +700,12 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 											$tall = join("', '", $dis_arr);
 											$sql = "SELECT SQL_CALC_FOUND_ROWS * FROM `NewsStory` WHERE `ScrapeHash` = '$ns_hash' AND `DistrictNumber` IN ('$tall')";
 											$sql1 = "SELECT FOUND_ROWS() AS ROWS";
-											$res1 = mysql_query($sql);
-											$res2 = mysql_query($sql1);
-											$ct = mysql_fetch_array($res2);
+											$res1 = mysqli_query($CONN, $sql);
+											$res2 = mysqli_query($CONN, $sql1);
+											$ct = mysqli_fetch_array($res2);
 												
 											
-												while($row = mysql_fetch_array($res1)){
+												while($row = mysqli_fetch_array($res1)){
 														
 													$dist = $row['DistrictNumber'];
 													$title = $row['Title'];
@@ -690,9 +715,9 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 													$img = $row['ImageURL'];
 													
 													$sel = "SELECT `LocalImageURL` FROM `Images` WHERE `RemoteImageURL` = '$img'";
-													$r_Q = mysql_query($sel);
-												if(mysql_num_rows($r_Q) >=1){
-												    $rowx = mysql_fetch_array($r_Q);
+													$r_Q = mysqli_query($CONN, $sel);
+												if(mysqli_num_rows($r_Q) >=1){
+												    $rowx = mysqli_fetch_array($r_Q);
 												    $pre = $rowx['LocalImageURL'];
 												    $img = $PROTO1."images/".$pre;
 												}
@@ -711,11 +736,11 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 
 												$qvid = "SELECT * FROM `UCVideos` WHERE `HashTag` = '$uc_hash'";
 												$sql5 = "SELECT FOUND_ROWS() AS ROWS";
-												$res5 = mysql_query($qvid);
-												$res6 = mysql_query($sql5);
-												$ct1 = mysql_fetch_array($res6);
+												$res5 = mysqli_query($CONN, $qvid);
+												$res6 = mysqli_query($CONN, $sql5);
+												$ct1 = mysqli_fetch_array($res6);
 											
-													while($row1 = mysql_fetch_array($res5)){
+													while($row1 = mysqli_fetch_array($res5)){
 														
 														$vidT = $row1['VideoTitle'];
 														$des = $row1['Description'];
@@ -744,7 +769,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 										
 									
 								
-							}else if(mysql_num_rows($res) <=0 ) {
+							}else if(mysqli_num_rows($res) <=0 ) {
 									
 								echo json_encode(array("error"=>"true","msg"=>"No Record INVaIlid DEviCe"));
 							
@@ -811,11 +836,11 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 									
 									
 									$cquery = "SELECT FOUND_ROWS() AS ROWS";
-									$result = mysql_query($query) or die('Bad Query '.mysql_error());
-									$cresult = mysql_query($cquery);
-										$cat = mysql_fetch_array($cresult);
-										if(mysql_num_rows($result) > 0){
-											while($row = mysql_fetch_array($result)){
+									$result = mysqli_query($CONN, $query) or die('Bad Query '.mysql_error());
+									$cresult = mysqli_query($CONN, $cquery);
+										$cat = mysqli_fetch_array($cresult);
+										if(mysqli_num_rows($result) > 0){
+											while($row = mysqli_fetch_array($result)){
 												$id = $row['ID'];
 												$title = $row['VideoTitle'];
 												
@@ -832,12 +857,12 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 												$vid_ID = $row['VideoID'];
 												
 												$chg = "SELECT `Description` FROM `NewsStory` WHERE `TubeURL` LIKE '%$vid_ID%' LIMIT 0,1";
-												$r_chg = mysql_query($chg);
+												$r_chg = mysqli_query($CONN, $chg);
 												
-												if(mysql_num_rows($r_chg) <= 0){
+												if(mysqli_num_rows($r_chg) <= 0){
 												    $desc = cleanUpHTML(utf8_encode($row['Description']));
 												}else{
-												    $azzy = mysql_fetch_array($r_chg);
+												    $azzy = mysqli_fetch_array($r_chg);
 												    $desc = cleanUpHTML(utf8_encode($azzy['Description']));
 												}
 												
@@ -894,17 +919,17 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 									if($isNews == "true"){
 												
 										$sql = "SELECT `DeviceID` FROM `Bookmarks` WHERE `DeviceID` = '$device' AND `NewsStoryID` != 0";
-										$isDev = mysql_query($sql) or die("Bad Query ".mysql_error());
+										$isDev = mysqli_query($CONN, $sql) or die("Bad Query ".mysql_error());
 									
-										if(mysql_num_rows($isDev) >=1){
+										if(mysqli_num_rows($isDev) >=1){
 												
 											$getAll = "SELECT SQL_CALC_FOUND_ROWS * FROM `Bookmarks` WHERE `DeviceID` = '$device' AND `NewsStoryID` != 0";
 											$cquery = "SELECT FOUND_ROWS() AS ROWS";
-											$val = mysql_query($getAll);
-											$cresult = mysql_query($cquery);
-											$count = mysql_fetch_array($cresult);
+											$val = mysqli_query($CONN, $getAll);
+											$cresult = mysqli_query($CONN, $cquery);
+											$count = mysqli_fetch_array($cresult);
 											
-												while($rows = mysql_fetch_array($val)){
+												while($rows = mysqli_fetch_array($val)){
 													
 													// if($rows['NewsStoryID'] == 0){
 														// array_push($videos, $rows['UCVideoID']);
@@ -923,9 +948,9 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 															
 														$s_vals = join(',', $news);
 														$news_story = "SELECT * FROM `NewsStory` WHERE `ID` IN ($s_vals) LIMIT 0,5";
-														$res = mysql_query($news_story);
+														$res = mysqli_query($CONN, $news_story);
 														
-															while($n_row = mysql_fetch_array($res)){
+															while($n_row = mysqli_fetch_array($res)){
 																	
 																$dist = $n_row['DistrictNumber'];
 																$title = $n_row['Title'];
@@ -939,8 +964,8 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 																$divv = convertdiv($dist);
 																
 																$fetc = "SELECT `LocalImageURL` FROM `Images` WHERE `NewsID` = '$news_id'";
-																$dex = mysql_query($fetc);
-																$rowx = mysql_fetch_array($dex);
+																$dex = mysqli_query($CONN, $fetc);
+																$rowx = mysqli_fetch_array($dex);
 																$iimg = $IMG_DIR.$rowx['LocalImageURL'];
 																
 																if(empty($vid_URL)){
@@ -964,9 +989,9 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 // 															
 														// $v_vals = join(',', $videos);
 														// $vid_story = "SELECT * FROM `UCVideos` WHERE `ID` IN ($v_vals) ";
-														// $res_v = mysql_query($vid_story);
+														// $res_v = mysqli_query($CONN, $vid_story);
 // 														
-															// while($v_row = mysql_fetch_array($res_v)){
+															// while($v_row = mysqli_fetch_array($res_v)){
 																// $vid_title = $v_row['VideoTitle'];
 																// $desc = $v_row['Description'];
 																// $vid_ID = $v_row['VideoID'];
@@ -1002,17 +1027,17 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 										
 										
 										$sql = "SELECT `DeviceID` FROM `Bookmarks` WHERE `DeviceID` = '$device' AND `UCVideoID` != 0";
-										$isDev = mysql_query($sql) or die("Bad Query ".mysql_error());
+										$isDev = mysqli_query($CONN, $sql) or die("Bad Query ".mysql_error());
 									
-										if(mysql_num_rows($isDev) >=1){
+										if(mysqli_num_rows($isDev) >=1){
 												
 											$getAll = "SELECT SQL_CALC_FOUND_ROWS * FROM `Bookmarks` WHERE `DeviceID` = '$device' AND `UCVideoID` != 0";
 											$cquery = "SELECT FOUND_ROWS() AS ROWS";
-											$val = mysql_query($getAll);
-											$cresult = mysql_query($cquery);
-											$count = mysql_fetch_array($cresult);
+											$val = mysqli_query($CONN, $getAll);
+											$cresult = mysqli_query($CONN, $cquery);
+											$count = mysqli_fetch_array($cresult);
 											
-												while($rows = mysql_fetch_array($val)){
+												while($rows = mysqli_fetch_array($val)){
 													
 													if($rows['NewsStoryID'] == 0){
 														array_push($videos, $rows['UCVideoID']);
@@ -1030,9 +1055,9 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 													// }else{
 														// $s_vals = join(',', $news);
 														// $news_story = "SELECT * FROM `NewsStory` WHERE `ID` IN ($s_vals) ";
-														// $res = mysql_query($news_story);
+														// $res = mysqli_query($CONN, $news_story);
 // 														
-															// while($n_row = mysql_fetch_array($res)){
+															// while($n_row = mysqli_fetch_array($res)){
 																// $dist = $n_row['DistrictNumber'];
 																// $title = $n_row['Title'];
 																// $desc = $n_row['Description'];
@@ -1059,9 +1084,9 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 															
 														$v_vals = join(',', $videos);
 														$vid_story = "SELECT * FROM `UCVideos` WHERE `ID` IN ($v_vals) LIMIT 0,5";
-														$res_v = mysql_query($vid_story);
+														$res_v = mysqli_query($CONN, $vid_story);
 														
-															while($v_row = mysql_fetch_array($res_v)){
+															while($v_row = mysqli_fetch_array($res_v)){
 
 																$vid_title = $v_row['VideoTitle'];
 																$desc = utf8_encode($v_row['Description']);
@@ -1114,23 +1139,23 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 										
 										
 										$sql = "SELECT `DeviceID` FROM `Devices` WHERE `DeviceID` = '$device'";
-										$res_q = mysql_query($sql) or die(json_encode(array("error"=>mysql_error())));
+										$res_q = mysqli_query($CONN, $sql) or die($MYSQL_ERROR. header('HTTP/1.1 403 Forbidden'));
 											
-											if(mysql_num_rows($res_q) >=1){
+											if(mysqli_num_rows($res_q) >=1){
 												
 												if($isBkNews == "true"){ // IF USER SENDS A NEWS STORY
 														
 													$sql1 = "SELECT `DeviceID` FROM `Bookmarks` WHERE `NewsStoryID` = '$story_ID' AND `DeviceID` = '$device'";
-													$res_q1 = mysql_query($sql1); //LOOK FOR BOOKMARK BEFOR INSERT
+													$res_q1 = mysqli_query($CONN, $sql1); //LOOK FOR BOOKMARK BEFOR INSERT
 														
-														if(mysql_num_rows($res_q1) >=1){
+														if(mysqli_num_rows($res_q1) >=1){
 															// BOOKMARK ALREADY EXIST
 															echo json_encode(array("error"=>"true","Insert Record"=>"false","msg"=>"Record Already Exist"));
 														
 														}else{
 																
 															$in_q = "INSERT INTO `Bookmarks` (`DeviceID`,`NewsStoryID`,`UCVideoID`)VALUES('$device','$story_ID','0')";
-															$res_in = mysql_query($in_q);
+															$res_in = mysqli_query($CONN, $in_q);
 															
 																if($res_in){
 																	echo json_encode(array("error"=>"false","Insert Record"=>"true","msg"=>"success"));
@@ -1143,16 +1168,16 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 												}else if($isVid == "true"){
 													
 													$sql = "SELECT `DeviceID` FROM `Bookmarks` WHERE `UCVideoID` = '$story_ID' AND `DeviceID` = '$device'";
-													$res = mysql_query($sql);
+													$res = mysqli_query($CONN, $sql);
 														
-														if(mysql_num_rows($res) >=1){
+														if(mysqli_num_rows($res) >=1){
 														
 															echo json_encode(array("error"=>"false","Insert Record"=>"true","msg"=>"success"));
 														
 														}else{
 																	
 															$in = "INSERT INTO `Bookmarks` (`DeviceID`,`NewsStoryID`,`UCVideoID`)VALUES('$device','0','$story_ID')";	
-															$in_res = mysql_query($in);
+															$in_res = mysqli_query($CONN, $in);
 															
 																if($in_res){
 																	echo json_encode(array("error"=>"false","Insert Record"=>"true","msg"=>"success"));
@@ -1176,14 +1201,14 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 											if($is_news_id == "true" && $is_vid_id == "false"){
 												
 												$sql = "SELECT `ID`,`DeviceID`,`NewsStoryID` FROM `Bookmarks` WHERE `DeviceID` = '$device' AND `NewsStoryID` = '$obj_news_id'";
-												$res = mysql_query($sql) or die(json_encode(array("error"=>mysql_error())));
+												$res = mysqli_query($CONN, $sql) or die($MYSQL_ERROR. header('HTTP/1.1 403 Forbidden'));
 													
-													if(mysql_num_rows($res)>=1){
+													if(mysqli_num_rows($res)>=1){
 															
-														$row = mysql_fetch_array($res);
+														$row = mysqli_fetch_array($res);
 														$rID = $row['ID'];
 														$del = "DELETE FROM `Bookmarks` WHERE `ID` = '$rID'";
-														$res1 = mysql_query($del);
+														$res1 = mysqli_query($CONN, $del);
 															
 															if($res1){
 																	
@@ -1202,14 +1227,14 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 												}else if($is_vid_id == "true" && $is_news_id == "false"){
 														
 													$sql = "SELECT `ID`,`DeviceID`,`UCVideoID` FROM `Bookmarks` WHERE `DeviceID` = '$device' AND `UCVideoID` = '$obj_vid_id'";
-													$res = mysql_query($sql) or die(json_encode(array("error"=>mysql_error())));
+													$res = mysqli_query($CONN, $sql) or die($MYSQL_ERROR. header('HTTP/1.1 403 Forbidden'));
 														
-														if(mysql_num_rows($res)>=1){
+														if(mysqli_num_rows($res)>=1){
 																
-															$row = mysql_fetch_array($res);
+															$row = mysqli_fetch_array($res);
 															$rID = $row['ID'];
 															$del = "DELETE FROM `Bookmarks` WHERE `ID` = '$rID'";
-															$res1 = mysql_query($del);
+															$res1 = mysqli_query($CONN, $del);
 																
 																if($res1){
 																		
@@ -1253,15 +1278,15 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 						          foreach($data as $item){
 						            $iURL = $item['RemoteImageURL'];
 						            $chk = "SELECT `RemoteImageURL` FROM  `Images` WHERE `RemoteImageURL` = '$iURL'";
-						            $res = mysql_query($chk);
+						            $res = mysqli_query($CONN, $chk);
 						            
-						              if(mysql_num_rows($res)>=1){
+						              if(mysqli_num_rows($res)>=1){
 						                  // RECORD EXIST
 						              }else{
 						                  $r_url = $item['RemoteImageURL'];
 						                  $i_url = $item['LocalImageURL'];
 						                  $in = "INSERT INTO `Images` (`LocalImageURL`,`RemoteImageURL`)VALUES('$i_url','$r_url')";
-						                  $in_res = mysql_query($in);
+						                  $in_res = mysqli_query($CONN, $in);
 						              }
 						            
 						          }
