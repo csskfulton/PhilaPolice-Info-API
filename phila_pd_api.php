@@ -3,12 +3,15 @@
 
         //INCLUDE NEWSOBJECT CLASS
         include('NewsObject.php');
+        include('DistrictInfoObject.php');
+        include('PSAObject.php');
+        include('CalendarObject.php');
     
 	    // MySQL Server Settings
         define("MYSQL_SERVER", 'localhost');
-        define("MYSQL_USERNAME", 'user');
-        define("MYSQL_PASSWORD", 'password');
-        define("MYSQL_DATABASE",'database');
+        define("MYSQL_USERNAME", 'root');
+        define("MYSQL_PASSWORD", 'Keithistheking');
+        define("MYSQL_DATABASE",'PhillyPolice');
        
         define('R_MD5_MATCH', '/^[a-f0-9]{32}$/i'); //MD5 REGEX CHECKER
         define('NUM_ONLY', '/^\d{1,6}$/');
@@ -26,9 +29,7 @@
         $ZERO_HASH_KEYS = json_encode(array("error"=>"true","msg"=>"NO HASH KEYS FOUND"));
         
         
-        ///
-        
-        //Attaempt Connect to database 
+        //CONNECT TO DATABASE
         $CONN = mysqli_connect(MYSQL_SERVER,MYSQL_USERNAME,MYSQL_PASSWORD,MYSQL_DATABASE);
         
         if(mysqli_connect_errno()){
@@ -92,7 +93,7 @@
 			        $fire = str_replace("&#8242;","'",$fire);
 			    }
 			    if(strpos($fire,"&#039;") >=1){
-			        $fire = str_replace("&#039;","′",$fire);
+			        $fire = str_replace("&#039;","â€²",$fire);
 			    }
 			    if(strpos($fire,"&amp;") >=1){
 			        $fire = str_replace("&amp;","&",$fire);
@@ -101,7 +102,7 @@
 			        $fire = str_replace("&#215;","X",$fire);
 			    }
 			    if(strpos($fire,"&#8211;") >=1){
-			    $fire = str_replace("&#8211;","–",$fire);
+			    $fire = str_replace("&#8211;","â€“",$fire);
 			    }
 			    
 			    return $fire;
@@ -161,8 +162,7 @@
 										// FAILED TO GET HASH KEYS
 									    echo $ZERO_HASH_KEYS;
 									}
-								
-								
+		
 								
 							}else{
 								// UPDATE DEVICE EXHNACGE FAILED
@@ -222,6 +222,7 @@
     		        $row = mysqli_fetch_array($res);
     		        $NEW_HASH = $row['Hash'];
     		        
+    		        $array2 = array();
     		        $array = array();
     		        $query = "SELECT SQL_CALC_FOUND_ROWS `ID`,`Category`,`PubDate`,`StoryAuthor`,`Title`,`Description`,`ImageURL`,`TubeURL` FROM `NewsStory` WHERE `ScrapeHash` = '$NEW_HASH' ORDER BY `PubDate` DESC LIMIT $srt,$end";
     		        $cquery = "SELECT FOUND_ROWS() AS ROWS";
@@ -231,53 +232,39 @@
     		        
     		        while($row = mysqli_fetch_array($result)){
     		            
-//     		            $newzObj = new NewsObject();
-//     		            $newzObj->set_category($row['Category']);
-//     		            $newzObj->set_pubDate(date('M j, g:i A',strtotime($row['PubDate'])));
-//     		            $newzObj->set_storyAuthor($row['StoryAuthor']);
-//     		            $newzObj->set_id($row['ID']);
-//     		            $newzObj->set_title($row['Title']);
-//    		            $newzObj->set_imageURL($row['ImageURL']);
-//     		            if(empty($row['TubeURL'])){
-//     		                $newzObj->set_tubeURL("No Video");
-//     		            }else{
-//     		               $newzObj->set_tubeURL($row['TubeURL']);
-//    		        }
+    		            $newzObj = new NewsObject();
+    		            $newzObj->setCategory($row['Category']);
+    		            $newzObj->setPubDate(date('M j, g:i A',strtotime($row['PubDate'])));
+    		            $newzObj->setStoryAuthor($row['StoryAuthor']);
+    		            $newzObj->setNewsStoryID($row['ID']);
+    		            $newzObj->setDescription(cleanUpHTML(utf8_encode($row['Description'])));
+    		            $newzObj->setTitle($row['Title']);
+   		                //$newzObj->setTitle(cleanUpHTML(utf8_encode($row['Description'])));
 
-    		            
+    		            $imgURLL = $row['ImageURL'];
+    		            $SQLL = "SELECT `LocalImageURL` FROM `Images` WHERE `RemoteImageURL` = '$imgURLL'";
+    		            $REZZ = mysqli_query($CONN, $SQLL);
 
-    		            
-    		            $alType = $row['Category'];
-    		            $stDate = date('M j, g:i A',strtotime($row['PubDate']));
-    		            $stAuth = $row['StoryAuthor'];
-    		            $strID = $row['ID'];
-    		            $stTitle = $row['Title'];
-    		            $stTubeURL = $row['TubeURL'];
-    		            
-    		            if(empty($stTubeURL)){
-    		                $stTubeURL = "No Video";
-    		            }
-    		            
-    		            $stIMG = $row['ImageURL'];
-    		            
-    		            $sel = "SELECT `LocalImageURL` FROM `Images` WHERE `RemoteImageURL` = '$stIMG'";
-    		            $r_Q = mysqli_query($CONN, $sel);
-    		            if(mysqli_num_rows($r_Q) >=1){
-    		                $roww = mysqli_fetch_array($r_Q);
-    		                $pre = $roww['LocalImageURL'];
-    		                $stIMG = $IMG_DIR.$pre;
-    		            }
-    		            
-    		            $stExcert = cleanUpHTML(utf8_encode($row['Description']));
-    		            
-    		            $mnews = array("StoryID"=>$strID,"AlertType"=>$alType,"StoryDate"=>$stDate,"StoryAuthor"=>$stAuth,"ImageURL"=>$stIMG,"StoryTitle"=>$stTitle,"StoryExcert"=>$stExcert,"TubeURL"=>$stTubeURL);
-    		            array_push($array,$mnews);
+    		            if(mysqli_num_rows($REZZ) >=1){
+    		                $ROWW = mysqli_fetch_array($REZZ);
+    		                $pre = $ROWW['LocalImageURL'];
+    		                $newzObj->setImageURL($IMG_DIR.$pre);
+    		            }else{
+   		                $newzObj->setImageURL($row['ImageURL']);
+   		                }
+
+    		            if(empty($row['TubeURL'])){
+    		                $newzObj->setTubeURL("No Video");
+    		            }else{
+    		               $newzObj->setTubeURL($row['TubeURL']);
+   		                }
+                    		            
+   		               array_push($array2,$newzObj);   
+                        
     		        }
     		        
-    		        
-    		        echo json_encode(array("News"=>$array,"TotalCount"=>$cat['ROWS']));
-    		        
-    		        
+    		        echo json_encode(array("News"=>$array2,"TotalCount"=>$cat['ROWS']));
+    		      
     		        
     		    }else{
     		        echo $ZERO_HASH_KEYS;
@@ -319,46 +306,52 @@
 		        
 		        $result = mysqli_query($CONN, $query)or die('Bad Query '.mysql_error());
 		        if(mysqli_num_rows($result) >0){
-		            $row = mysqli_fetch_array($result);
-		            $dnum = $row['DistrictNumber'];
-		            $dadd = $row['LocationAddress'];
-		            $cname = $row['CaptainName'];
-		            $cImg = $row['CaptainURL'];
-		            $demail = $row['EmailAddress'];
-		            $dphone = $row['Phone'];
+		            $row = mysqli_fetch_array($result);        
 		            
-		            $obj = array("DistrictNumber"=>$dnum,"DistrictAddress"=>$dadd,"CaptainName"=>$cname
-		                ,"CaptainImageURL"=>$cImg,"DistrictEmail"=>$demail,"DistrictPhone"=>$dphone);
+		            $disObj = new DistrictInfoObject();
+		            $disObj->setDistrictNumber($row['DistrictNumber']);
+		            $disObj->setLocationAddress($row['LocationAddress']);
+		            $disObj->setPhoneNumber($row['Phone']);
+		            $disObj->setEmailAddress($row['EmailAddress']);
+		            $disObj->setCaptainName($row['CaptainName']);
+		            $disObj->setCaptainImageURL($row['CaptainURL']);
+		            $disObj->setDetectiveDivision($row['DetectiveDivision']);
+
 		            
 		        }
 		        
-		        // else if($result){
-		        // $obj = array("DistrictNumber"=>"None","DistrictAddress"=>"None","CaptainName"=>"None"
-		        // ,"CaptainImageURL"=>"None","DistrictEmail"=>"None","DistrictPhone"=>"None");
-		        // }
 		        
 		        $result1 = mysqli_query($CONN, $query1) or die('Bad query 1');
 		        while($row1 = mysqli_fetch_array($result1)){
-		            $area = $row1['PSAAreaNum'];
-		            $LTName =$row1['LieutenantName'];
-		            $email = $row1['Email'];
-		            $psa = array("PSAAreaNum"=>$area, "LTName"=>$LTName, "LTEmail"=>$email);
-		            array_push($array1, $psa);
+
+		            $psaObj = new PSAObject();
+		            $psaObj->setPSAID($row1['ID']);
+		            $psaObj->setDistrictNumber($row1['DistrictNumber']);
+		            $psaObj->setEmailAddress($row1['Email']);
+		            $psaObj->setPSAAreaNumber($row1['PSAAreaNum']);
+		            $psaObj->setLieutenantName($row1['LieutenantName']);
+		            array_push($array1,$psaObj);
+
+		            
 		        }
 		        
 		        
 		        
 		        $result2 = mysqli_query($CONN, $query2)or die('Bad query2');
 		        while($row2 = mysqli_fetch_array($result2)){
-		            $meetName = $row2['Title'];
-		            $disDate = $row2['MeetDate'];
-		            $m_loc = $row2['MeetLocation'];
-		            $cal = array("MeetingName"=>$meetName,"MeetingDate"=>$disDate,"MeetingLocation"=>$m_loc);
-		            array_push($array2, $cal);
+
+		            $calObj = new CalendarObject();
+		            $calObj->setTimeStamp($row2['TimeStamp']);
+		            $calObj->setDistrictNumber($row2['DistrictNumber']);
+		            $calObj->setTitle($row2['Title']);
+		            $calObj->setMeetDate($row2['MeetDate']);
+		            $calObj->setMeetLocation($row2['MeetLocation']);
+		            array_push($array2, $calObj);
+		            
 		            
 		        }
-		        echo json_encode(array("District"=>$obj,"PSAInfo"=>$array1,"CalenderInfo"=>$array2));
-		        //echo json_encode($obj);
+		        
+		        echo json_encode(array("DistrictInfo"=>$disObj,"PSAInfo"=>$array1,"CalenderInfo"=>$array2));
 		        
 }
 
