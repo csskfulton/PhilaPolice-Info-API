@@ -6,6 +6,7 @@
         include('DistrictInfoObject.php');
         include('PSAObject.php');
         include('CalendarObject.php');
+        include('UCVideoObject.php');
     
 	    // MySQL Server Settings
         define("MYSQL_SERVER", 'localhost');
@@ -27,6 +28,7 @@
         $INVALID_DEVICE_ID = json_encode(array("error"=>"true","msg"=>"INVALID DEVICE ID"));
         $INVALID_DEVICE = json_encode(array("error"=>"true","msg"=>"INVALID DEVICE BEING USED"));
         $ZERO_HASH_KEYS = json_encode(array("error"=>"true","msg"=>"NO HASH KEYS FOUND"));
+        $INVALID_DIS = json_encode(array("error"=>"true","msg"=>"INVALID DISTRICT"));
         
         
         //CONNECT TO DATABASE
@@ -369,84 +371,92 @@
 
 
 else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" || $_SERVER['REQUEST_METHOD'] == 'POST' && $data['DistrictNews'] == "true"){
-                
-    if(!empty($_GET['DistrictNumber'])){
-        $district = $_GET['DistrictNumber'];
-        if(!empty($_GET['End']) && !empty($_GET['Start'])){
+              
+    if(preg_match(NUM_ONLY, $data['DistrictNumber']) || preg_match(NUM_ONLY, $_GET['DistrictNumber'])){
+        
+        if(!empty($_GET['DistrictNumber'])){
+            $district = $_GET['DistrictNumber'];
+            if(!empty($_GET['End']) && !empty($_GET['Start'])){
                 $srt = $_GET['Start'];
                 $end = $_GET['End'];
             }else{
                 $srt = 0;
                 $end = 5;
             }
-    }else if(!empty($data['DistrictNumber'])){
-        $district = $data['DistrictNumber'];
-        if(!empty($data['End']) && !empty($data['Start'])){
-            $srt = $data['Start'];
-            $end = $data['End'];
-        }else{
-            $srt = 0;
-            $end = 5;
+        }else if(!empty($data['DistrictNumber'])){
+            $district = $data['DistrictNumber'];
+            if(!empty($data['End']) && !empty($data['Start'])){
+                $srt = $data['Start'];
+                $end = $data['End'];
+            }else{
+                $srt = 0;
+                $end = 5;
+            }
         }
-    }
-        	    
-        	    
-                    //$district = $_GET['d'];
-                    $array = array();
-                    $query = "SELECT SQL_CALC_FOUND_ROWS * FROM `NewsStory` WHERE `DistrictNumber` = $district ORDER BY `TimeStamp` DESC LIMIT $srt,$end";
-                    $cquery = "SELECT FOUND_ROWS() AS ROWS";
-                    
-                    $result = mysqli_query($CONN, $query) or die('Bad Query '.mysql_error());
-                    $cresult = mysqli_query($CONN, $cquery);
-                    
-                    $ct = mysqli_fetch_array($cresult);
-                    while($row = mysqli_fetch_array($result)){
-                        $title = $row['Title'];
-                        $captionURL = $row['ImageURL'];
-                        
-                        
-                        $sel = "SELECT `LocalImageURL` FROM `Images` WHERE `RemoteImageURL` = '$captionURL'";
-                        $r_Q = mysqli_query($CONN, $sel);
-                        if(mysqli_num_rows($r_Q) >=1){
-                            $rowz = mysqli_fetch_array($r_Q);
-                            $pre = $rowz['LocalImageURL'];
-                            $captionURL = $IMG_DIR.$pre;
-                        }
-                        
-                        // $mdate = new DateTime($row['StroyDate']);
-                        // $date = $mdate->format("M jS, g:s A");
-                        $date = date('M j, g:i A',strtotime($row['PubDate']));
-                        
-                        $excert = cleanUpHTML(utf8_encode($row['Description']));
-                        $storyURL = trim($row['URL']);
-                        $storyID = $row['ID'];
-                        $districtNumber = $row['DistrictNumber'];
-                        $videoURL = $row['TubeURL'];
-                        //				$description = utf8_encode($row['Description']);
-                        $alertType = $row['Category'];
-                        
-                        if($alertType == "missing person"){
-                            $alertType = "Missing Person";
-                        }
-                        
-                        $author = $row['StoryAuthor'];
-                        
-                        if(empty($videoURL)){
-                            $videoURL = "No Video";
-                        }
-                        
-                        $article = array("StoryID"=>$storyID,"AlertType"=>$alertType,"District"=>$districtNumber,"Title"=>$title,"Excert"=>$excert,"StoryDate"=>$date,
-                            "CaptionURL"=>$captionURL,"StoryURL"=>$storyURL,"VideoURL"=>$videoURL,"Author"=>$author);
-                        array_push($array, $article);
-                        //print_r($article);
-                    }
-                    
-                    echo json_encode(array("Articles"=>$array,"TotalCount"=>$ct['ROWS']));
-                    //echo json_encode($array);
-                    // $aa = array_map(utf8_encode, $array);
-                    // echo json_encode($aa);
+        
+        
+        //$district = $_GET['d'];
+        $array = array();
+        $query = "SELECT SQL_CALC_FOUND_ROWS * FROM `NewsStory` WHERE `DistrictNumber` = $district ORDER BY `TimeStamp` DESC LIMIT $srt,$end";
+        $cquery = "SELECT FOUND_ROWS() AS ROWS";
+        
+        $result = mysqli_query($CONN, $query) or die('Bad Query '.mysql_error());
+        $cresult = mysqli_query($CONN, $cquery);
+        
+        $ct = mysqli_fetch_array($cresult);
+        while($row = mysqli_fetch_array($result)){ 
+            
+            $captionURL = $row['ImageURL'];
+            $sel = "SELECT `LocalImageURL` FROM `Images` WHERE `RemoteImageURL` = '$captionURL'";
+            $r_Q = mysqli_query($CONN, $sel);
+            
+            if(mysqli_num_rows($r_Q) >=1){
+                $rowz = mysqli_fetch_array($r_Q);
+                $pre = $rowz['LocalImageURL'];
+                $captionURL = $IMG_DIR.$pre;
+                $newzObj->setImageURL($IMG_DIR.$pre);
+                
+            }
+            
+            $newzObj = new NewsObject();
+            $newzObj->setNewsStoryID($row['ID']);
+            $newzObj->setDistrictNumber($row['DistrictNumber']);
+            $excert = cleanUpHTML(utf8_encode($row['Description']));
+            $newzObj->setDescription($excert);
+            $date = date('M j, g:i A',strtotime($row['PubDate']));
+            $newzObj->setPubDate($date);
+            $storyURL = trim($row['URL']);
+            $newzObj->setURL($storyURL);
+            $newzObj->setTitle($row['Title']);
+            $videoURL = $row['TubeURL'];
+            if(empty($videoURL)){
+                $videoURL = "No Video";
+            }
+            $newzObj->setTubeURL($videoURL);
+            $cat = $row['Category'];
+            
+            if($cat == "missing person"){
+                $cat == "Missing Person";
+            }
+                $newzObj->setCategory($cat);
+                $newzObj->setStoryAuthor($row['StoryAuthor']);
+               
+            array_push($array, $newzObj);
+            
+       
             
         }
+        
+        echo json_encode(array("Articles"=>$array,"TotalCount"=>$ct['ROWS']));
+   
+    }else{
+        
+        echo $INVALID_DIS;
+        
+    }
+
+}
+
 		
         
 		
@@ -454,17 +464,109 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
         
         
 		
-		
-		
-		
-		
-		
-		
+
+
+//////////////////////////////////////////////////////////////////////////////////// UCVIDEOS API //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+        else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['UCVideos'] == "true" || $_SERVER['REQUEST_METHOD'] == 'POST' && $data['UCVideos'] == "true"){
+            
+            
+            if(!empty($_GET['UCVideos'])){
+                $district = $_GET['District'];
+                if(!empty($_GET['End']) && !empty($_GET['Start'])){
+                    $start = $_GET['Start'];
+                    $end = $_GET['End'];
+                }else{
+                    $start = 0;
+                    $end = 5;
+                }
+            }else if(!empty($data['District'])){
+                $district = $data['District'];
+                if(!empty($data['End']) && !empty($data['Start'])){
+                    $start = $data['Start'];
+                    $end = $data['End'];
+                }else{
+                    $start = 0;
+                    $end = 5;
+                }
+            }
+            
+            
+            
+            $array = array();
+            //$query = "SELECT SQL_CALC_FOUND_ROWS * FROM `UCVideos` WHERE `PoliceDivision` = '$div' AND `VideoID` != '0' AND `VideoDate` > DATE_FORMAT(NOW(), '%b %e, %Y') ORDER BY STR_TO_DATE( `VideoDate` , '%b %e, %Y' ) DESC LIMIT $start,$end";
+            if(!empty($district)){
+                $query = "SELECT SQL_CALC_FOUND_ROWS * FROM `UCVideos` WHERE `VideoID` != '0' AND `DistrictNumber` = '$district'  ORDER BY  `TimeStamp` DESC LIMIT $start,$end";
+                
+            }else{
+                $query = "SELECT SQL_CALC_FOUND_ROWS * FROM `UCVideos` WHERE `VideoID` != '0' AND `DistrictNumber` != 0  ORDER BY  `TimeStamp` DESC LIMIT $start,$end";
+                
+            }
+            
+            
+            $cquery = "SELECT FOUND_ROWS() AS ROWS";
+            $result = mysqli_query($CONN, $query) or die('Bad Query '.mysql_error());
+            $cresult = mysqli_query($CONN, $cquery);
+            $cat = mysqli_fetch_array($cresult);
+            if(mysqli_num_rows($result) > 0){
+                while($row = mysqli_fetch_array($result)){
+
+                    $ucVid = new UCVideoObject();
+                    $ucVid->setUCVideoID($row['ID']);
+                    $ucVid->setNewsStoryID($row['NewsID']);
+                    $ucVid->setTimeStamp($row['TimeStamp']);
+                    $title = $row['VideoTitle'];
+                    if(strpos($title," DC ") >=1){
+                        $txt = explode(" DC",$title);
+                        $title = $txt[0];
+                    }
+                    $ucVid->setVideoTitle($title);
+                    $vid_ID = $row['VideoID'];
+                    $chg = "SELECT `Description` FROM `NewsStory` WHERE `TubeURL` LIKE '%$vid_ID%' LIMIT 0,1";
+                    $r_chg = mysqli_query($CONN, $chg);
+                    if(mysqli_num_rows($r_chg) <= 0){
+                        $desc = cleanUpHTML(utf8_encode($row['Description']));
+                    }else{
+                        $azzy = mysqli_fetch_array($r_chg);
+                        $desc = cleanUpHTML(utf8_encode($azzy['Description']));
+                    }
+                    $ucVid->setDescription($desc);
+                    $ucVid->setVideoID($row['VideoID']);
+                    $ucVid->setVideoImageURL($row['VideoImageURL']);
+                    $ucVid->setVideoDate($row['VideoDate']);
+                    $divv = convertdiv($row['DistrictNumber']);
+                    $ucVid->setDistrictDivision($divv);
+                    $ucVid->setDistrictNumber($row['DistrictNumber']);
+                    $ucVid->setCrimeType($row['CrimeType']);
+                    $videoURL = "https://www.youtube.com/embed/".$vid_ID;
+                    $ucVid->setTubeURL($videoURL);
+
+                    array_push($array,$ucVid);
+                    
+                    
+                }
+                
+                echo json_encode(array("Videos"=>$array,"TotalCount"=>$cat['ROWS'],"error"=>"false"));
+            }
+            
+        }
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////// END of UCVIDEOS API ///////////////////////////////////////////////////////////////////
+
+
 
 		
 		
 		
 ///////////////////////////////////////////////////////// START CLIENT APIs ///////////////////////////////////////////////////////////////////		
+		
+		
+		/////////START DEVICE REGISTRATION///////////////////////////////////////////////////////////
 		
 		else if($_SERVER['REQUEST_METHOD'] == 'POST' && $data['isAgreement'] == 'true'){
 			$devID = $data['DeviceID'];
@@ -496,8 +598,9 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 				
 				
 				
-		}
-		
+		  }
+		  
+		  /////////END DEVICE REGISTRATION///////////////////////////////////////////
 			
 			
 			
@@ -775,110 +878,6 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 			}
 		
 		
-
-
-//////////////////////////////////////////////////////////////////////////////////// UCVIDEOS API //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-			else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['UCVideos'] == "true" || $_SERVER['REQUEST_METHOD'] == 'POST' && $data['UCVideos'] == "true"){
-							
-// 									$devID = $data['DeviceID'];
-// 									$hashTag = $data['HashTag'];
-// 									$dist = $data['District'];
-// 									$div = $data['Division'];
-// 									$start = $data['Start'];
-// 									$end = $data['End'];
-// 									$div = $_GET['d'];
-						
-						
-									
-									
-									if(!empty($_GET['UCVideos'])){
-									    $district = $_GET['District'];
-									    if(!empty($_GET['End']) && !empty($_GET['Start'])){
-									        $start = $_GET['Start'];
-									        $end = $_GET['End'];
-									    }else{
-									        $start = 0;
-									        $end = 5;
-									    }
-									}else if(!empty($data['District'])){
-									    $district = $data['District'];
-									    if(!empty($data['End']) && !empty($data['Start'])){
-									        $start = $data['Start'];
-									        $end = $data['End'];
-									    }else{
-									        $start = 0;
-									        $end = 5;
-									    }
-									}
-						
-			                         
-									
-									$array = array();
-									//$query = "SELECT SQL_CALC_FOUND_ROWS * FROM `UCVideos` WHERE `PoliceDivision` = '$div' AND `VideoID` != '0' AND `VideoDate` > DATE_FORMAT(NOW(), '%b %e, %Y') ORDER BY STR_TO_DATE( `VideoDate` , '%b %e, %Y' ) DESC LIMIT $start,$end";
-									if(!empty($district)){
-									    $query = "SELECT SQL_CALC_FOUND_ROWS * FROM `UCVideos` WHERE `VideoID` != '0' AND `DistrictNumber` = '$district'  ORDER BY  `TimeStamp` DESC LIMIT $start,$end";
-									    
-									}else{
-									    $query = "SELECT SQL_CALC_FOUND_ROWS * FROM `UCVideos` WHERE `VideoID` != '0' AND `DistrictNumber` != 0  ORDER BY  `TimeStamp` DESC LIMIT $start,$end";
-									    
-									}
-									
-									
-									$cquery = "SELECT FOUND_ROWS() AS ROWS";
-									$result = mysqli_query($CONN, $query) or die('Bad Query '.mysql_error());
-									$cresult = mysqli_query($CONN, $cquery);
-										$cat = mysqli_fetch_array($cresult);
-										if(mysqli_num_rows($result) > 0){
-											while($row = mysqli_fetch_array($result)){
-												$id = $row['ID'];
-												$title = $row['VideoTitle'];
-												
-												if(strpos($title," DC ") >=1){
-												    $txt = explode(" DC",$title);
-												    $title = $txt[0];
-												}
-												
-												
-												
-												$captionURL = $row['VideoImageURL'];
-												$videoDate = $row['VideoDate'];
-												$crimeT = $row['CrimeType'];
-												$vid_ID = $row['VideoID'];
-												
-												$chg = "SELECT `Description` FROM `NewsStory` WHERE `TubeURL` LIKE '%$vid_ID%' LIMIT 0,1";
-												$r_chg = mysqli_query($CONN, $chg);
-												
-												if(mysqli_num_rows($r_chg) <= 0){
-												    $desc = cleanUpHTML(utf8_encode($row['Description']));
-												}else{
-												    $azzy = mysqli_fetch_array($r_chg);
-												    $desc = cleanUpHTML(utf8_encode($azzy['Description']));
-												}
-												
-												
-												$videoURL = "https://www.youtube.com/embed/".$vid_ID;
-												$divv = convertdiv($row['DistrictNumber']);
-												
-												
-												$story = array("ID"=>$id,"Title"=>$title,"Description"=>$desc,"CaptionURL"=>$captionURL,
-																"VideoDate"=>$videoDate,"CrimeType"=>$crimeT,"VideoURL"=>$videoURL,"Division"=>$divv);
-												array_push($array,$story);
-												
-											}
-											
-												echo json_encode(array("Videos"=>$array,"TotalCount"=>$cat['ROWS'],"error"=>"false"));
-										}
-									
-								}
-
-
-
-//////////////////////////////////////////////////////////////////////////////// END of UCVIDEOS API ///////////////////////////////////////////////////////////////////
-
 
 
 
