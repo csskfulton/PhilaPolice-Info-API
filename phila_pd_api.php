@@ -7,6 +7,7 @@
         include('PSAObject.php');
         include('CalendarObject.php');
         include('UCVideoObject.php');
+        include('ShootingObject.php');
     
 	    // MySQL Server Settings
         define("MYSQL_SERVER", 'localhost');
@@ -560,7 +561,103 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 
 
 
-		
+
+        
+        
+//////////////////////////////////////////////////////////////////////////////////// START SHOOTING API //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        
+        
+        
+        else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['Shooting'] == "true" || $_SERVER['REQUEST_METHOD'] == 'POST' && $data['Shooting'] == "true")
+        {
+            
+            
+            if(!empty($_GET['Latest'])){
+                $isLate = $_GET['Latest'];
+                if($isLate == "true"){
+                    $isLate = "true";
+                }else{
+                    // NOT equal to true
+                }
+                
+               
+            }else if(!empty($data['Latest'])){
+                $isLate = $data['Latest'];
+                if($isLate == "true"){
+                    $isLate = "true";
+                }else{
+                    // NOT equal to true
+                }
+                
+            }
+            
+            if($isLate == "true"){
+                
+                $objArr = array();
+                $sel = "SELECT `Hash` FROM `CurrentHash` WHERE `HashName` = 'Shootings'";
+                $resHash = mysqli_query($CONN, $sel) or die('Bad Query '.mysql_error());
+                $hast = mysqli_fetch_array($resHash);
+                $hash = $hast['Hash'];
+                
+                $sql = "SELECT `ID`,`TimeStamp`,`DistrictNumber`,`CrimeTime`,`DCNumber`,`CrimeDate`,`Race`,`Gender`,`Age`,`Wound`,`isOfficerInvolved`,`LocationAddress`,`LocationX`,`LocationY`,`isFatal` FROM `Shooting` WHERE `HashTag` = '$hash'";
+                $resLat = mysqli_query($CONN, $sql) or die('Bad Query '.mysql_error());
+                if(mysqli_num_rows($resLat) >=1){
+                    
+                    while($row = mysqli_fetch_array($resLat)){
+                        $shootObj = new ShootingObject();
+                        $shootObj->setShootingID($row['ID']);
+                        $shootObj->setTimeStamp($row['TimeStamp']);
+                        $shootObj->setDistrictNumber($row['DistrictNumber']);
+                        $shootObj->setCrimeTime($row['CrimeTime']);
+                        $shootObj->setDCNumber($row['DCNumber']);
+                        $newDate = date("D. M j, Y", strtotime($row['CrimeDate']));
+                        $shootObj->setCrimeDate($newDate);
+                        $race = $row['Race'];
+                        if($race == "B"){
+                            $race = "black";
+                        }else if($race == "W"){
+                            $race = "white";
+                        }else if($race == "A"){
+                            $race = "asian";
+                        }
+                        $shootObj->setRace($race);
+                        $shootObj->setGender($row['Gender']);
+                        $shootObj->setAge($row['Age']);
+                        $shootObj->setWound($row['Wound']);
+                        $shootObj->setisOfficerInvolved($row['isOfficerInvolved']);
+                        $shootObj->setLocationAddress($row['LocationAddress']);
+                        $shootObj->setLocationX($row['LocationX']);
+                        $shootObj->setLocationY($row['LocationY']);
+                        $shootObj->setisFatal($row['isFatal']);
+                        array_push($objArr,$shootObj);
+                    }
+                    
+                    
+                    echo json_encode(array("Shootings"=>$objArr));
+                    
+                }else{
+                    // no record returned
+                }
+                
+                
+                
+            }
+                
+            
+            
+            
+            
+        }
+        
+        
+        
+        
+//////////////////////////////////////////////////////////////////////////////// END of SHOOTING API ///////////////////////////////////////////////////////////////////
+        
+        
+        
+        
+        
 		
 		
 ///////////////////////////////////////////////////////// START CLIENT APIs ///////////////////////////////////////////////////////////////////		
