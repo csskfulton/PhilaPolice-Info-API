@@ -8,6 +8,7 @@
         include('CalendarObject.php');
         include('UCVideoObject.php');
         include('ShootingObject.php');
+        include('CrimeObject.php');
     
 	    // MySQL Server Settings
         define("MYSQL_SERVER", 'localhost');
@@ -71,6 +72,26 @@
 
 			    return $div;
 
+			}
+			
+			
+			function convertDis($zig){
+			    
+			    $dNum = $zig;
+			    
+			    if($dNum == "1"){
+			        $dNum = "1st";
+			    }else if($dNum == "2"){
+			        $dNum = "2nd";
+			    }else if($dNum == "3"){
+			        $dNum = "3rd";
+			    }else if($dNum == "22"){
+			        $dNum = "22nd";
+			    }else{
+			        $dNum .= "th";
+			    }
+			    
+			    return $dNum;
 			}
     				
     				
@@ -599,7 +620,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                 $hast = mysqli_fetch_array($resHash);
                 $hash = $hast['Hash'];
                 
-                $sql = "SELECT `ID`,`TimeStamp`,`DistrictNumber`,`CrimeTime`,`DCNumber`,`CrimeDate`,`Race`,`Gender`,`Age`,`Wound`,`isOfficerInvolved`,`LocationAddress`,`LocationX`,`LocationY`,`isFatal` FROM `Shooting` WHERE `HashTag` = '$hash'";
+                $sql = "SELECT * FROM `Shooting` WHERE `HashTag` = '$hash'";
                 $resLat = mysqli_query($CONN, $sql) or die('Bad Query '.mysql_error());
                 if(mysqli_num_rows($resLat) >=1){
                     
@@ -607,9 +628,17 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                         $shootObj = new ShootingObject();
                         $shootObj->setShootingID($row['ID']);
                         $shootObj->setTimeStamp($row['TimeStamp']);
-                        $shootObj->setDistrictNumber($row['DistrictNumber']);
+                        $shootObj->setIsInside($row['isInside']);
+                        $shootObj->setIsOutside($row['isOutside']);
+                        $num = convertDis($row['DistrictNumber']);
+                        $shootObj->setDistrictNumber($num);
                         $shootObj->setCrimeTime($row['CrimeTime']);
-                        $shootObj->setDCNumber($row['DCNumber']);
+                        $dcNum = $row['DCNumber'];
+                        $Fdate = substr($dcNum, 0, 4);
+                        $Fdistrict = substr($dcNum, 4, 2);
+                        $Frest = substr($dcNum, 6, 7);
+                        $DCN = $Fdate."-".$Fdistrict."-".$Frest;
+                        $shootObj->setDCNumber($DCN);
                         $newDate = date("D. M j, Y", strtotime($row['CrimeDate']));
                         $shootObj->setCrimeDate($newDate);
                         $race = $row['Race'];
@@ -621,14 +650,32 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                             $race = "asian";
                         }
                         $shootObj->setRace($race);
-                        $shootObj->setGender($row['Gender']);
+                        if($row['Gender'] == "M"){
+                            $shootObj->setGender("male");
+                        }else if($row['Gender'] == "F"){
+                            $shootObj->setGender("female");
+                        }
+                        
                         $shootObj->setAge($row['Age']);
                         $shootObj->setWound($row['Wound']);
-                        $shootObj->setisOfficerInvolved($row['isOfficerInvolved']);
-                        $shootObj->setLocationAddress($row['LocationAddress']);
+                        $isOFF = $row['isOfficerInvolved'];
+                        if($isOFF == "0" || $isOFF == 0){
+                            $isOFF = "false";
+                        }else if($isOFF == "1" || $isOFF == 1){
+                            $isOFF = "true";
+                        }
+                        $shootObj->setisOfficerInvolved($isOFF);
+                        $loca = str_replace(" BLOCK"," blk of",$row['LocationAddress']);
+                        $shootObj->setLocationAddress($loca);
                         $shootObj->setLocationX($row['LocationX']);
                         $shootObj->setLocationY($row['LocationY']);
-                        $shootObj->setisFatal($row['isFatal']);
+                        $isFat = $row['isFatal'];
+                        if($isFat == "0" || $isFat == 0){
+                            $isFat = "false";
+                        }else if($isFat == "1" || $isFat == 1){
+                            $isFat = "true";
+                        }
+                        $shootObj->setisFatal($isFat);
                         array_push($objArr,$shootObj);
                     }
                     
@@ -654,6 +701,128 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
         
 //////////////////////////////////////////////////////////////////////////////// END of SHOOTING API ///////////////////////////////////////////////////////////////////
         
+        
+        
+
+        
+        
+        
+//////////////////////////////////////////////////////////////////////////////////// START CRIMES DATA API //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        
+        
+        
+        
+        
+        else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['CrimeIncidents'] == "true" || $_SERVER['REQUEST_METHOD'] == 'POST' && $data['CrimeIncidents'] == "true")
+        {
+            
+            if(!empty($_GET['Latest'])){
+                $isLate = $_GET['Latest'];
+                if($isLate == "true"){
+                    $isLate = "true";
+                }else{
+                    // NOT equal to true
+                }
+                
+                
+            }else if(!empty($data['Latest'])){
+                $isLate = $data['Latest'];
+                if($isLate == "true"){
+                    $isLate = "true";
+                }else{
+                    // NOT equal to true
+                }
+                
+            }
+ 
+                if(!empty($_GET['DistrictNumber'])){
+                    
+                    if(preg_match(NUM_ONLY, $_GET['DistrictNumber'])){
+                        $dNum = $_GET['DistrictNumber']; 
+                    }else{
+                        $dNum = 0; 
+                    }
+                    
+                    
+                }else if(!empty($data['DistrictNumber'])){
+                    
+                    if(preg_match(NUM_ONLY, $data['DistrictNumber'])){
+                        $dNum = $data['DistrictNumber'];
+                    }else{
+                        $dNum = 0;
+                    }
+
+                }
+ 
+            
+            if($isLate == "true"){
+               
+                $objArray = array();
+                $query = "SELECT `Hash` FROM `CurrentHash` WHERE `HashName` = 'CrimeIncidents'";
+                $r_hash = mysqli_query($CONN, $query);
+                
+                if(mysqli_num_rows($r_hash) >=1){
+                    
+                    $var = mysqli_fetch_array($r_hash);
+                    $hash = $var['Hash'];
+                    
+                    if($dNum != 0){
+                        $sql = "SELECT SQL_CALC_FOUND_ROWS `ID`,`TimeStamp`,`DistrictNumber`,`PSAArea`,`DispatchTime`,`DispatchDate`,`AddressBlock`,`CrimeName`,`CrimeCode`,`LocationX`,`LocationY` FROM `CrimeIncidents` WHERE `HashTag` = '$hash' AND `DistrictNumber` = '$dNum'";
+                        
+                    }else{
+                        $sql = "SELECT SQL_CALC_FOUND_ROWS `ID`,`TimeStamp`,`DistrictNumber`,`PSAArea`,`DispatchTime`,`DispatchDate`,`AddressBlock`,`CrimeName`,`CrimeCode`,`LocationX`,`LocationY` FROM `CrimeIncidents` WHERE `HashTag` = '$hash'";
+                        
+                    }
+                    $sql_c = "SELECT FOUND_ROWS() AS ROWS";
+                    $rez = mysqli_query($CONN,$sql);
+                    $rez_c = mysqli_query($CONN,$sql_c);
+                    $roww_c = mysqli_fetch_array($rez_c);
+                    
+                    while($roww = mysqli_fetch_array($rez)){
+                        $crimeObj = new CrimeObject();
+                        $crimeObj->setCrimeID($roww['ID']);
+                        $crimeObj->setTimeStamp($roww['TimeStamp']);
+                        $crimeObj->setDistrictNumber($roww['DistrictNumber']);
+                        $crimeObj->setPSAArea($roww['PSAArea']);
+                        $crimeObj->setDispatchTime($roww['DispatchTime']);
+                        $crimeObj->setDispatchDate($roww['DispatchDate']);
+                        $crimeObj->setAddress($roww['AddressBlock']);
+                        $crimeObj->setCrimeType($roww['CrimeName']);
+                        $crimeObj->setCrimeCode($roww['CrimeCode']);
+                        $crimeObj->setLocationX($roww['LocationX']);
+                        $crimeObj->setLocationY($roww['LocationY']);
+                        array_push($objArray,$crimeObj);
+
+                        
+                    }
+                    
+                    echo json_encode(array("CrimeIncidents"=>$objArray,"TotalCount"=>$roww_c['ROWS']));
+                    
+                }else{
+                    // NO HAS RETURNED
+                }
+                
+                
+            
+            }
+            
+            
+            
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+//////////////////////////////////////////////////////////////////////////////// END of CRIMES DATA API ///////////////////////////////////////////////////////////////////
         
         
         
