@@ -1,0 +1,1338 @@
+#!/usr/bin/php
+
+<?php
+
+//		include('../public_html/apps/philapd/php/libs/rss_php.php');				/////RSS DOM Lib
+//		include('../public_html/apps/philapd/php/libs/simplehtmldom.php');		/////HTML DOM Lib
+//		include('../public_html/apps/philapd/php/conn_db_sett.php'); 				/////DB Connection Script
+		
+		include('scripts/rss_php.php');				/////RSS DOM Lib
+		include('scripts/simplehtmldom.php');		/////HTML DOM Lib
+		include('scripts/conn.php'); 				/////DB Connection Script
+		
+		//$RSS_URL = "https://10.0.0.206/phillyPD/test";
+		$RSS_URL = "https://pr.phillypolice.com/feed/";	//SITE URL
+		
+		$HASH = sha1(time());
+
+	////////////////////////////////////////////START of FUNCTIONS/////////////////////////////////////////////////////
+		
+		function writeToLog($s_txt){
+			file_put_contents('php/'.'p_pd.log', $s_txt."\n",FILE_APPEND);
+		}
+		
+		function wcType($text){
+			if(strpos($text, "Robbery")){
+				return "Robbery";
+			}
+			if(strpos($text, "Burglary")){
+				return "Burglary";
+			}
+			if(strpos($text, "Theft")){
+				return "Theft";
+			}
+			if(strpos($text, "Shooting")){
+				return "Shooting";
+			}
+			if(strpos($text, "Assault")){
+				return "Assault";
+			}
+			if(strpos($text, "Robberies")){
+			    return "Robberies";
+			}
+			if(strpos($text, "Burglaries")){
+			    return "Burglary";
+			}
+			if(strpos($text, "Sexual Assault")){
+			    return "Sexual Assault";
+			}
+			if(strpos($text, "Counterfeiting")){
+			    return "Fraud";
+			}
+			if(strpos($text, "Aggravated Assault")){
+			    return "Assault";
+			}
+			if(strpos($text, "Fraud")){
+			    return "Fraud";
+			}
+			if(strpos($text, "Vandalism")){
+			    return "Vandalism";
+			}
+			
+			return $text;
+		}
+		
+		function getDISnum($title){
+			
+			if(strpos($title, "18th District")>=1){
+				return '18';	
+			}
+			
+			if(strpos($title, "16th District")>=1){
+				return '16';
+			}
+			
+			if(strpos($title, "25th District")>=1){
+				return '25';
+			}
+			if(strpos($title, "17th District")>=1){
+				return '17';
+			}
+
+			if(strpos($title, "24th District")>=1){
+				return '24';	
+			}
+			
+			if(strpos($title, "19th District")>=1){
+				return '19';
+			}
+			
+			if(strpos($title, "15th District")>=1){
+				return '15';
+			}
+			
+			if(strpos($title, "26th District")>=1){
+				return '26';
+			}
+
+			if(strpos($title, "22nd District")>=1){
+				return '22';
+			}
+			
+			if(strpos($title, "39th District")>=1){
+				return '39';
+			}
+			if(strpos($title, "35th District")>=1){
+				return '35';
+			}
+			if(strpos($title, "14th District")>=1){
+				return '14';
+			}
+
+			if(strpos($title, "12th District")>=1){
+				return '12';
+			}
+			if(strpos($title, "2nd District")>=1){
+				return '2';
+			}
+			if(strpos($title, "7th District")>=1){
+				return '7';
+			}
+			if(strpos($title, "8th District")>=1){
+				return '8';	
+			}
+			
+			if(strpos($title, "1st District")>=1){
+				return '1';
+			}
+			if(strpos($title, "3rd District")>=1){
+				return '3';
+			}
+			if(strpos($title, "5th District")>=1){
+				return '5';
+			}
+			if(strpos($title, "9th District")>=1){
+				return '9';	
+			}
+			if(strpos($title, "6th District")>=1){
+				return '6';
+			}
+			
+			
+		}
+		
+		function fixCAP($var){
+		    $nd = $var;
+		    
+		    if($var == "missing person"){
+		        $nd = "Missing Person";
+		    }
+		    
+		    if($var == "robbery"){
+		        $nd = "Robbery";
+		    }
+		    
+		    if($var == "theft"){
+		        $nd = 'Theft';
+		    }
+		    
+		    return $nd;
+		}
+		
+		
+		function trimIT($param) {
+		    $total = $param;
+		    
+		    if(strpos($total, "Wanted: ") !== false){
+		        $total = str_replace("Wanted: ","",$total);
+		        
+		    }
+		    
+		    if(strpos($total, " [VIDEO]")){
+		        $total = str_replace(" [VIDEO]","",$total);
+		    }
+		    
+		    $last = html_entity_decode($total,ENT_QUOTES);
+		    
+		    
+		    return $last;
+		    
+		    
+		}
+		
+		function makeEmailStr($dNum, $psa){
+		    $fg = $dNum;
+		    
+		    if($fg == "5"){
+		        $fg = "05";
+		    }
+		    if($fg == "2"){
+		        $fg = "02";
+		    }
+		    if($fg == "7"){
+		        $fg = "07";
+		    }
+		    if($fg == "8"){
+		        $fg = "08";
+		    }
+		    if($fg == "6"){
+		        $fg = "06";
+		    }
+		    if($fg == "9"){
+		        $fg = "09";
+		    }
+		    if($fg == "1"){
+		        $fg = "01";
+		    }
+		    if($fg == "3"){
+		        $fg = "03";
+		    }
+		    $num = str_replace(" ","",$fg);
+		    $ss = str_replace(" ","",$psa);
+		    $pp = str_replace("PSA","",$ss);
+		    return "ppd.".$num."_psa".$pp."@phila.gov";
+		}
+		
+		function makeEmailStrCAP($dNum){
+		    $fg = $dNum;
+		    
+		    if($fg == "5"){
+		        $fg = "05";
+		    }
+		    if($fg == "2"){
+		        $fg = "02";
+		    }
+		    if($fg == "7"){
+		        $fg = "07";
+		    }
+		    if($fg == "8"){
+		        $fg = "08";
+		    }
+		    if($fg == "6"){
+		        $fg = "06";
+		    }
+		    if($fg == "9"){
+		        $fg = "09";
+		    }
+		    if($fg == "1"){
+		        $fg = "01";
+		    }
+		    if($fg == "3"){
+		        $fg = "03";
+		    }
+		    $num = str_replace(" ","",$fg);
+		    
+		    return "police.co_".$num."@phila.gov";
+		}
+			
+	////////////////////////////////////////////END of FUNCTIONS/////////////////////////////////////////////////////	
+	
+		
+		
+    ///////////////////////////////////////////////////// START NEWS FEED SCRAPER //////////////////////////////////////////////////////
+	
+		date_default_timezone_set('US/Eastern');
+		writeToLog("\n"."////STARTING SCRAPER SCRIPT//// ");
+		writeToLog("StartTimeStamp: ".time());
+		$rss = new rss_php;
+		$rss->load($RSS_URL);
+		writeToLog("Loading Page....: ".$RSS_URL);
+		$items = $rss->getItems();
+
+			$ct = count($items);
+			
+			$ctt = 0; //news stories inserted
+			$cff = 0; //news stories failed to insert
+			$caa = 0; // news stories that already exist
+			
+			writeToLog("NUMBER OF OBJs IN NEWS FEED: ".$ct);
+			
+				for($i=0;$i<$ct;$i++){
+	
+				    $title = trimIT($items[$i]['title']);
+					$DIS_NUM = getDISnum($title);
+					$link  = $items[$i]['link'];
+					$jeff = str_replace("'", "\\'",$items[$i]['description']);  // mysql hack for apostrophe
+					$desc = html_entity_decode($jeff,ENT_QUOTES);
+					$obj_id = $items[$i]['guid'];
+					$author = $items[$i]['dc:creator'];
+					$pubDate =  date('Y-m-d H:i:s', strtotime($items[$i]['pubDate']));
+					$category = fixCAP($items[$i]['category']);
+	//				$txt = $items[$i]['wfw:commentRss']; // RSS channel for the story it self
+					$isWanted = strpos($title, "Wanted: ");
+					$isVideo = strpos($title, " [VIDEO]");
+					$html = str_get_html($items[$i]['description']);
+					$ext = str_get_html($items[$i]['content:encoded']);
+					$imgURL = $html->find('img',0)->src;
+					$tubURL = $ext->find('iframe',0)->src;
+					$shortTxT = $html->plaintext;
+					$longTxT = $ext->plaintext;
+					//$lgTxT = htmlspecialchars_decode($longTxT,ENT_QUOTES);
+					$lgTxT = mysql_real_escape_string(iconv("UTF-8", "ISO-8859-1//TRANSLIT", $longTxT));
+				
+					$isThere = "SELECT `GUID` FROM `NewsStory` WHERE `GUID` = '$obj_id'";
+					$answ = mysql_query($isThere);
+					
+						if(mysql_num_rows($answ) <= 0){
+							
+							$in_rec = "INSERT INTO `NewsStory` (`DistrictNumber`,`Title`,`URL`,`Description`,`GUID`,`PubDate`,`Category`,`ImageURL`,`TubeURL`,`ScrapeHash`,`StoryAuthor`)
+											VALUES('$DIS_NUM','$title','$link','$lgTxT','$obj_id','$pubDate','$category','$imgURL','$tubURL','$HASH','$author')";
+						 	
+						 	$res = mysql_query($in_rec) or die(mysql_error());
+						 		
+						 		if($res){
+							 		$ctt++;
+									// $image = file_get_contents($imgURL);
+									// file_put_contents('imgs/test'.$i.'.jpg', $image);
+	
+						 		}else{
+							 		$cff++;
+						 		}
+						
+						}else if(mysql_num_rows($answ) == 1){
+							$caa++;
+						} 
+
+		
+					}
+
+			
+				
+						writeToLog("RSS NEWS SCRAPER STOPPED.....");
+						writeToLog("NUMBER OF OBJs INSERTED: ".$ctt);
+						writeToLog("NUMBER OF OBJs FAILED TO INSERTED: ".$cff);
+						writeToLog("NUMBER OF OBJs ALREADY EXIST: ".$caa);
+				
+				
+				
+				// UPDATE SCRAPE HASH ONLY IF A NEW STORY WAS INSERT INTO THE DATABASE
+				if($ctt >=1){
+						
+					$up_hash = "INSERT INTO `ScrapeHashHistory` (`HashName`,`HashTag`) VALUES ('NewsStory','$HASH')";
+					$is_good = mysql_query($up_hash);
+						
+						if($is_good){
+								$is_there = "SELECT `HashName` FROM `CurrentHash` WHERE `HashName` = 'NewsStory'";
+								$is_res = mysql_query($is_there);
+									if(mysql_num_rows($is_res) >=1){
+										$up_date = "UPDATE `CurrentHash` SET `TimeStamp` = NOW(), `Hash` = '$HASH' WHERE `HashName` = 'NewsStory'";
+										$res_fin = mysql_query($up_date);
+											if($res_fin){
+												writeToLog("HASH UPDATED FOR NewsStory TABLE IN DATABASE");
+											}else{
+												// FAILED TO UPDATE THE CURRENT HASH --
+											}
+											
+											
+									}else{
+										$in_to = "INSERT INTO `CurrentHash` (`HashName`,`Hash`)VALUES('NewsStory','$HASH')";
+										$res_d = mysql_query($in_to);
+											if($res_d){
+												writeToLog("HASH UPDATED FOR NewsStory TABLE IN DATABASE");
+											}else{
+												//Failed to insert --
+											}
+									
+									}
+									
+							
+							
+							
+						}
+				}
+				
+				
+///////////////////////////////////////////////////// END NEWS FEED SCRAPER //////////////////////////////////////////////////////
+				
+
+			
+//////////////////////////////////////////// START SHOOTINGS SCRAPE /////////////////////////////////////////////////////////
+				
+				
+				date_default_timezone_set('US/Eastern');
+				$td1 = date('Y-m-d');
+				$dd = date('l');
+				$pDate = strtotime('last '.$dd);
+				$td2 = date('Y-m-d',$pDate);
+				$SHct = 0;
+				
+				$curl = curl_init('https://phl.carto.com/api/v2/sql?q=SELECT%20*%20FROM%20shootings%20WHERE%20date_%20%3E=%20%27'.$td2.'%27%20AND%20date_%20%3C%20%27'.$td1.'%27');
+				curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+				curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
+				curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+				$curl_response = curl_exec($curl);
+				curl_close($curl);
+				$curl_jason = json_decode($curl_response, true);
+				
+				$arr = $curl_jason['rows'];
+				
+				foreach($arr as $feet){
+				    
+				    $d_id = $feet['cartodb_id'];
+				    $obj_id = $feet['objectid'];
+				    $year = $feet['year'];
+				    $dc_num = $feet['dc_key'];
+				    $c_code = $feet['code'];
+				    $snuff = explode("T",$feet['date_']);
+				    $d_date = $snuff[0];
+				    $race = $feet['race'];
+				    $gen = $feet['sex'];
+				    $age = $feet['age'];
+				    $wound = $feet['wound'];
+				    $isOffI = $feet['officer_involved'];
+				    $isOffenInj = $feet['offender_injured'];
+				    $isOffDead = $feet['offender_deceased'];
+				    $location = $feet['location'];
+				    $pointx = $feet['point_x'];
+				    $pointy = $feet['point_y'];
+				    $dist = $feet['dist'];
+				    $time_d = $feet['time'];
+				    $in = $feet['inside'];
+				    $out = $feet['outside'];
+				    $fatal = $feet['fatal'];
+				    
+				    $isT = "SELECT `DataID` FROM `Shooting` WHERE `DataID` = '$d_id' OR `ObjID` = '$obj_id'";
+				    $reg = mysql_query($isT);
+				    
+				    if(mysql_num_rows($reg) >= 1){
+				        // RECORD ALREADY EXIST
+				    }else{
+				        
+				        $in = "INSERT INTO `Shooting` (`DataID`,`ObjID`,`Year`,`DCNumber`,`CrimeCode`,`CrimeDate`,`Race`,
+                            `Gender`,`Age`,`Wound`,`isOfficerInvolved`,`isOffenderInj`,`isOffenderDec`,`LocationAddress`,
+                                `LocationX`,`LocationY`,`DistrictNumber`,`CrimeTime`,`isInside`,`isOutside`,`isFatal`,`HashTag`) VALUES('$d_id','$obj_id','$year',
+                                    '$dc_num','$c_code','$d_date','$race','$gen','$age','$wound','$isOffI','$isOffenInj','$isOffDead',
+                                        '$location','$pointx','$pointy','$dist','$time_d','$in','$out','$fatal','$HASH')";
+				        
+				        $isG = mysql_query($in);
+				            if($isG){
+				                $SHct ++;
+				            }
+				    }
+				    
+				    
+				    
+				}
+				
+				if($SHct >= 1){
+				    $up_hash = "INSERT INTO `ScrapeHashHistory` (`HashName`,`HashTag`) VALUES ('Shootings','$HASH')";
+				    $is_good = mysql_query($up_hash);
+				    
+				    if($is_good){
+				        $is_there = "SELECT `HashName` FROM `CurrentHash` WHERE `HashName` = 'Shootings'";
+				        $is_res = mysql_query($is_there);
+				        if(mysql_num_rows($is_res) >=1){
+				            $up_date = "UPDATE `CurrentHash` SET `TimeStamp` = NOW(), `Hash` = '$HASH' WHERE `HashName` = 'Shootings'";
+				            $res_fin = mysql_query($up_date);
+				            if($res_fin){
+				                writeToLog("HASH UPDATED FOR Shootings TABLE IN DATABASE");
+				            }else{
+				                // FAILED TO UPDATE THE CURRENT HASH --
+				            }
+				            
+				            
+				        }else{
+				            $in_to = "INSERT INTO `CurrentHash` (`HashName`,`Hash`)VALUES('Shootings','$HASH')";
+				            $res_d = mysql_query($in_to);
+				            if($res_d){
+				                writeToLog("HASH UPDATED FOR Shootings TABLE IN DATABASE");
+				            }else{
+				                //Failed to insert --
+				            }
+				            
+				        }
+				        
+				        
+				        
+				        
+				    }
+				}
+				
+				
+				
+				
+				
+				
+				
+////////////////////////////////////////////END SHOOTINGS SCRAPE ///////////////////////////////////////////////////////////////////////				
+				
+				
+				
+				
+				
+////////////////////////////////////////////////////////////START CRIME INCIDENTS //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+				
+				date_default_timezone_set('US/Eastern');
+				$pDate = strtotime('today - 2 days');
+				$td2z = date('Y-m-d',$pDate);
+				
+				$curl = curl_init('https://phl.carto.com/api/v2/sql?q=SELECT%20*%20FROM%20incidents_part1_part2%20WHERE%20dispatch_date%20%3E=%20%27'.$td2z.'%27');
+				curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+				curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
+				curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+				$curl_response = curl_exec($curl);
+				curl_close($curl);
+				$curl_jason = json_decode($curl_response, true);
+				
+				$d_arr = $curl_jason['rows'];
+				$rw_ct = 0;
+				foreach($d_arr as $tree){
+				    
+				    $d_id = $tree['cartodb_id'];
+				    $obj_id = $tree['objectid'];
+				    $dist = $tree['dc_dist'];
+				    $psa = $tree['psa'];
+				    $disTime = $tree['dispatch_time'];
+				    $disDate = $tree['dispatch_date'];
+				    $dc_key = $tree['dc_key'];
+				    $loca = $tree['location_block'];
+				    $crCode = $tree['ucr_general'];
+				    $cr_name = $tree['text_general_code'];
+				    $pointx = $tree['point_x'];
+				    $pointy = $tree['point_y'];
+				    
+				    $isT = "SELECT `DataID` FROM `CrimeIncidents` WHERE `DataID` = '$d_id' OR `ObjID` = '$obj_id'";
+				    $ret = mysql_query($isT);
+				    
+				    if(mysql_num_rows($ret) >=1){
+				        // RECORD EXIST
+				    }else{
+				        
+				        $inin = "INSERT INTO `CrimeIncidents` (`DataID`,`ObjID`,`DistrictNumber`,`PSAArea`,
+                                            `DispatchTime`,`DispatchDate`,`AddressBlock`,`CrimeCode`,`CrimeName`,
+                                                `LocationX`,`LocationY`,`HashTag`)VALUES('$d_id','$obj_id','$dist','$psa','$disTime','$disDate',
+                                                    '$loca','$crCode','$cr_name','$pointx','$pointy','$HASH')";
+				        $iS_g = mysql_query($inin);
+    				       
+    				        if($iS_g){
+    				            $rw_ct ++;
+    				        }
+				        
+				    }
+				    
+				}
+				
+				
+				if($rw_ct >= 1){
+				    $up_hash = "INSERT INTO `ScrapeHashHistory` (`HashName`,`HashTag`) VALUES ('CrimeIncidents','$HASH')";
+				    $is_good = mysql_query($up_hash);
+				    
+				    if($is_good){
+				        $is_there = "SELECT `HashName` FROM `CurrentHash` WHERE `HashName` = 'CrimeIncidents'";
+				        $is_res = mysql_query($is_there);
+				        if(mysql_num_rows($is_res) >=1){
+				            $up_date = "UPDATE `CurrentHash` SET `TimeStamp` = NOW(), `Hash` = '$HASH' WHERE `HashName` = 'CrimeIncidents'";
+				            $res_fin = mysql_query($up_date);
+				            if($res_fin){
+				                writeToLog("HASH UPDATED FOR CrimeIncidents TABLE IN DATABASE");
+				            }else{
+				                // FAILED TO UPDATE THE CURRENT HASH --
+				            }
+				            
+				            
+				        }else{
+				            $in_to = "INSERT INTO `CurrentHash` (`HashName`,`Hash`)VALUES('Shootings','$HASH')";
+				            $res_d = mysql_query($in_to);
+				            if($res_d){
+				                writeToLog("HASH UPDATED FOR CrimeIncidents TABLE IN DATABASE");
+				            }else{
+				                //Failed to insert --
+				            }
+				            
+				        }
+				        
+				        
+				        
+				        
+				    }
+				}
+				
+				
+				
+				
+				
+				
+				
+////////////////////////////////////////////////////////////END CRIME INCIDENTS //////////////////////////////////////////////////////////////////////////////////////////////////////
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+////////////////////////////////////////////////////////////// START DISTRICT PAGE SCRAPER  //////////////////////////////////////////////
+		
+	$sites = array(
+ 					  "http://www.phillypolice.com/districts/18th",
+ 					  "http://www.phillypolice.com/districts/25th",
+ 					  "http://www.phillypolice.com/districts/24th",
+ 					  "http://www.phillypolice.com/districts/26th",
+ 					  "http://www.phillypolice.com/districts/17th",
+  					  "http://www.phillypolice.com/districts/22nd",
+//				  "http://fuckwit.me/test.html"
+ 					  "http://www.phillypolice.com/districts/39th",
+ 					  "http://www.phillypolice.com/districts/35th",
+ 					  "http://www.phillypolice.com/districts/14th",
+ 					  "http://www.phillypolice.com/districts/19th",
+ 					  "http://www.phillypolice.com/districts/16th",
+ 					  "http://www.phillypolice.com/districts/12th",
+ 					  "http://www.phillypolice.com/districts/15th",
+ 					  "http://www.phillypolice.com/districts/3rd",
+ 					  "http://www.phillypolice.com/districts/6th",
+ 					  "http://www.phillypolice.com/districts/9th",
+ 					  "http://www.phillypolice.com/districts/2nd",
+ 					  "http://www.phillypolice.com/districts/5th",
+ 					  "http://www.phillypolice.com/districts/7th",
+ 					  "http://www.phillypolice.com/districts/8th",
+					  "http://www.phillypolice.com/districts/1st"
+					      
+					 );
+					 
+					 $loop_count = count($sites);
+			
+			
+			
+	/////////////////////////////DIRTy FOR LOOP BEGINS ////////////////////////////
+			
+			writeToLog("STARTING LOOP at: ".time());
+			writeToLog("SITES BEING SCRAPED: ".$loop_count.' '.time());
+			$alr = 0;		 
+			 
+			 for($oo=0;$oo<$loop_count;$oo++){
+			 		
+				$html = file_get_html($sites[$oo]);
+				writeToLog("CURRENTLY SCRAPING: ".$sites[$oo].' '.time());  
+				$infoDiv = $html->find('div.span3',1);
+				$addI = $infoDiv->find('p',0)->plaintext;
+				$loc_prts = explode("Google Maps", $addI);
+				$add_loc = trim($loc_prts[0]);
+				$add_prts = $loc_prts[1];
+				$adf = explode(" ", $add_prts);
+				$loc_phone = $adf[2];
+				$hdr_cont = $html->find('div#header-content');
+				$DIS_N = "";
+									
+	//////////////FETCHING THE District Number/////////////
+		
+			foreach($hdr_cont as $item){
+				$dis_txt = $item->find('div',5);
+				$num_arr = explode("District",$dis_txt->plaintext);
+				$dis_num = $num_arr[0];
+				
+				$pos = strpos($dis_num, "st");
+				$pos2 = strpos($dis_num, "th");
+				$pos3 = strpos($dis_num, "nd");
+				$pos4 = strpos($dis_num, "rd");
+				
+					if($pos >=1 ){
+						$dd_arr = explode("st", $dis_num);
+						$DIS_N = $dd_arr[0];
+					}
+						
+					if($pos2 >=1){
+						$d_arr = explode("th", $dis_num);
+						$DIS_N = $d_arr[0];
+					}
+					
+					if($pos3 >=1){
+						$ddd_arr = explode("nd", $dis_num);
+						$DIS_N = $ddd_arr[0];
+					}
+			
+					if($pos4 >=1){
+						$dddd_arr = explode("rd", $dis_num);
+						$DIS_N = $dddd_arr[0];
+					}
+		
+
+			}
+			
+			
+	//////////////END FETCHING THE District Number/////////////	
+             		
+
+	////////////////FETCHING Calendar Info ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+			$cal_info  = $html->find('div.span3',2);
+			
+			$meet_title = "";
+			$time_loc = "";
+			$addr = "";
+			$daa = 0; // cal record inserted
+			$dxx = 0; //insert failed for cal record
+			$dzz = 0; // record exist
+
+			foreach($cal_info->find('p') as $item){
+						
+					foreach($item->find('a') as $li){
+	             		$meet_title = $li->plaintext;
+						
+	       			}
+					
+					foreach($item->find('strong') as $stg){
+	             		$time_loc = $stg->plaintext;
+									
+	       			}
+					
+						$loc_add = explode("PM",$item->plaintext);
+						$addr = trim(preg_replace('/\s\s+/', ' ', $loc_add[1]));
+						
+						$is_cal = "SELECT `MeetDate`,`MeetLocation` FROM `Calendar` WHERE `MeetDate` = '$time_loc' AND `MeetLocation` = '$addr'";
+						$res_cal = mysql_query($is_cal);
+					
+							if(mysql_num_rows($res_cal) <= 0){
+								$sql_cal = "INSERT INTO `Calendar` (`DistrictNumber`,`Title`,`MeetDate`,`MeetLocation`,`ScrapeHash`)
+										VALUES('$DIS_N','$meet_title','$time_loc','$addr','$HASH')";
+						              
+						              if(!empty($meet_title)){
+						                  $res = mysql_query($sql_cal);
+						              }
+								
+									if($res){
+										// cal record inserted
+										$daa ++;
+									}else{
+										//insert faied for cal record
+										$dxx ++;
+									}	
+							}else{
+								//cal record exist
+								$dzz ++;
+							}
+							
+								
+					
+			} 
+
+							if($daa >=1 && $alr == 0){ /////////////////////CALENDAR HASH UPDATE
+								$alr ++;
+								
+								$up_uc = "INSERT INTO `ScrapeHashHistory` (`HashName`,`HashTag`)VALUES('Calendar','$HASH')";
+								$cal_res = mysql_query($up_uc);
+								
+									if($cal_res){
+											
+										$is_cal = "SELECT `HashName` FROM `CurrentHash` WHERE `HashName` = 'Calendar'";
+										$res_cal = mysql_query($is_cal);
+											
+											if(mysql_num_rows($res_cal)>=1){
+												
+													
+												$up_cal = "UPDATE `CurrentHash` SET `TimeStamp` = NOW(), `Hash` = '$HASH' WHERE `HashName` = 'Calendar'";
+												$res_up = mysql_query($up_cal);
+													
+													if($res_up){
+														//CALENDAR RECORD UPDATED	
+													}else{
+														//CALENDAR FAILED TO INSERT
+													}
+													
+											}else{
+													
+												$in_cal = "INSERT INTO `CurrentHash` (`HashName`,`Hash`)VALUES('Calendar','$HASH')";
+												$res_in = mysql_query($in_cal);
+													
+													if($res_in){
+														// CURRENT HASH UPDATED
+													}else{
+														// CURRENT HASH FAILED
+													}
+											}
+									}
+								
+							}/////////////////////END CALENDAR HASH UPDATE
+		
+		
+		
+////////////////END FETCHING Calendar Info ///////////////////////////////////////////////////////////////////////////////////////////////////////////		
+		
+		
+	///////////////Captain Info///////////////////////////////////////
+       
+			$picURL = "";
+			$cap_name = "";
+			
+		
+			$cap_img_info = $infoDiv->find('div',2);
+			$preFix = "https://www.phillypolice.com";
+				foreach($cap_img_info->find('img') as $img){
+					$pic_URL = $img->src;
+					//$picURL = $preFix.$pic_URL;								
+       			}
+	
+			
+			$cap_info = $infoDiv->find('div',3);
+			$cap_div = $cap_info->find('p',0);
+			foreach($cap_div->find('a') as $a){
+			   // $cap_name = $a->plaintext;
+			    $cap_name = str_replace("'", "\\'",$a->plaintext);
+       		}
+			
+			
+			
+			$id_dis = "SELECT `CaptainName` FROM `DistrictInfo` WHERE `CaptainName` = '$cap_name' AND `CaptainURL` = '$pic_URL'";
+			$res_pd = mysql_query($id_dis);
+				if(mysql_num_rows($res_pd)<=0){
+						
+				    $redd = makeEmailStrCAP($DIS_N);
+				    
+				    
+					$in_dis = "INSERT INTO `DistrictInfo` (`DistrictNumber`,`LocationAddress`,`Phone`,`EmailAddress`,`CaptainName`,`CaptainURL`)
+								VALUES('$DIS_N','$add_loc','$loc_phone','$redd','$cap_name','$pic_URL')";
+					
+					$res_dis = mysql_query($in_dis);
+					
+						if($res_dis){
+							// record inserted in district info
+						}else{
+							//record failed to insert
+						}			
+								
+				}else{
+					//district record already exist
+				}
+			
+			
+	///////////////END Captain Info///////////////////////////////////////		
+	
+	
+	///////////////////////////PSA Info //////////////////////////////////
+
+			$psa_CT = 0;
+			foreach($infoDiv->find('p.district-psa') as $psa){
+				foreach($psa->find('strong') as $p){
+				$lt_name = html_entity_decode($p->plaintext,ENT_QUOTES);
+				$arry = explode("-",$psa->plaintext); 	
+				$psa_area = $arry[0];
+				// echo $psa_area.'</br>';
+				// echo $p.'</br>';
+				
+					$is_psa = "SELECT `DistrictNumber`,`PSAAreaNum`,`LieutenantName` FROM `PSA` WHERE `DistrictNumber` = '$DIS_N' 
+								AND `PSAAreaNum` = '$psa_area' AND `LieutenantName` = '$lt_name'";
+					$res_is_chk = mysql_query($is_psa);
+					
+						if(mysql_num_rows($res_is_chk) <=0){
+						    $ccK = "SELECT `DistrictNumber`,`PSAAreaNum` FROM `PSA` WHERE `DistrictNumber` = '$DIS_N'
+						        AND `PSAAreaNum` = '$psa_area'";
+						    $reCCK = mysql_query($ccK);
+						    $happ = makeEmailStr($DIS_N,$psa_area);
+						      
+						      if(mysql_num_rows($reCCK) >=1){
+						          $upd = "UPDATE `PSA` SET `isCurrent` = 0 WHERE `PSAAreaNum` = '$psa_area' AND `DistrictNumber` != '$DIS_N'  AND `LieutenantName` = '$lt_name'";
+						          $in_psa = "INSERT INTO `PSA` (`DistrictNumber`,`PSAAreaNum`,`LieutenantName`,`ScrapeHash`,`isCurrent`,`Email`)VALUES('$DIS_N','$psa_area','$lt_name','$HASH',1,'$happ')";
+						          $res_upd = mysql_query($udp);
+						          $res_psa = mysql_query($in_psa);
+						              
+						              if($res_psa){
+						                  $psa_CT ++;
+						              }
+						          
+						      }else{
+						          $in_psa1 = "INSERT INTO `PSA` (`DistrictNumber`,`PSAAreaNum`,`LieutenantName`,`ScrapeHash`,`isCurrent`,`Email`)VALUES('$DIS_N','$psa_area','$lt_name','$HASH',1,'$happ')";
+						          $res_psa1 = mysql_query($in_psa1);
+						          
+						              if($res_psa1){
+						                  $psa_CT ++;
+						              }
+						      }
+						    
+						    
+						    
+							
+							
+// 								if($res_psa){
+// 									// insert the PAS record
+// 								}else{
+// 									// insert of PSA record failed
+// 								}
+								
+								
+								
+						}else if(mysql_num_rows($res_is_chk) >=1){
+						    // PSA Already UPDATE GOOD
+						        
+						        
+						      
+						        
+						    }
+						    
+						    
+						    
+						    
+						    
+						    
+						    
+						    
+						    
+						    
+							
+						    
+							
+									
+						}
+				
+					
+				
+									
+       			}	
+				
+       			if($psa_CT >= 1){
+				    $uop = "UPDATE `CurrentHash` SET `TimeStamp` = NOW(), `Hash` = '$HASH' WHERE `HashName` = 'PSA'";
+				    mysql_query($uop);
+				}
+       		
+			
+			
+		///////////////////////////END OF PSA Info //////////////////////////////////		
+
+		
+		
+		///////////////////////////CLEAN UP IMAGES THAT HAVE BLANK NEWS IDs //////////////////////////////////
+			
+			
+//        			$getNum = "SELECT `RemoteImageURL` FROM `Images` WHERE `NewsID` = 0";
+//        			$res = mysql_query($getNum);
+       			
+//        			while($row = mysql_fetch_array($res)){
+//        			    $x_id = $row['RemoteImageURL'];
+//        			    $q = "UPDATE `Images` SET `NewsID` = (SELECT `ID` FROM `NewsStory` WHERE `ImageURL` = '$x_id' LIMIT 1) WHERE '$x_id' = `RemoteImageURL`";
+//        			    mysql_query($q);
+//        			}
+
+       			
+                //// IMAGES ID CLEAN UP
+       			$fg = "SELECT `RemoteImageURL` FROM `Images` WHERE `NewsID` = 0";
+       			$res = mysql_query($fg);
+       			
+       			while($row = mysql_fetch_array($res)){
+       			    
+       			    $tol = $row['RemoteImageURL'];
+       			    
+       			    $r = "SELECT `ID` FROM `NewsStory` WHERE `ImageURL` = '$tol'";
+       			    $red = mysql_query($r);
+       			    
+       			    if(mysql_num_rows($red) >=1){
+       			        $raw = mysql_fetch_array($red);
+       			        $lo = $raw['ID'];
+       			        $up = "UPDATE `Images` SET `NewsID` = '$lo' WHERE `RemoteImageURL` = '$tol'";
+       			        mysql_query($up);
+       			    }
+       			    
+       			}
+       			    /////// UCVIDEOS ID CLEANUP
+       			    $fg = "SELECT `VideoID` FROM `UCVideos` WHERE `VideoID` IS NOT NULL";
+       			    $res = mysql_query($fg);
+       			    
+       			    while($row = mysql_fetch_array($res)){
+       			        
+       			        $tol = $row['VideoID'];
+       			        
+       			        $r = "SELECT `ID` FROM `NewsStory` WHERE `TubeURL` LIKE '%$tol%'";
+       			        $red = mysql_query($r);
+       			        
+       			        if(mysql_num_rows($red) >=1){
+       			            $raw = mysql_fetch_array($red);
+       			            $lo = $raw['ID'];
+       			            $up = "UPDATE `UCVideos` SET `NewsID` = '$lo' WHERE `VideoID` = '$tol'";
+       			            mysql_query($up);
+       			        }
+       			        
+       			        
+       			    }
+       			
+       			
+       			
+       			///////////////////////////END CLEAN UP IMAGES THAT HAVE BLANK NEWS IDs //////////////////////////////////
+			 
+
+			 
+					 
+	} 
+	
+	
+	
+	
+	
+		
+/////////////////////////////////////////////////////////////// END DISTRICT PAGE SCRAPER  //////////////////////////////////////////
+	
+	
+	
+	
+	
+				//$uchtml = file_get_html("https://10.0.0.206/phillyPD/uscvideos.html");
+				$uchtml = file_get_html("https://www.phillypolice.com/news/unsolved-crime-surveillance-videos/");
+				// $infoDiv = $html->find('div.span3',1);
+				// $addI = $infoDiv->find('p',0)->plaintext;
+				// $loc_prts = explode("Google Maps", $addI);
+				// $add_loc = $loc_prts[0];
+				// $add_prts = $loc_prts[1];
+				// $adf = explode(" ", $add_prts);
+				// $loc_phone = $adf[2];
+				// $hdr_cont = $html->find('div#header-content');
+				// $DIS_N = "";
+				
+				$ucc = 0; //video added successfully
+				$uxx = 0; //video insert failed
+				$uaa = 0;
+				
+				$div_box = $uchtml->find('div#video-cards-wrapper');
+					foreach ($div_box as $vid) {
+						$ape = $vid->find('.video-card-thumbnail');
+							foreach ($ape as $vv_item) {
+								//echo $vv_item;	
+								$vid_img = $vv_item->getElementByTagName('a')->getElementByTagName('img')->src;
+								$crd_title = $vv_item->getElementByTagName('div.video-card-title');
+								$d_txt = $crd_title->getElementByTagName('a')->getAttribute("data-description");
+								$vid_arr = $vv_item->getElementByTagName('div.video-card-meta')->plaintext;
+								$r = explode("&nbsp;&nbsp;&nbsp;", $vid_arr);
+								
+								$vi_date = $r[0];
+								$vit_type = wcType($crd_title);
+								$desc = utf8_decode($d_txt);
+								//$vid_img = $vv_item->getElementByTagName('a')->getElementByTagName('img')->src;
+								$vid_id = $crd_title->getElementByTagName('a')->getAttribute("data-videoid");
+								$vid_title = $crd_title->getElementByTagName('a')->getAttribute("data-title");
+								
+									
+								$ref = strip_tags($desc);
+
+								$is_ne = "SELECT `ID`,`DistrictNumber` FROM `NewsStory` WHERE `TubeURL` LIKE '%$vid_id%'";
+								$res_ne = mysql_query($is_ne);
+								
+								    if(mysql_num_rows($res_ne) >=1){
+								        $mRow = mysql_fetch_array($res_ne);
+								        $p_div = $mRow['DistrictNumber'];
+								        $nID = $mRow['ID'];
+								        
+								        $is_vid = "SELECT `VideoID` FROM `UCVideos` WHERE `VideoID` = '$vid_id'";
+								        $res_vi = mysql_query($is_vid);
+								        
+								        if(mysql_num_rows($res_vi) <=0){
+								            $in_vid = "INSERT INTO `UCVideos` (`VideoTitle`,`Description`,`VideoID`,`VideoDate`,`CrimeType`,`HashTag`,`VideoImageURL`,`DistrictNumber`,`NewsID`)
+													VALUES ('$vid_title','$ref','$vid_id','$vi_date','$vit_type','$HASH','$vid_img','$p_div','$nID')";
+								            
+								            if($vid_title !== 'Private video'){
+								                $res_in = mysql_query($in_vid);
+								                
+								                if($res_in){
+								                    $ucc ++; // video added successfully
+								                }else{
+								                    $uxx ++; //video faile to insert
+								                }
+								            }
+								            
+								            
+								            
+								        }else{
+								            $uaa ++;
+								            // video recod already exist
+								        }
+								        
+								        
+								    }else{
+								        
+								        $is_vid = "SELECT `VideoID` FROM `UCVideos` WHERE `VideoID` = '$vid_id'";
+								        $res_vi = mysql_query($is_vid);
+								        
+								        
+								        if(mysql_num_rows($res_vi) <=0){
+								            $p_div = 00;
+								            $nID = 0;
+								            $in_vid = "INSERT INTO `UCVideos` (`VideoTitle`,`Description`,`VideoID`,`VideoDate`,`CrimeType`,`HashTag`,`VideoImageURL`,`DistrictNumber`,`NewsID`)
+													VALUES ('$vid_title','$ref','$vid_id','$vi_date','$vit_type','$HASH','$vid_img','$p_div','$nID')";
+								            
+								            if($vid_title !== 'Private video'){
+								                $res_in = mysql_query($in_vid);
+								                
+								                if($res_in){
+								                    $ucc ++; // video added successfully
+								                }else{
+								                    $uxx ++; //video faile to insert
+								                }
+								            }
+								            
+								            
+								            
+								        }else{
+								            $uaa ++;
+								            // video recod already exist
+								        }
+								        
+								    }
+								
+									
+							
+							
+
+								
+							}
+					}				
+
+									if($ucc >=1){
+										$up_uc = "INSERT INTO `ScrapeHashHistory` (`HashName`,`HashTag`)VALUES('UCVideos','$HASH')";
+										$up_res = mysql_query($up_uc);
+											
+											if($up_res){
+												$sel_up = "SELECT `HashName` FROM `CurrentHash` WHERE `HashName` = 'UCVideos'";
+												$res_up = mysql_query($sel_up);
+													if(mysql_num_rows($res_up) >=1){
+														$up_up = "UPDATE `CurrentHash` SET `TimeStamp` = NOW(), `Hash` = '$HASH' WHERE `HashName` = 'UCVideos'";
+														$update_res = mysql_query($up_up);
+															if($update_res){
+																// CURRENT HASH FROM UCVIDEOS IS UPDATED
+															}else{
+																// CURRENT HASH FOR UCVIDEOS FAILED TO UPDATE
+															}
+													}else{
+														$in_rec = "INSERT INTO `CurrentHash` (`HashName`,`Hash`)VALUES('UCVideos','$HASH')";
+														$ress_in = mysql_query($in_rec);
+															if($ress_in){
+																// NEW CURRENT HASH UPDATED
+															}else{
+																// NEW USC HASH FAILED TO INSERT
+															}
+													}
+											}
+									}
+
+///////////////////////////////////////////////// MASTER HASH SETUP ////////////////////////////////////////////////////////////
+
+				$is_mas_hash = "SELECT `Hash` FROM `CurrentHash` WHERE `HashName` = 'MasterHash'";
+				$res_isgood = mysql_query($is_mas_hash);
+					
+					if(mysql_num_rows($res_isgood) >=1){
+						
+						$update_hash = "SELECT `HashName`,`Hash` FROM `CurrentHash` WHERE NOT `HashName` = 'MasterHash'";
+						$res_up_hash = mysql_query($update_hash);
+						$m_str = 0;
+							
+							if(mysql_num_rows($res_up_hash) >=1){
+									
+								$n_str_H = 0;
+								$c_str_H = 0;
+								$u_vid_H = 0;
+								$p_sa = 0;
+								$d_shoot = 0;
+								
+									while($rowp = mysql_fetch_array($res_up_hash)){
+										
+										if($rowp['HashName'] == 'NewsStory'){
+											$n_str_H = $rowp['Hash'];
+										}else if($rowp['HashName'] == 'UCVideos'){
+											$u_vid_H = $rowp['Hash'];
+										}else if($rowp['HashName'] == 'Calendar'){
+											$c_str_H = $rowp['Hash'];
+										}else if($rowp['HashName'] == 'PSA'){
+											$p_sa = $rowp['Hash'];
+										}else if($rowp['HashName'] == 'Shooting'){
+										    $d_shoot = $rowp['Hash'];
+										}else if($rowp['HashName'] == 'CrimeIncidents'){
+										    $p_ccc = $rowp['Hash'];
+										}
+										
+									}
+									
+									$m_str = sha1($n_str_H.$c_str_H.$u_vid_H.$p_sa.$d_shoot.$p_ccc);
+									$in_hash_m = "UPDATE `CurrentHash` SET `TimeStamp` = NOW(), `Hash` = '$m_str' WHERE `HashName` = 'MasterHash'";
+									$res_don = mysql_query($in_hash_m);
+									   
+									   if($res_don){
+									       
+									       $in_in = "INSERT INTO `ScrapeHashHistory` (`HashName`,`HashTag`)VALUES('MasterHash','$m_str')";
+									       mysql_query($in_in);
+									       
+									       $cal_sel = "SELECT `ID` FROM `Calendar` WHERE `MasterHash`= ''  AND `ScrapeHash` = '$HASH'";
+									       $re_cal = mysql_query($cal_sel);
+									       
+									       if(mysql_num_rows($re_cal) >=1){
+									           
+									           while($toi = mysql_fetch_array($re_cal)){
+									               $d_id = $toi['ID'];
+									               $upp = "UPDATE `Calendar` SET `MasterHash` = '$m_str' WHERE `ID` = '$d_id'";
+									               mysql_query($upp);
+									           }
+									           
+									       }
+									       
+									       //IMAGES ARE SCRAPED BY NODE
+// 									       $img_se = "SELECT `ID` FROM `Images` WHERE `MasterHash`= '' AND `ScrapeHash` = '$HASH'";
+// 									       $re_img = mysql_query($img_se);
+									      
+// 									       if(mysql_num_rows($re_img) >=1){
+									           
+// 									           while($tor = mysql_fetch_array($re_img)){
+// 									               $d_id = $tor['ID'];
+// 									               $upp = "UPDATE `Iamges` SET `MasterHash` = '$m_str' WHERE `ID` = '$d_id'";
+// 									               mysql_query($upp);
+// 									           }
+									           
+// 									       }
+									       
+									      
+									       $n_sto = "SELECT `ID` FROM `NewsStory` WHERE `MasterHash`= '' AND `ScrapeHash` = '$HASH'";
+									       $re_sto = mysql_query($n_sto);
+
+									       if(mysql_num_rows($re_sto) >=1){
+									           
+									           while($tot = mysql_fetch_array($re_sto)){
+									               $d_id = $tot['ID'];
+									               $upp = "UPDATE `NewsStory` SET `MasterHash` = '$m_str' WHERE `ID` = '$d_id'";
+									               mysql_query($upp);
+									           }
+									           
+									       }
+									       
+									       $psa_sel = "SELECT `ID` FROM `PSA` WHERE `MasterHash`= '' AND `ScrapeHash` = '$HASH'";
+									       $re_psa = mysql_query($psa_sel);
+									       
+									       if(mysql_num_rows($re_psa) >=1){
+									           
+									           while($toz = mysql_fetch_array($re_psa)){
+									               $d_id = $toz['ID'];
+									               $upp = "UPDATE `PSA` SET `MasterHash` = '$m_str' WHERE `ID` = '$d_id'";
+									               mysql_query($upp);
+									           }
+									           
+									       }
+									       
+									       $uc_vids = "SELECT `ID` FROM `UCVideos` WHERE `MasterHash`= '' AND `HashTag` = '$HASH'";
+									       $re_ucv = mysql_query($uc_vids);
+									       
+									       if(mysql_num_rows($re_ucv) >=1){
+									           
+									           while($tog = mysql_fetch_array($re_ucv)){
+									               $d_id = $tog['ID'];
+									               $upp = "UPDATE `UCVideos` SET `MasterHash` = '$m_str' WHERE `ID` = '$d_id'";
+									               mysql_query($upp);
+									           }
+									           
+									       }
+									       
+									       $shot_pu = "SELECT `ID` FROM `Shooting` WHERE `MasterHash`= '' AND `HashTag` = '$HASH'";
+									       $rx_ucx = mysql_query($shot_pu);
+									       
+									       if(mysql_num_rows($rx_ucx) >=1){
+									           
+									           while($tox = mysql_fetch_array($rx_ucx)){
+									               $x_id = $tox['ID'];
+									               $upx = "UPDATE `Shooting` SET `MasterHash` = '$m_str' WHERE `ID` = '$x_id'";
+									               mysql_query($upx);
+									           }
+									           
+									       }
+									       
+									       $gInc = "SELECT `ID` FROM `CrimeIncidents` WHERE `MasterHash`= '' AND `HashTag` = '$HASH'";
+									       $gIx = mysql_query($gInc);
+									       
+									       if(mysql_num_rows($gIx) >=1){
+									           
+									           while($toxx = mysql_fetch_array($gIx)){
+									               $xx_id = $toxx['ID'];
+									               $upxx = "UPDATE `CrimeIncidents` SET `MasterHash` = '$m_str' WHERE `ID` = '$xx_id'";
+									               mysql_query($upxx);
+									           }
+									           
+									       }
+									       
+									       
+									       
+									   }
+
+								}else{
+									///NO HASES EXIST AT ALL ???
+								}
+							
+
+					}else{
+							//// CREATE A HASH IF ONE DOES NOT EXIST
+							
+						$update_hash = "SELECT `HashName`,`Hash` FROM `CurrentHash` WHERE NOT `HashName` = 'MasterHash'";
+						$res_up_hash = mysql_query($update_hash);
+						$m_str = 0;
+							
+							if(mysql_num_rows($res_up_hash) >=1){
+									
+								$n_str_H = 0;
+								$c_str_H = 0;
+								$u_vid_H = 0;
+								$p_sa = 0;
+								
+									while($rowp = mysql_fetch_array($res_up_hash)){
+										
+										if($rowp['HashName'] == 'NewsStory'){
+											$n_str_H = sha1($rowp['Hash']);
+										}else if($rowp['HashName'] == 'UCVideos'){
+											$u_vid_H = sha1($rowp['Hash']);
+										}else if($rowp['HashName'] == 'Calendar'){
+											$c_str_H = sha1($rowp['Hash']);
+										}else if($rowp['HashName'] == 'PSA'){
+										    $p_sa = sha1($rowp['Hash']);
+										}else if($rowp['HashName'] == 'Shooting'){
+										    $d_shoot = $rowp['Hash'];
+										}
+										
+									}
+									
+									$m_str = sha1($n_str_H.$c_str_H.$u_vid_H.$p_sa.$d_shoot);
+									$in_MH = "INSERT INTO `CurrentHash` (`HashName`,`Hash`)VALUES('MasterHash','$m_str')";
+									mysql_query($in_MH);
+							
+							}else{
+								// NO OTHER HASES EXIST in the DATABASE
+							}
+						
+						
+						
+						
+						
+						
+						
+						
+					}					
+					
+					
+					
+				
+///////////////////////////////////////////////// END MASTER HASH SETUP ////////////////////////////////////////////////////////////					
+					
+									
+
+	
+
+
+
+
+
+?>
