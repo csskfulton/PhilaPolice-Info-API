@@ -2,23 +2,29 @@
 
 <?php
 
-//		include('../public_html/apps/philapd/php/libs/rss_php.php');				/////RSS DOM Lib
-//		include('../public_html/apps/philapd/php/libs/simplehtmldom.php');		/////HTML DOM Lib
-//		include('../public_html/apps/philapd/php/conn_db_sett.php'); 				/////DB Connection Script
-		
 		include('scripts/rss_php.php');				/////RSS DOM Lib
 		include('scripts/simplehtmldom.php');		/////HTML DOM Lib
-		include('scripts/conn.php'); 				/////DB Connection Script
+
+		define("MYSQL_SERVER", 'localhost');
+		define("MYSQL_USERNAME", 'gerry');
+		define("MYSQL_PASSWORD", 'Keithistheking');
+		define("MYSQL_DATABASE",'PhillyPolice');
 		
-		//$RSS_URL = "https://10.0.0.206/phillyPD/test";
+		$CONN = mysqli_connect(MYSQL_SERVER,MYSQL_USERNAME,MYSQL_PASSWORD,MYSQL_DATABASE);
+		
+		if(mysqli_connect_errno()){
+		    die($NO_CONNECTION. header('HTTP/1.1 403 Forbidden'));
+		}
+
 		$RSS_URL = "https://pr.phillypolice.com/feed/";	//SITE URL
+		//$RSS_URL = "http://10.20.30.11/feed.xml";	//SITE URL
 		
 		$HASH = sha1(time());
 
 	////////////////////////////////////////////START of FUNCTIONS/////////////////////////////////////////////////////
 		
 		function writeToLog($s_txt){
-			file_put_contents('php/'.'p_pd.log', $s_txt."\n",FILE_APPEND);
+			file_put_contents('p_pd.log', $s_txt."\n",FILE_APPEND);
 		}
 		
 		function wcType($text){
@@ -288,17 +294,17 @@
 					$shortTxT = $html->plaintext;
 					$longTxT = $ext->plaintext;
 					//$lgTxT = htmlspecialchars_decode($longTxT,ENT_QUOTES);
-					$lgTxT = mysql_real_escape_string(iconv("UTF-8", "ISO-8859-1//TRANSLIT", $longTxT));
+					$lgTxT = mysqli_real_escape_string($CONN, iconv("UTF-8", "ISO-8859-1//TRANSLIT", $longTxT));
 				
 					$isThere = "SELECT `GUID` FROM `NewsStory` WHERE `GUID` = '$obj_id'";
-					$answ = mysql_query($isThere);
+					$answ = mysqli_query($CONN, $isThere);
 					
-						if(mysql_num_rows($answ) <= 0){
+						if(mysqli_num_rows($answ) <= 0){
 							
 							$in_rec = "INSERT INTO `NewsStory` (`DistrictNumber`,`Title`,`URL`,`Description`,`GUID`,`PubDate`,`Category`,`ImageURL`,`TubeURL`,`ScrapeHash`,`StoryAuthor`)
 											VALUES('$DIS_NUM','$title','$link','$lgTxT','$obj_id','$pubDate','$category','$imgURL','$tubURL','$HASH','$author')";
 						 	
-						 	$res = mysql_query($in_rec) or die(mysql_error());
+						 	$res = mysqli_query($CONN, $in_rec) or die();
 						 		
 						 		if($res){
 							 		$ctt++;
@@ -309,7 +315,7 @@
 							 		$cff++;
 						 		}
 						
-						}else if(mysql_num_rows($answ) == 1){
+						}else if(mysqli_num_rows($answ) == 1){
 							$caa++;
 						} 
 
@@ -329,14 +335,14 @@
 				if($ctt >=1){
 						
 					$up_hash = "INSERT INTO `ScrapeHashHistory` (`HashName`,`HashTag`) VALUES ('NewsStory','$HASH')";
-					$is_good = mysql_query($up_hash);
+					$is_good = mysqli_query($CONN, $up_hash);
 						
 						if($is_good){
 								$is_there = "SELECT `HashName` FROM `CurrentHash` WHERE `HashName` = 'NewsStory'";
-								$is_res = mysql_query($is_there);
-									if(mysql_num_rows($is_res) >=1){
+								$is_res = mysqli_query($CONN, $is_there);
+									if(mysqli_num_rows($is_res) >=1){
 										$up_date = "UPDATE `CurrentHash` SET `TimeStamp` = NOW(), `Hash` = '$HASH' WHERE `HashName` = 'NewsStory'";
-										$res_fin = mysql_query($up_date);
+										$res_fin = mysqli_query($CONN, $up_date);
 											if($res_fin){
 												writeToLog("HASH UPDATED FOR NewsStory TABLE IN DATABASE");
 											}else{
@@ -346,7 +352,7 @@
 											
 									}else{
 										$in_to = "INSERT INTO `CurrentHash` (`HashName`,`Hash`)VALUES('NewsStory','$HASH')";
-										$res_d = mysql_query($in_to);
+										$res_d = mysqli_query($CONN, $in_to);
 											if($res_d){
 												writeToLog("HASH UPDATED FOR NewsStory TABLE IN DATABASE");
 											}else{
@@ -375,14 +381,19 @@
 				$pDate = strtotime('last '.$dd);
 				$td2 = date('Y-m-d',$pDate);
 				$SHct = 0;
+				$ssURL = 'https://phl.carto.com/api/v2/sql?q=SELECT%20*%20FROM%20shootings%20WHERE%20date_%20%3E=%20%27'.$td2.'%27%20AND%20date_%20%3C%20%27'.$td1.'%27';
+				writeToLog("Loading Page....: ".$ssURL);
 				
-				$curl = curl_init('https://phl.carto.com/api/v2/sql?q=SELECT%20*%20FROM%20shootings%20WHERE%20date_%20%3E=%20%27'.$td2.'%27%20AND%20date_%20%3C%20%27'.$td1.'%27');
+				
+				$curl = curl_init($ssURL);
 				curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 				curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
 				curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
 				$curl_response = curl_exec($curl);
 				curl_close($curl);
 				$curl_jason = json_decode($curl_response, true);
+				
+				
 				
 				$arr = $curl_jason['rows'];
 				
@@ -412,9 +423,9 @@
 				    $fatal = $feet['fatal'];
 				    
 				    $isT = "SELECT `DataID` FROM `Shooting` WHERE `DataID` = '$d_id' OR `ObjID` = '$obj_id'";
-				    $reg = mysql_query($isT);
+				    $reg = mysqli_query($CONN, $isT);
 				    
-				    if(mysql_num_rows($reg) >= 1){
+				    if(mysqli_num_rows($reg) >= 1){
 				        // RECORD ALREADY EXIST
 				    }else{
 				        
@@ -424,7 +435,7 @@
                                     '$dc_num','$c_code','$d_date','$race','$gen','$age','$wound','$isOffI','$isOffenInj','$isOffDead',
                                         '$location','$pointx','$pointy','$dist','$time_d','$in','$out','$fatal','$HASH')";
 				        
-				        $isG = mysql_query($in);
+				        $isG = mysqli_query($CONN, $in);
 				            if($isG){
 				                $SHct ++;
 				            }
@@ -436,14 +447,14 @@
 				
 				if($SHct >= 1){
 				    $up_hash = "INSERT INTO `ScrapeHashHistory` (`HashName`,`HashTag`) VALUES ('Shootings','$HASH')";
-				    $is_good = mysql_query($up_hash);
+				    $is_good = mysqli_query($CONN, $up_hash);
 				    
 				    if($is_good){
 				        $is_there = "SELECT `HashName` FROM `CurrentHash` WHERE `HashName` = 'Shootings'";
-				        $is_res = mysql_query($is_there);
-				        if(mysql_num_rows($is_res) >=1){
+				        $is_res = mysqli_query($CONN, $is_there);
+				        if(mysqli_num_rows($is_res) >=1){
 				            $up_date = "UPDATE `CurrentHash` SET `TimeStamp` = NOW(), `Hash` = '$HASH' WHERE `HashName` = 'Shootings'";
-				            $res_fin = mysql_query($up_date);
+				            $res_fin = mysqli_query($CONN, $up_date);
 				            if($res_fin){
 				                writeToLog("HASH UPDATED FOR Shootings TABLE IN DATABASE");
 				            }else{
@@ -453,7 +464,7 @@
 				            
 				        }else{
 				            $in_to = "INSERT INTO `CurrentHash` (`HashName`,`Hash`)VALUES('Shootings','$HASH')";
-				            $res_d = mysql_query($in_to);
+				            $res_d = mysqli_query($CONN, $in_to);
 				            if($res_d){
 				                writeToLog("HASH UPDATED FOR Shootings TABLE IN DATABASE");
 				            }else{
@@ -486,16 +497,24 @@
 				date_default_timezone_set('US/Eastern');
 				$pDate = strtotime('today - 2 days');
 				$td2z = date('Y-m-d',$pDate);
-				
-				$curl = curl_init('https://phl.carto.com/api/v2/sql?q=SELECT%20*%20FROM%20incidents_part1_part2%20WHERE%20dispatch_date%20%3E=%20%27'.$td2z.'%27');
+				$gURL = 'https://phl.carto.com/api/v2/sql?q=SELECT%20*%20FROM%20incidents_part1_part2%20WHERE%20dispatch_date%20%3E=%20%27'.$td2z.'%27';
+				writeToLog("GOING TO SITE: ".$gURL);
+				$curl = curl_init($gURL);
+				writeToLog("FETCHING CRIMES INCIDENTS DATA....");
 				curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 				curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
 				curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
 				$curl_response = curl_exec($curl);
+				
+				if($curl_response === FALSE){
+				    writeToLog("NO DATA RETURNED CURL RETURNED FALSE");
+				    writeToLog("CURL ERROR ".curl_error($curl));
+				}
+				
 				curl_close($curl);
 				$curl_jason = json_decode($curl_response, true);
-				
 				$d_arr = $curl_jason['rows'];
+				writeToLog("JSON CRIMES OBJECT DATA COUNT: ".count($d_arr));
 				$rw_ct = 0;
 				foreach($d_arr as $tree){
 				    
@@ -513,9 +532,9 @@
 				    $pointy = $tree['point_y'];
 				    
 				    $isT = "SELECT `DataID` FROM `CrimeIncidents` WHERE `DataID` = '$d_id' OR `ObjID` = '$obj_id'";
-				    $ret = mysql_query($isT);
+				    $ret = mysqli_query($CONN, $isT);
 				    
-				    if(mysql_num_rows($ret) >=1){
+				    if(mysqli_num_rows($ret) >=1){
 				        // RECORD EXIST
 				    }else{
 				        
@@ -523,7 +542,7 @@
                                             `DispatchTime`,`DispatchDate`,`AddressBlock`,`CrimeCode`,`CrimeName`,
                                                 `LocationX`,`LocationY`,`HashTag`)VALUES('$d_id','$obj_id','$dist','$psa','$disTime','$disDate',
                                                     '$loca','$crCode','$cr_name','$pointx','$pointy','$HASH')";
-				        $iS_g = mysql_query($inin);
+				        $iS_g = mysqli_query($CONN, $inin);
     				       
     				        if($iS_g){
     				            $rw_ct ++;
@@ -536,14 +555,14 @@
 				
 				if($rw_ct >= 1){
 				    $up_hash = "INSERT INTO `ScrapeHashHistory` (`HashName`,`HashTag`) VALUES ('CrimeIncidents','$HASH')";
-				    $is_good = mysql_query($up_hash);
+				    $is_good = mysqli_query($CONN, $up_hash);
 				    
 				    if($is_good){
 				        $is_there = "SELECT `HashName` FROM `CurrentHash` WHERE `HashName` = 'CrimeIncidents'";
-				        $is_res = mysql_query($is_there);
-				        if(mysql_num_rows($is_res) >=1){
+				        $is_res = mysqli_query($CONN, $is_there);
+				        if(mysqli_num_rows($is_res) >=1){
 				            $up_date = "UPDATE `CurrentHash` SET `TimeStamp` = NOW(), `Hash` = '$HASH' WHERE `HashName` = 'CrimeIncidents'";
-				            $res_fin = mysql_query($up_date);
+				            $res_fin = mysqli_query($CONN, $up_date);
 				            if($res_fin){
 				                writeToLog("HASH UPDATED FOR CrimeIncidents TABLE IN DATABASE");
 				            }else{
@@ -553,7 +572,7 @@
 				            
 				        }else{
 				            $in_to = "INSERT INTO `CurrentHash` (`HashName`,`Hash`)VALUES('Shootings','$HASH')";
-				            $res_d = mysql_query($in_to);
+				            $res_d = mysqli_query($CONN, $in_to);
 				            if($res_d){
 				                writeToLog("HASH UPDATED FOR CrimeIncidents TABLE IN DATABASE");
 				            }else{
@@ -634,7 +653,10 @@
 				$html = file_get_html($sites[$oo]);
 				writeToLog("CURRENTLY SCRAPING: ".$sites[$oo].' '.time());  
 				$infoDiv = $html->find('div.span3',1);
-				$addI = $infoDiv->find('p',0)->plaintext;
+				if(!empty($infoDiv)){
+				    $addI = $infoDiv->find('p',0)->plaintext;
+				}
+				
 				$loc_prts = explode("Google Maps", $addI);
 				$add_loc = trim($loc_prts[0]);
 				$add_prts = $loc_prts[1];
@@ -709,14 +731,14 @@
 						$addr = trim(preg_replace('/\s\s+/', ' ', $loc_add[1]));
 						
 						$is_cal = "SELECT `MeetDate`,`MeetLocation` FROM `Calendar` WHERE `MeetDate` = '$time_loc' AND `MeetLocation` = '$addr'";
-						$res_cal = mysql_query($is_cal);
+						$res_cal = mysqli_query($CONN, $is_cal);
 					
-							if(mysql_num_rows($res_cal) <= 0){
+							if(mysqli_num_rows($res_cal) <= 0){
 								$sql_cal = "INSERT INTO `Calendar` (`DistrictNumber`,`Title`,`MeetDate`,`MeetLocation`,`ScrapeHash`)
 										VALUES('$DIS_N','$meet_title','$time_loc','$addr','$HASH')";
 						              
 						              if(!empty($meet_title)){
-						                  $res = mysql_query($sql_cal);
+						                  $res = mysqli_query($CONN, $sql_cal);
 						              }
 								
 									if($res){
@@ -739,18 +761,18 @@
 								$alr ++;
 								
 								$up_uc = "INSERT INTO `ScrapeHashHistory` (`HashName`,`HashTag`)VALUES('Calendar','$HASH')";
-								$cal_res = mysql_query($up_uc);
+								$cal_res = mysqli_query($CONN, $up_uc);
 								
 									if($cal_res){
 											
 										$is_cal = "SELECT `HashName` FROM `CurrentHash` WHERE `HashName` = 'Calendar'";
-										$res_cal = mysql_query($is_cal);
+										$res_cal = mysqli_query($CONN, $is_cal);
 											
-											if(mysql_num_rows($res_cal)>=1){
+											if(mysqli_num_rows($res_cal)>=1){
 												
 													
 												$up_cal = "UPDATE `CurrentHash` SET `TimeStamp` = NOW(), `Hash` = '$HASH' WHERE `HashName` = 'Calendar'";
-												$res_up = mysql_query($up_cal);
+												$res_up = mysqli_query($CONN, $up_cal);
 													
 													if($res_up){
 														//CALENDAR RECORD UPDATED	
@@ -761,7 +783,7 @@
 											}else{
 													
 												$in_cal = "INSERT INTO `CurrentHash` (`HashName`,`Hash`)VALUES('Calendar','$HASH')";
-												$res_in = mysql_query($in_cal);
+												$res_in = mysqli_query($CONN, $in_cal);
 													
 													if($res_in){
 														// CURRENT HASH UPDATED
@@ -802,8 +824,8 @@
 			
 			
 			$id_dis = "SELECT `CaptainName` FROM `DistrictInfo` WHERE `CaptainName` = '$cap_name' AND `CaptainURL` = '$pic_URL'";
-			$res_pd = mysql_query($id_dis);
-				if(mysql_num_rows($res_pd)<=0){
+			$res_pd = mysqli_query($CONN, $id_dis);
+				if(mysqli_num_rows($res_pd)<=0){
 						
 				    $redd = makeEmailStrCAP($DIS_N);
 				    
@@ -811,7 +833,7 @@
 					$in_dis = "INSERT INTO `DistrictInfo` (`DistrictNumber`,`LocationAddress`,`Phone`,`EmailAddress`,`CaptainName`,`CaptainURL`)
 								VALUES('$DIS_N','$add_loc','$loc_phone','$redd','$cap_name','$pic_URL')";
 					
-					$res_dis = mysql_query($in_dis);
+					$res_dis = mysqli_query($CONN, $in_dis);
 					
 						if($res_dis){
 							// record inserted in district info
@@ -840,19 +862,19 @@
 				
 					$is_psa = "SELECT `DistrictNumber`,`PSAAreaNum`,`LieutenantName` FROM `PSA` WHERE `DistrictNumber` = '$DIS_N' 
 								AND `PSAAreaNum` = '$psa_area' AND `LieutenantName` = '$lt_name'";
-					$res_is_chk = mysql_query($is_psa);
+					$res_is_chk = mysqli_query($CONN, $is_psa);
 					
-						if(mysql_num_rows($res_is_chk) <=0){
+						if(mysqli_num_rows($res_is_chk) <=0){
 						    $ccK = "SELECT `DistrictNumber`,`PSAAreaNum` FROM `PSA` WHERE `DistrictNumber` = '$DIS_N'
 						        AND `PSAAreaNum` = '$psa_area'";
-						    $reCCK = mysql_query($ccK);
+						    $reCCK = mysqli_query($CONN, $ccK);
 						    $happ = makeEmailStr($DIS_N,$psa_area);
 						      
-						      if(mysql_num_rows($reCCK) >=1){
+						      if(mysqli_num_rows($reCCK) >=1){
 						          $upd = "UPDATE `PSA` SET `isCurrent` = 0 WHERE `PSAAreaNum` = '$psa_area' AND `DistrictNumber` != '$DIS_N'  AND `LieutenantName` = '$lt_name'";
 						          $in_psa = "INSERT INTO `PSA` (`DistrictNumber`,`PSAAreaNum`,`LieutenantName`,`ScrapeHash`,`isCurrent`,`Email`)VALUES('$DIS_N','$psa_area','$lt_name','$HASH',1,'$happ')";
-						          $res_upd = mysql_query($udp);
-						          $res_psa = mysql_query($in_psa);
+						          $res_upd = mysqli_query($CONN, $udp);
+						          $res_psa = mysqli_query($CONN, $in_psa);
 						              
 						              if($res_psa){
 						                  $psa_CT ++;
@@ -860,7 +882,7 @@
 						          
 						      }else{
 						          $in_psa1 = "INSERT INTO `PSA` (`DistrictNumber`,`PSAAreaNum`,`LieutenantName`,`ScrapeHash`,`isCurrent`,`Email`)VALUES('$DIS_N','$psa_area','$lt_name','$HASH',1,'$happ')";
-						          $res_psa1 = mysql_query($in_psa1);
+						          $res_psa1 = mysqli_query($CONN, $in_psa1);
 						          
 						              if($res_psa1){
 						                  $psa_CT ++;
@@ -879,7 +901,7 @@
 								
 								
 								
-						}else if(mysql_num_rows($res_is_chk) >=1){
+						}else if(mysqli_num_rows($res_is_chk) >=1){
 						    // PSA Already UPDATE GOOD
 						        
 						        
@@ -909,7 +931,7 @@
 				
        			if($psa_CT >= 1){
 				    $uop = "UPDATE `CurrentHash` SET `TimeStamp` = NOW(), `Hash` = '$HASH' WHERE `HashName` = 'PSA'";
-				    mysql_query($uop);
+				    mysqli_query($CONN, $uop);
 				}
        		
 			
@@ -922,50 +944,50 @@
 			
 			
 //        			$getNum = "SELECT `RemoteImageURL` FROM `Images` WHERE `NewsID` = 0";
-//        			$res = mysql_query($getNum);
+//        			$res = mysqli_query($CONN, $getNum);
        			
-//        			while($row = mysql_fetch_array($res)){
+//        			while($row = mysqli_fetch_array($res)){
 //        			    $x_id = $row['RemoteImageURL'];
 //        			    $q = "UPDATE `Images` SET `NewsID` = (SELECT `ID` FROM `NewsStory` WHERE `ImageURL` = '$x_id' LIMIT 1) WHERE '$x_id' = `RemoteImageURL`";
-//        			    mysql_query($q);
+//        			    mysqli_query($CONN, $q);
 //        			}
 
        			
                 //// IMAGES ID CLEAN UP
        			$fg = "SELECT `RemoteImageURL` FROM `Images` WHERE `NewsID` = 0";
-       			$res = mysql_query($fg);
+       			$res = mysqli_query($CONN, $fg);
        			
-       			while($row = mysql_fetch_array($res)){
+       			while($row = mysqli_fetch_array($res)){
        			    
        			    $tol = $row['RemoteImageURL'];
        			    
        			    $r = "SELECT `ID` FROM `NewsStory` WHERE `ImageURL` = '$tol'";
-       			    $red = mysql_query($r);
+       			    $red = mysqli_query($CONN, $r);
        			    
-       			    if(mysql_num_rows($red) >=1){
-       			        $raw = mysql_fetch_array($red);
+       			    if(mysqli_num_rows($red) >=1){
+       			        $raw = mysqli_fetch_array($red);
        			        $lo = $raw['ID'];
        			        $up = "UPDATE `Images` SET `NewsID` = '$lo' WHERE `RemoteImageURL` = '$tol'";
-       			        mysql_query($up);
+       			        mysqli_query($CONN, $up);
        			    }
        			    
        			}
        			    /////// UCVIDEOS ID CLEANUP
        			    $fg = "SELECT `VideoID` FROM `UCVideos` WHERE `VideoID` IS NOT NULL";
-       			    $res = mysql_query($fg);
+       			    $res = mysqli_query($CONN, $fg);
        			    
-       			    while($row = mysql_fetch_array($res)){
+       			    while($row = mysqli_fetch_array($res)){
        			        
        			        $tol = $row['VideoID'];
        			        
        			        $r = "SELECT `ID` FROM `NewsStory` WHERE `TubeURL` LIKE '%$tol%'";
-       			        $red = mysql_query($r);
+       			        $red = mysqli_query($CONN, $r);
        			        
-       			        if(mysql_num_rows($red) >=1){
-       			            $raw = mysql_fetch_array($red);
+       			        if(mysqli_num_rows($red) >=1){
+       			            $raw = mysqli_fetch_array($red);
        			            $lo = $raw['ID'];
        			            $up = "UPDATE `UCVideos` SET `NewsID` = '$lo' WHERE `VideoID` = '$tol'";
-       			            mysql_query($up);
+       			            mysqli_query($CONN, $up);
        			        }
        			        
        			        
@@ -1029,22 +1051,22 @@
 								$ref = strip_tags($desc);
 
 								$is_ne = "SELECT `ID`,`DistrictNumber` FROM `NewsStory` WHERE `TubeURL` LIKE '%$vid_id%'";
-								$res_ne = mysql_query($is_ne);
+								$res_ne = mysqli_query($CONN, $is_ne);
 								
-								    if(mysql_num_rows($res_ne) >=1){
-								        $mRow = mysql_fetch_array($res_ne);
+								    if(mysqli_num_rows($res_ne) >=1){
+								        $mRow = mysqli_fetch_array($res_ne);
 								        $p_div = $mRow['DistrictNumber'];
 								        $nID = $mRow['ID'];
 								        
 								        $is_vid = "SELECT `VideoID` FROM `UCVideos` WHERE `VideoID` = '$vid_id'";
-								        $res_vi = mysql_query($is_vid);
+								        $res_vi = mysqli_query($CONN, $is_vid);
 								        
-								        if(mysql_num_rows($res_vi) <=0){
+								        if(mysqli_num_rows($res_vi) <=0){
 								            $in_vid = "INSERT INTO `UCVideos` (`VideoTitle`,`Description`,`VideoID`,`VideoDate`,`CrimeType`,`HashTag`,`VideoImageURL`,`DistrictNumber`,`NewsID`)
 													VALUES ('$vid_title','$ref','$vid_id','$vi_date','$vit_type','$HASH','$vid_img','$p_div','$nID')";
 								            
 								            if($vid_title !== 'Private video'){
-								                $res_in = mysql_query($in_vid);
+								                $res_in = mysqli_query($CONN, $in_vid);
 								                
 								                if($res_in){
 								                    $ucc ++; // video added successfully
@@ -1064,17 +1086,17 @@
 								    }else{
 								        
 								        $is_vid = "SELECT `VideoID` FROM `UCVideos` WHERE `VideoID` = '$vid_id'";
-								        $res_vi = mysql_query($is_vid);
+								        $res_vi = mysqli_query($CONN, $is_vid);
 								        
 								        
-								        if(mysql_num_rows($res_vi) <=0){
+								        if(mysqli_num_rows($res_vi) <=0){
 								            $p_div = 00;
 								            $nID = 0;
 								            $in_vid = "INSERT INTO `UCVideos` (`VideoTitle`,`Description`,`VideoID`,`VideoDate`,`CrimeType`,`HashTag`,`VideoImageURL`,`DistrictNumber`,`NewsID`)
 													VALUES ('$vid_title','$ref','$vid_id','$vi_date','$vit_type','$HASH','$vid_img','$p_div','$nID')";
 								            
 								            if($vid_title !== 'Private video'){
-								                $res_in = mysql_query($in_vid);
+								                $res_in = mysqli_query($CONN, $in_vid);
 								                
 								                if($res_in){
 								                    $ucc ++; // video added successfully
@@ -1102,14 +1124,14 @@
 
 									if($ucc >=1){
 										$up_uc = "INSERT INTO `ScrapeHashHistory` (`HashName`,`HashTag`)VALUES('UCVideos','$HASH')";
-										$up_res = mysql_query($up_uc);
+										$up_res = mysqli_query($CONN, $up_uc);
 											
 											if($up_res){
 												$sel_up = "SELECT `HashName` FROM `CurrentHash` WHERE `HashName` = 'UCVideos'";
-												$res_up = mysql_query($sel_up);
-													if(mysql_num_rows($res_up) >=1){
+												$res_up = mysqli_query($CONN, $sel_up);
+													if(mysqli_num_rows($res_up) >=1){
 														$up_up = "UPDATE `CurrentHash` SET `TimeStamp` = NOW(), `Hash` = '$HASH' WHERE `HashName` = 'UCVideos'";
-														$update_res = mysql_query($up_up);
+														$update_res = mysqli_query($CONN, $up_up);
 															if($update_res){
 																// CURRENT HASH FROM UCVIDEOS IS UPDATED
 															}else{
@@ -1117,7 +1139,7 @@
 															}
 													}else{
 														$in_rec = "INSERT INTO `CurrentHash` (`HashName`,`Hash`)VALUES('UCVideos','$HASH')";
-														$ress_in = mysql_query($in_rec);
+														$ress_in = mysqli_query($CONN, $in_rec);
 															if($ress_in){
 																// NEW CURRENT HASH UPDATED
 															}else{
@@ -1130,15 +1152,15 @@
 ///////////////////////////////////////////////// MASTER HASH SETUP ////////////////////////////////////////////////////////////
 
 				$is_mas_hash = "SELECT `Hash` FROM `CurrentHash` WHERE `HashName` = 'MasterHash'";
-				$res_isgood = mysql_query($is_mas_hash);
+				$res_isgood = mysqli_query($CONN, $is_mas_hash);
 					
-					if(mysql_num_rows($res_isgood) >=1){
+					if(mysqli_num_rows($res_isgood) >=1){
 						
 						$update_hash = "SELECT `HashName`,`Hash` FROM `CurrentHash` WHERE NOT `HashName` = 'MasterHash'";
-						$res_up_hash = mysql_query($update_hash);
+						$res_up_hash = mysqli_query($CONN, $update_hash);
 						$m_str = 0;
 							
-							if(mysql_num_rows($res_up_hash) >=1){
+							if(mysqli_num_rows($res_up_hash) >=1){
 									
 								$n_str_H = 0;
 								$c_str_H = 0;
@@ -1146,7 +1168,7 @@
 								$p_sa = 0;
 								$d_shoot = 0;
 								
-									while($rowp = mysql_fetch_array($res_up_hash)){
+									while($rowp = mysqli_fetch_array($res_up_hash)){
 										
 										if($rowp['HashName'] == 'NewsStory'){
 											$n_str_H = $rowp['Hash'];
@@ -1166,102 +1188,107 @@
 									
 									$m_str = sha1($n_str_H.$c_str_H.$u_vid_H.$p_sa.$d_shoot.$p_ccc);
 									$in_hash_m = "UPDATE `CurrentHash` SET `TimeStamp` = NOW(), `Hash` = '$m_str' WHERE `HashName` = 'MasterHash'";
-									$res_don = mysql_query($in_hash_m);
+									$res_don = mysqli_query($CONN, $in_hash_m);
 									   
 									   if($res_don){
 									       
 									       $in_in = "INSERT INTO `ScrapeHashHistory` (`HashName`,`HashTag`)VALUES('MasterHash','$m_str')";
-									       mysql_query($in_in);
+									       mysqli_query($CONN, $in_in);
 									       
 									       $cal_sel = "SELECT `ID` FROM `Calendar` WHERE `MasterHash`= ''  AND `ScrapeHash` = '$HASH'";
-									       $re_cal = mysql_query($cal_sel);
+									       $re_cal = mysqli_query($CONN, $cal_sel);
 									       
-									       if(mysql_num_rows($re_cal) >=1){
+									       if(mysqli_num_rows($re_cal) >=1){
 									           
-									           while($toi = mysql_fetch_array($re_cal)){
+									           while($toi = mysqli_fetch_array($re_cal)){
 									               $d_id = $toi['ID'];
 									               $upp = "UPDATE `Calendar` SET `MasterHash` = '$m_str' WHERE `ID` = '$d_id'";
-									               mysql_query($upp);
+									               mysqli_query($CONN, $upp);
 									           }
 									           
 									       }
 									       
 									       //IMAGES ARE SCRAPED BY NODE
 // 									       $img_se = "SELECT `ID` FROM `Images` WHERE `MasterHash`= '' AND `ScrapeHash` = '$HASH'";
-// 									       $re_img = mysql_query($img_se);
+// 									       $re_img = mysqli_query($CONN, $img_se);
 									      
-// 									       if(mysql_num_rows($re_img) >=1){
+// 									       if(mysqli_num_rows($re_img) >=1){
 									           
-// 									           while($tor = mysql_fetch_array($re_img)){
+// 									           while($tor = mysqli_fetch_array($re_img)){
 // 									               $d_id = $tor['ID'];
 // 									               $upp = "UPDATE `Iamges` SET `MasterHash` = '$m_str' WHERE `ID` = '$d_id'";
-// 									               mysql_query($upp);
+// 									               mysqli_query($CONN, $upp);
 // 									           }
 									           
 // 									       }
 									       
 									      
-									       $n_sto = "SELECT `ID` FROM `NewsStory` WHERE `MasterHash`= '' AND `ScrapeHash` = '$HASH'";
-									       $re_sto = mysql_query($n_sto);
+									      // $n_sto = "SELECT `ID` FROM `NewsStory` WHERE `MasterHash`= '' AND `ScrapeHash` = '$HASH'";
+									       $n_sto = "SELECT `ID` FROM `NewsStory` WHERE `MasterHash` IS NULL OR `MasterHash` = '' AND `ScrapeHash` = '$HASH'";
+									       $re_sto = mysqli_query($CONN, $n_sto);
 
-									       if(mysql_num_rows($re_sto) >=1){
+									       if(mysqli_num_rows($re_sto) >=1){
 									           
-									           while($tot = mysql_fetch_array($re_sto)){
+									           while($tot = mysqli_fetch_array($re_sto)){
 									               $d_id = $tot['ID'];
 									               $upp = "UPDATE `NewsStory` SET `MasterHash` = '$m_str' WHERE `ID` = '$d_id'";
-									               mysql_query($upp);
+									               mysqli_query($CONN, $upp);
 									           }
 									           
 									       }
 									       
-									       $psa_sel = "SELECT `ID` FROM `PSA` WHERE `MasterHash`= '' AND `ScrapeHash` = '$HASH'";
-									       $re_psa = mysql_query($psa_sel);
+									      // $psa_sel = "SELECT `ID` FROM `PSA` WHERE `MasterHash`= '' AND `ScrapeHash` = '$HASH'";
+									       $psa_sel = "SELECT `ID` FROM `PSA` WHERE `MasterHash` IS NULL OR `MasterHash` = '' AND `ScrapeHash` = '$HASH'";
+									       $re_psa = mysqli_query($CONN, $psa_sel);
 									       
-									       if(mysql_num_rows($re_psa) >=1){
+									       if(mysqli_num_rows($re_psa) >=1){
 									           
-									           while($toz = mysql_fetch_array($re_psa)){
+									           while($toz = mysqli_fetch_array($re_psa)){
 									               $d_id = $toz['ID'];
 									               $upp = "UPDATE `PSA` SET `MasterHash` = '$m_str' WHERE `ID` = '$d_id'";
-									               mysql_query($upp);
+									               mysqli_query($CONN, $upp);
 									           }
 									           
 									       }
 									       
-									       $uc_vids = "SELECT `ID` FROM `UCVideos` WHERE `MasterHash`= '' AND `HashTag` = '$HASH'";
-									       $re_ucv = mysql_query($uc_vids);
+									       //$uc_vids = "SELECT `ID` FROM `UCVideos` WHERE `MasterHash`= '' AND `HashTag` = '$HASH'";
+									       $uc_vids = "SELECT `ID` FROM `UCVideos` WHERE `MasterHash` IS NULL OR `MasterHash` = '' AND `HashTag` = '$HASH'";
+									       $re_ucv = mysqli_query($CONN, $uc_vids);
 									       
-									       if(mysql_num_rows($re_ucv) >=1){
+									       if(mysqli_num_rows($re_ucv) >=1){
 									           
-									           while($tog = mysql_fetch_array($re_ucv)){
+									           while($tog = mysqli_fetch_array($re_ucv)){
 									               $d_id = $tog['ID'];
 									               $upp = "UPDATE `UCVideos` SET `MasterHash` = '$m_str' WHERE `ID` = '$d_id'";
-									               mysql_query($upp);
+									               mysqli_query($CONN, $upp);
 									           }
 									           
 									       }
 									       
-									       $shot_pu = "SELECT `ID` FROM `Shooting` WHERE `MasterHash`= '' AND `HashTag` = '$HASH'";
-									       $rx_ucx = mysql_query($shot_pu);
+									       //$shot_pu = "SELECT `ID` FROM `Shooting` WHERE `MasterHash`= '' AND `HashTag` = '$HASH'";
+									       $shot_pu = "SELECT `ID` FROM `Shooting` WHERE `MasterHash` IS NULL OR `MasterHash` = '' AND `HashTag` = '$HASH'";
+									       $rx_ucx = mysqli_query($CONN, $shot_pu);
 									       
-									       if(mysql_num_rows($rx_ucx) >=1){
+									       if(mysqli_num_rows($rx_ucx) >=1){
 									           
-									           while($tox = mysql_fetch_array($rx_ucx)){
+									           while($tox = mysqli_fetch_array($rx_ucx)){
 									               $x_id = $tox['ID'];
 									               $upx = "UPDATE `Shooting` SET `MasterHash` = '$m_str' WHERE `ID` = '$x_id'";
-									               mysql_query($upx);
+									               mysqli_query($CONN, $upx);
 									           }
 									           
 									       }
 									       
-									       $gInc = "SELECT `ID` FROM `CrimeIncidents` WHERE `MasterHash`= '' AND `HashTag` = '$HASH'";
-									       $gIx = mysql_query($gInc);
+									      // $gInc = "SELECT `ID` FROM `CrimeIncidents` WHERE `MasterHash`= '' AND `HashTag` = '$HASH'";
+									       $gInc = "SELECT `ID` FROM `CrimeIncidents` WHERE `MasterHash` IS NULL OR `MasterHash` = '' AND `HashTag` = '$HASH'";
+									       $gIx = mysqli_query($CONN, $gInc);
 									       
-									       if(mysql_num_rows($gIx) >=1){
+									       if(mysqli_num_rows($gIx) >=1){
 									           
-									           while($toxx = mysql_fetch_array($gIx)){
+									           while($toxx = mysqli_fetch_array($gIx)){
 									               $xx_id = $toxx['ID'];
 									               $upxx = "UPDATE `CrimeIncidents` SET `MasterHash` = '$m_str' WHERE `ID` = '$xx_id'";
-									               mysql_query($upxx);
+									               mysqli_query($CONN, $upxx);
 									           }
 									           
 									       }
@@ -1279,17 +1306,17 @@
 							//// CREATE A HASH IF ONE DOES NOT EXIST
 							
 						$update_hash = "SELECT `HashName`,`Hash` FROM `CurrentHash` WHERE NOT `HashName` = 'MasterHash'";
-						$res_up_hash = mysql_query($update_hash);
+						$res_up_hash = mysqli_query($CONN, $update_hash);
 						$m_str = 0;
 							
-							if(mysql_num_rows($res_up_hash) >=1){
+							if(mysqli_num_rows($res_up_hash) >=1){
 									
 								$n_str_H = 0;
 								$c_str_H = 0;
 								$u_vid_H = 0;
 								$p_sa = 0;
 								
-									while($rowp = mysql_fetch_array($res_up_hash)){
+									while($rowp = mysqli_fetch_array($res_up_hash)){
 										
 										if($rowp['HashName'] == 'NewsStory'){
 											$n_str_H = sha1($rowp['Hash']);
@@ -1307,7 +1334,7 @@
 									
 									$m_str = sha1($n_str_H.$c_str_H.$u_vid_H.$p_sa.$d_shoot);
 									$in_MH = "INSERT INTO `CurrentHash` (`HashName`,`Hash`)VALUES('MasterHash','$m_str')";
-									mysql_query($in_MH);
+									mysqli_query($CONN, $in_MH);
 							
 							}else{
 								// NO OTHER HASES EXIST in the DATABASE
