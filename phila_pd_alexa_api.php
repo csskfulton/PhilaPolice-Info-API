@@ -1,9 +1,27 @@
 <?php
 
-
-    include('../scripts/php/conn.php');
-    $data = json_decode(file_get_contents('php://input'),true);
-    $rot = file_get_contents('php://input');
+    
+    define("MYSQL_SERVER", 'localhost');
+    define("MYSQL_USERNAME", 'gerry');
+    define("MYSQL_PASSWORD", 'Keithistheking');
+    define("MYSQL_DATABASE",'PhillyPolice');
+    
+    $CONN = mysqli_connect(MYSQL_SERVER,MYSQL_USERNAME,MYSQL_PASSWORD,MYSQL_DATABASE);
+    
+    if(mysqli_connect_errno()){
+        die($NO_CONNECTION. header('HTTP/1.1 403 Forbidden'));
+    }
+      
+   
+ ////////////////////////////////////////////////////////////////////////////////// START FUNCTIONS
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    
+    function writeToLog($var){
+        file_put_contents('test.txt', $var."\n",FILE_APPEND);
+    }
     
     file_put_contents('test.txt', $rot."\n",FILE_APPEND);
     
@@ -808,85 +826,107 @@
     function readThisNews($hah,$tlc,$cct){
         
         $ress = '';
-        
-        //         $aTTs = $data['session']['attributes'];
-        //         $hah = $aTTs['Hash'];
-        //         $tlc = $aTTs['totalCount'] - 1 ;
-        //         $cct = $aTTs['currentCount'];
-        
         $speaK = '';
         $f_obj = '';
         $ct = 0;
-        //$obj_arr = array();
-        //$cat_ct = array();
         
-        $us_ql = "SELECT * FROM `NewsStory` WHERE `ScrapeHash` = '$hah' ORDER BY `PubDate` DESC LIMIT $tlc , $cct";
-        $us_res = mysql_query($us_ql);
-        file_put_contents('test.txt', $us_ql."\n",FILE_APPEND);
-        if(mysql_num_rows($us_res) >= 1){
-            
-            while($roe = mysql_fetch_array($us_res)){
+        $us_ql = "SELECT * FROM `NewsStory` WHERE `ScrapeHash` = '$hah' ORDER BY `PubDate` ASC LIMIT $tlc , $cct";
+        $us_res = mysqli_query($CONN, $us_ql);
+        
+            $roe = mysqli_fetch_array($us_res);
+            $cattt = $roe['Title'];
                 
-                if($roe['Category'] == "Wanted"){
-                    $title = $roe['Title'];
-                    //array_push($cat_ct,$roe['Category']);
-                    
-                    if(preg_match('/(Suspects)/is',$title)){
-                        $hal = str_replace("Suspects for ",'',$title);
-                        $desc = utf8_encode(cleanTxT($roe['Description']));
-                        $speaK = '<s>there are multiple suspects wanted for a '.$hal.'</s><p>'.$desc.'</p>';
-                        // array_push($obj_arr, $speaK);
-                    }
-                    
-                    if(preg_match('/(Suspect)(\s+)/is',$title)){
-                        $hal = str_replace("Suspect for ",'',$title);
-                        $desc = utf8_encode(cleanTxT($roe['Description']));
-                        $speaK = '<s>a suspect is wanted for a '.$hal.'</s><p>'.$desc.'</p>';
-                        // array_push($obj_arr, $speaK);
-                    }
+//                 if($roe['Category'] == "Wanted"){
+//                     $title = $roe['Title'];
+//                     //array_push($cat_ct,$roe['Category']);
                     
                     
+//                     if(preg_match('/(Suspects)/is',$title)){
+//                         $hal = str_replace("Suspects for ",'',$title);
+//                         $desc = utf8_encode(cleanTxT($roe['Description']));
+//                         $speaK = '<s>there are multiple suspects wanted for a '.$hal.'</s><p>'.$desc.'</p>';
+//                         // array_push($obj_arr, $speaK);
+//                     }
                     
-                }
+//                     if(preg_match('/(Suspect)(\s+)/is',$title)){
+//                         $hal = str_replace("Suspect for ",'',$title);
+//                         $desc = utf8_encode(cleanTxT($roe['Description']));
+//                         $speaK = '<s>a suspect is wanted for a '.$hal.'</s><p>'.$desc.'</p>';
+//                         // array_push($obj_arr, $speaK);
+//                     }
+                    
+                    
+//                     writeToLog("WANTED "+$speaK);
+//                 }
                 
-                if($roe['Category'] == "Missing Person"){
-                    $title = str_replace(" ? "," ",utf8_decode($roe['Title']));
-                    //array_push($cat_ct,$roe['Category']);
+//                 else if($roe['Category'] == "Missing Person"){
+//                     $title = str_replace(" ? "," ",utf8_decode($roe['Title']));
+//                     //array_push($cat_ct,$roe['Category']);
                     
-                    if(preg_match('/(Missing)(\s+)(Person)/is',$title)){
-                        $hal = str_replace("Missing Person ",'',$title);
+//                     if(preg_match('/(Missing)(\s+)(Person)/is',$title)){
+//                         $hal = str_replace("Missing Person ",'',$title);
                         
-                        if(preg_match('/(\s+)(From)(\s+)(the)(\s+)/is',$hal)){
-                            $split = explode(" From the ",$hal);
-                            $name = $split[0];
-                            $distz = $split[1];
-                            $desc = utf8_encode(cleanTxT($roe['Description']));
-                            $speaK = '<p>a person is reportedly missing by the name '.$name.' from the '.$distz.'</p><p>'.$desc.'</p>';
-                            //  array_push($obj_arr, $speaK);
-                        }else{
-                            $desc = utf8_encode(cleanTxT($roe['Description']));
-                            $speaK = '<p>a person is reportedly missing by the name of '.$hal.'</p><p>'.$desc.'</p>';
-                            //  array_push($obj_arr, $speaK);
-                        }
-                    }
+//                         if(preg_match('/(\s+)(From)(\s+)(the)(\s+)/is',$hal)){
+//                             $split = explode(" From the ",$hal);
+//                             $name = $split[0];
+//                             $distz = $split[1];
+//                             $desc = utf8_encode(cleanTxT($roe['Description']));
+//                             $speaK = '<p>a person is reportedly missing by the name '.$name.' from the '.$distz.'</p><p>'.$desc.'</p>';
+//                             //  array_push($obj_arr, $speaK);
+//                         }else{
+//                             $desc = utf8_encode(cleanTxT($roe['Description']));
+//                             $speaK = '<p>a person is reportedly missing by the name of '.$hal.'</p><p>'.$desc.'</p>';
+//                             //  array_push($obj_arr, $speaK);
+//                         }
+//                     }
+                    
+//                     writeToLog("MISSING PERSON "+$speaK);
+//                 }
+                
+//                 else{
+// //                     $title = $roe['Title'];
+// //                     if(preg_match('/(Missing)( )(Juvenile)/is',$title)){
+                        
+// //                     }
+
+//                     $desc = "balls";
+//                     $name = "Hello";
+//                     $distz = "catfish";
+                    
+                    
+
+//                     $speaK = '<p>a person is reportedly missing by the name '.$name.' from the '.$distz.'</p><p>'.$desc.'</p>';
+                    
+//                     writeToLog("SOMETHING ELSE "+$speaK);
+//                 }
+                
+                
+                $tlc = "1";
+                $hah = "jfidf9dfjidf";
+                
+                if($cattt == "Wanted"){
+                    $speaK = "The Category is Wanted";
+                }else if($cattt == "Missing Person"){
+                    $speaK = "The Category is Missing Person";
+                }else if($cattt == "Missing Juvenile"){
+                    $speaK = "The Category is Missing Juvenile";
+                }else if($cattt == "Missing Endangered Person"){
+                    $speaK = "Missing Endangered Person";
                 }
-            }
+                
+                writeToLog("SOMETHING ELSE ".$roe['StoryAuthor']);
+                
             
             
+        
             
-            
-            $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$tlc,"currentCount"=>"1","Hash"=>$hah),"response"=>
-                array("outputSpeech"=>
-                    array("type"=>"SSML","ssml"=>"<speak>".$speaK."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
-            
-            
-            
-        }
         
         
+        $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$tlc,"currentCount"=>"1","Hash"=>$hah),"response"=>
+            array("outputSpeech"=>
+                array("type"=>"SSML","ssml"=>"<speak>".$speaK."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
         
-        
-        
+ 
         return $ress;
         
         
@@ -898,422 +938,9 @@
     
     
     
-    function getTodayStats($cType,$distN){
+    function getTodayStats($crT,$d_val){
         
-        $ret = '';
         
-        $tyArr = array();
-        $sRob = 'SELECT `Name` FROM `CrimeTypes` WHERE `Type` = '."'".$cType."'";
-        $sRes = mysql_query($sRob);
-        
-        if(mysql_num_rows($sRes) >= 1){
-            
-            while($tows = mysql_fetch_array($sRes)){
-                $nam = $tows['Name'];
-                array_push($tyArr,$nam);
-            }
-            
-            $sir = implode("','", $tyArr);
-            $fin = "'".$sir."'";
-            $td2 = date('Y-m-d');
-            
-            
-            if($distN !== null){
-                $sql_x = 'SELECT * FROM `CrimeIncidents` WHERE `CrimeName` IN ('.$fin.') AND `DispatchDate` = '.$td2.' AND `DistrictNumber` = '.$distN.' ORDER BY `DispatchTime` DESC';
-            }else{
-                $sql_x = 'SELECT * FROM `CrimeIncidents` WHERE `CrimeName` IN ('.$fin.') AND `DispatchDate` = '.$td2.' ORDER BY `DispatchTime` DESC';
-                
-            }
-            
-            $resx = mysql_query($sql_x);
-            
-            if(mysql_num_rows($resx) >= 1){
-                /// ASSAULTS DO EXIST TODAY
-                
-            }else{
-                
-                if($distN !== null){
-                    $l_sql = 'SELECT `DispatchDate` FROM `CrimeIncidents` WHERE `CrimeName`IN ('.$fin.') AND `DistrictNumber` = '.$distN.' ORDER BY `DispatchDate` DESC LIMIT 0,1';
-                    
-                }else{
-                    $l_sql = 'SELECT `DispatchDate` FROM `CrimeIncidents` WHERE `CrimeName`IN ('.$fin.') ORDER BY `DispatchDate` DESC LIMIT 0,1';
-                    
-                }
-                
-                $lres = mysql_query($l_sql);
-                
-                if(mysql_num_rows($lres) >= 1){
-                    
-                    $drow = mysql_fetch_array($lres);
-                    $f_date = $drow['DispatchDate'];
-                    
-                    if($distN !== null){
-                        $m_sql = 'SELECT COUNT(`DispatchDate`) AS d_Count FROM `CrimeIncidents` WHERE `DispatchDate` = '."'".$f_date."'".' AND `CrimeName` IN ('.$fin.') AND `DistrictNumber` = '.$distN.'';
-                        
-                    }else{
-                        $m_sql = 'SELECT COUNT(`DispatchDate`) AS d_Count FROM `CrimeIncidents` WHERE `DispatchDate` = '."'".$f_date."'".' AND `CrimeName` IN ('.$fin.')';
-                        
-                    }
-                    
-                    $ref = mysql_query($m_sql);
-                    
-                    if(mysql_num_rows($ref) >= 1){
-                        
-                        $c_arr = mysql_fetch_array($ref);
-                        $ctc = $c_arr['d_Count'];
-                        date_default_timezone_set('US/Eastern');
-                        $td2 = date('Y-m-d');
-                        $x_ago = dateDifference($f_date,$td2,"%d days");
-                        $cvv = strtotime($f_date);
-                        $nDate = date('l F jS ',$cvv);
-                            
-                            if($distN !== null){
-                                $f_URL = "SELECT * FROM `CrimeIncidents` WHERE `DispatchDate` = '$f_date' AND `CrimeName` IN ($fin) AND `DistrictNumber` = $distN ORDER BY `DispatchTime` DESC";
-                                
-                            }else{
-                                $f_URL = "SELECT * FROM `CrimeIncidents` WHERE `DispatchDate` = '$f_date' AND `CrimeName` IN ($fin) ORDER BY `DispatchTime` DESC";
-                                
-                            }
-                        
-                        /// IF ONE ONLY ONE RECORD RETURN
-                        if($ctc == 1 && $x_ago == "1 days"){
-                            
-                            if($cType == "assault"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no assaults to report today at this time. However, there is '.$ctc.' reported assault yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no assaults to report today at this time. However, there is '.$ctc.' reported assault yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                            }
-                            if($cType == "theft"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no thefts to report today at this time. However, there is '.$ctc.' reported theft yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no thefts to report today at this time. However, there is '.$ctc.' reported theft yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                            }
-                            if($cType == "robbery"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, I do not have any robberies to report today at this time. However, there is '.$ctc.' reported robbery yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, I do not have any robberies to report today at this time. However, there is '.$ctc.' reported robbery yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                            }
-                            if($cType == "burglary"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no burglaries to report today at this time. However, there is '.$ctc.' reported burglary yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no burglaries to report today at this time. However, there is '.$ctc.' reported burglary yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-
-                                }
-                                
-                            }
-                            if($cType == "homicide"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no homicides to report today at this time. However, there is '.$ctc.' reported homicide yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no homicides to report today at this time. However, there is '.$ctc.' reported homicide yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                            }
-                            if($cType == "sexual assault"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no sexual assaults to report today at this time. However, there is '.$ctc.' reported sexual assault yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no sexual assaults to report today at this time. However, there is '.$ctc.' reported sexual assault yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                            }
-                            if($cType == "drugs"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, there are no drugs, or narcotic law violations to report today at this time. However, there is '.$ctc.' reported drug, or narcotic law violation yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no drugs, or narcotic law violations to report today at this time. However, there is '.$ctc.' reported drug, or narcotic law violation yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                            }
-                        }else if($ctc > 1 && $x_ago == "1 days"){
-                            
-                            if($cType == "assault"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no assaults to report today at this time. However, there was '.$ctc.' reported assaults yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no assaults to report today at this time. However, there was '.$ctc.' reported assault yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                            }
-                            if($cType == "theft"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no thefts to report today at this time. However, there was '.$ctc.' reported thefts yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no thefts to report today at this time. However, there was '.$ctc.' reported theft yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                            }
-                            if($cType == "robbery"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, I do not have any robberies to report today at this time. However, there was '.$ctc.' reported robberies yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, I do not have any robberies to report today at this time. However, there was '.$ctc.' reported robbery yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                            }
-                            if($cType == "burglary"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no burglaries to report today at this time. However, there was '.$ctc.' reported burglaries yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no burglaries to report today at this time. However, there was '.$ctc.' reported burglary yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                            }
-                            if($cType == "homicide"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no homicides to report today at this time. However, there was '.$ctc.' reported homicides yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no homicides to report today at this time. However, there was '.$ctc.' reported homicide yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                            }
-                            if($cType == "sexual assault"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no sexual assaults to report today at this time. However, there was '.$ctc.' reported sexual assaults yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no sexual assaults to report today at this time. However, there was '.$ctc.' reported sexual assault yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                            }
-                            if($cType == "drugs"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no drugs, or narcotic law violations to report today at this time. However, there was '.$ctc.' reported drug or narcotic law violations yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no drug, or narcotic law violations to report today at this time. However, there was '.$ctc.' reported drug, or narcotic law violation, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                            }
-                            
-                        }else if($ctc == 1){
-                            
-                            if($cType == "assault"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no assaults to report today at this time. However, there is '.$ctc.' reported assault '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no assaults to report today at this time. However, there is '.$ctc.' reported assault '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                            }
-                            if($cType == "theft"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no thefts to report today at this time. However, there is '.$ctc.' reported theft '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no thefts to report today at this time. However, there is '.$ctc.' reported theft '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                            }
-                            if($cType == "robbery"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, I do not have any robberies to report today at this time. However, there is '.$ctc.' reported robbery '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, I do not have any robberies to report today at this time. However, there is '.$ctc.' reported robbery '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                            }
-                            if($cType == "burglary"){
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no burglaries to report today at this time. However, there is '.$ctc.' reported burglary '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no burglaries to report today at this time. However, there is '.$ctc.' reported burglary '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                            }
-                            if($cType == "homicide"){
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no homicides to report today at this time. However, there is '.$ctc.' reported homicide '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no homicides to report today at this time. However, there is '.$ctc.' reported homicide '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                            }
-                            if($cType == "sexual assault"){
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no sexual assaults to report today at this time. However, there is '.$ctc.' reported sexual assault '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no sexual assaults to report today at this time. However, there is '.$ctc.' reported sexual assault '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                            }
-                            if($cType == "drugs"){
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no drugs, or narcotic law violations to report today at this time. However, there is '.$ctc.' reported drug, or narcotic law violation '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no drug, or narcotic law violations to report today at this time. However, there is '.$ctc.' reported drug, or narcotic law violation '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                            }
-                        }else{
-                            
-                            if($cType == "assault"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no assaults to report today at this time. However, there were '.$ctc.' assaults '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no assaults to report today at this time. However, there were '.$ctc.' assaults '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                            }
-                            if($cType == "theft"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no thefts to report today at this time. However, there were '.$ctc.' reported thefts '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no thefts to report today at this time. However, there were '.$ctc.' reported thefts '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                                
-                            }
-                            if($cType == "robbery"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, I do not have any robberies to report today at this time. However, there were '.$ctc.' reported robberies '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, I do not have any robberies to report today at this time. However, there were '.$ctc.' reported robberies '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                                
-                            }
-                            if($cType == "burglary"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no burglaries to report today at this time. However, there were '.$ctc.' reported burglaries '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no burglaries to report today at this time. However, there were '.$ctc.' reported burglaries '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                                
-                            }
-                            if($cType == "homicide"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no homicides to report today at this time. However, there were '.$ctc.' reported homicides '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no homicides to report today at this time. However, there were '.$ctc.' reported homicides '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                                
-                            }
-                            if($cType == "sexual assault"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no sexual assaults to report today at this time. However, there were '.$ctc.' reported sexual assaults '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no sexual assaults to report today at this time. However, there were '.$ctc.' reported sexual assaults '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                                
-                            }
-                            if($cType == "drugs"){
-                                
-                                if($distN == null){
-                                    $say = '<speak><p>Fortunately, There are no drugs, or narcotic law violations to report today at this time. However, there were '.$ctc.' reported drugs, or narcotic law violations '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }else{
-                                    $say = '<speak><p>Fortunately, In the '.addTH($distN).' district, There are no drugs, or narcotic law violations to report today at this time. However, there were '.$ctc.' reported drugs, or narcotic law violations '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                    
-                                }
-                                
-                                
-                            }
-                            
-                            
-                        }
-                        
-                        $txt = array("version"=>"1.0","sessionAttributes"=>array("SQL"=>$f_URL,"presentTime"=>"today","crimeType"=>$cType),"response"=>array("outputSpeech"=>array("type"=>"SSML","ssml"=>$say),"reprompt"=>null,"shouldEndSession"=>false));
-                        
-                        $ret = json_encode($txt);
-                        
-                        
-                    }
-                    
-                }
-                
-                
-            }
-            
-            
-        }
-        
-        return $ret;
         
         
         
@@ -1323,13 +950,13 @@
     function readAnswer($objs,$dtype){
         $rt_Txt = '';
         
-        $rez = mysql_query($objs);
-        if(mysql_num_rows($rez) >=1){
+        $rez = mysqli_query($CONN, $objs);
+        if(mysqli_num_rows($rez) >=1){
             $word = '';
             
             if($dtype == "robbery"){
                 
-                while($rots = mysql_fetch_array($rez)){
+                while($rots = mysqli_fetch_array($rez)){
                     
                     $disNum = addTH($rots['DistrictNumber']);
                     $disT = date('h:i a', strtotime($rots['DispatchTime']));
@@ -1357,7 +984,7 @@
             
             if($dtype == "assault"){
 
-                 while($rots = mysql_fetch_array($rez)){
+                 while($rots = mysqli_fetch_array($rez)){
         
                          $disNum = addTH($rots['DistrictNumber']);
                          $disT = date('h:i a', strtotime($rots['DispatchTime']));
@@ -1402,7 +1029,7 @@
             
             if($dtype == "burglary"){
                 
-                while($rots = mysql_fetch_array($rez)){
+                while($rots = mysqli_fetch_array($rez)){
                     
                     $disNum = addTH($rots['DistrictNumber']);
                     $disT = date('h:i a', strtotime($rots['DispatchTime']));
@@ -1437,7 +1064,7 @@
             
             if($dtype == "homicide"){
                 
-                while($rots = mysql_fetch_array($rez)){
+                while($rots = mysqli_fetch_array($rez)){
                     
                     $disNum = addTH($rots['DistrictNumber']);
                     $disT = date('h:i a', strtotime($rots['DispatchTime']));
@@ -1472,7 +1099,7 @@
             
             if($dtype == "theft"){
                 
-                while($rots = mysql_fetch_array($rez)){
+                while($rots = mysqli_fetch_array($rez)){
                     
                     $disNum = addTH($rots['DistrictNumber']);
                     $disT = date('h:i a', strtotime($rots['DispatchTime']));
@@ -1519,7 +1146,7 @@
             
             if($dtype == "sexual assault"){
                 
-                while($rots = mysql_fetch_array($rez)){
+                while($rots = mysqli_fetch_array($rez)){
                     
                     $disNum = addTH($rots['DistrictNumber']);
                     $disT = date('h:i a', strtotime($rots['DispatchTime']));
@@ -1554,7 +1181,7 @@
             
             if($dtype == "drugs"){
                 
-                while($rots = mysql_fetch_array($rez)){
+                while($rots = mysqli_fetch_array($rez)){
                     
                     $disNum = addTH($rots['DistrictNumber']);
                     $disT = date('h:i a', strtotime($rots['DispatchTime']));
@@ -1599,15 +1226,30 @@
     }
     
     
-    $itReq = $data['request']['type'];
-    $itNam = $data['request']['intent']['name'];
-    $itDis = $data['request']['dialogState'];
+    
+    
+    ////////////////////////////////////////////////////////////////////////////////// END FUNCTIONS
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    
     
  ////////////////////////////////////////// APPLICATION LAUNCH POINT ///////////////////////////////////////////////////////////////////////////   
 
     
     
 //////////////////////////////////////////////////////////// LAUNCH REQUEST ///////////////////////////////////////////////////////////////////////////    
+  
+ 
+    
+        $data = json_decode(file_get_contents('php://input'),true);
+        $rot = file_get_contents('php://input');
+        writeToLog($rot);
+    
+        $itReq = $data['request']['type'];
+        $itNam = $data['request']['intent']['name'];
+        $itDis = $data['request']['dialogState'];
+    
     
         if($itReq == "LaunchRequest"){
             
@@ -1691,7 +1333,433 @@
                     
                         if($isRob == "ER_SUCCESS_MATCH"){
                             
-                            echo getTodayStats($crT,$d_val);
+                            //echo getTodayStats($crT,$d_val);
+                         
+                            
+                            $ret = '';
+                            
+                            $tyArr = array();
+                            $sRob = 'SELECT `Name` FROM `CrimeTypes` WHERE `Type` = '."'".$crT."'";
+                            $sRes = mysqli_query($CONN, $sRob);
+                            
+                            if(mysqli_num_rows($sRes) >= 1){
+                                
+                                while($tows = mysqli_fetch_array($sRes)){
+                                    $nam = $tows['Name'];
+                                    array_push($tyArr,$nam);
+                                }
+                                
+                                $sir = implode("','", $tyArr);
+                                $fin = "'".$sir."'";
+                                $td2 = date('Y-m-d');
+                                
+                                
+                                if($d_val !== null){
+                                    $sql_x = 'SELECT * FROM `CrimeIncidents` WHERE `CrimeName` IN ('.$fin.') AND `DispatchDate` = '.$td2.' AND `DistrictNumber` = '.$d_val.' ORDER BY `DispatchTime` DESC';
+                                }else{
+                                    $sql_x = 'SELECT * FROM `CrimeIncidents` WHERE `CrimeName` IN ('.$fin.') AND `DispatchDate` = '.$td2.' ORDER BY `DispatchTime` DESC';
+                                    
+                                }
+                                
+                                $resx = mysqli_query($CONN, $sql_x);
+                                
+                                if(mysqli_num_rows($resx) >= 1){
+                                    /// ASSAULTS DO EXIST TODAY
+                                    
+                                }else{
+                                    
+                                    if($d_val !== null){
+                                        $l_sql = 'SELECT `DispatchDate` FROM `CrimeIncidents` WHERE `CrimeName`IN ('.$fin.') AND `DistrictNumber` = '.$d_val.' ORDER BY `DispatchDate` DESC LIMIT 0,1';
+                                        
+                                    }else{
+                                        $l_sql = 'SELECT `DispatchDate` FROM `CrimeIncidents` WHERE `CrimeName`IN ('.$fin.') ORDER BY `DispatchDate` DESC LIMIT 0,1';
+                                        
+                                    }
+                                    
+                                    $lres = mysqli_query($CONN, $l_sql);
+                                    
+                                    if(mysqli_num_rows($lres) >= 1){
+                                        
+                                        $drow = mysqli_fetch_array($lres);
+                                        $f_date = $drow['DispatchDate'];
+                                        
+                                        if($d_val !== null){
+                                            $m_sql = 'SELECT COUNT(`DispatchDate`) AS d_Count FROM `CrimeIncidents` WHERE `DispatchDate` = '."'".$f_date."'".' AND `CrimeName` IN ('.$fin.') AND `DistrictNumber` = '.$d_val.'';
+                                            
+                                        }else{
+                                            $m_sql = 'SELECT COUNT(`DispatchDate`) AS d_Count FROM `CrimeIncidents` WHERE `DispatchDate` = '."'".$f_date."'".' AND `CrimeName` IN ('.$fin.')';
+                                            
+                                        }
+                                        
+                                        $ref = mysqli_query($CONN, $m_sql);
+                                        
+                                        if(mysqli_num_rows($ref) >= 1){
+                                            $c_arr = mysqli_fetch_array($ref);
+                                            $ctc = $c_arr['d_Count'];
+                                            date_default_timezone_set('US/Eastern');
+                                            $td2 = date('Y-m-d');
+                                            $x_ago = dateDifference($f_date,$td2,"%d days");
+                                            writeToLog("XDAYZ ago ".$x_ago);
+                                            writeToLog("XDAYZ ctc ".$ctc);
+                                            writeToLog("XDAYZ dval ".$d_val);
+                                            writeToLog("XDAYZ cType ".$crT);
+                                            $cvv = strtotime($f_date);
+                                            $nDate = date('l F jS ',$cvv);
+                                            
+                                            if($d_val !== null){
+                                                $f_URL = "SELECT * FROM `CrimeIncidents` WHERE `DispatchDate` = '$f_date' AND `CrimeName` IN ($fin) AND `DistrictNumber` = $d_val ORDER BY `DispatchTime` DESC";
+                                                
+                                            }else{
+                                                $f_URL = "SELECT * FROM `CrimeIncidents` WHERE `DispatchDate` = '$f_date' AND `CrimeName` IN ($fin) ORDER BY `DispatchTime` DESC";
+                                                
+                                            }
+                                            
+                                            /// IF ONE ONLY ONE RECORD RETURN
+                                            if($ctc == 1 && $x_ago == "1 days"){
+                                                
+                                                if($crT == "assault"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no assaults to report today at this time. However, there is '.$ctc.' reported assault yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no assaults to report today at this time. However, there is '.$ctc.' reported assault yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                                if($crT == "theft"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no thefts to report today at this time. However, there is '.$ctc.' reported theft yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no thefts to report today at this time. However, there is '.$ctc.' reported theft yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                                if($crT == "robbery"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, I do not have any robberies to report today at this time. However, there is '.$ctc.' reported robbery yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, I do not have any robberies to report today at this time. However, there is '.$ctc.' reported robbery yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                                if($crT == "burglary"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no burglaries to report today at this time. However, there is '.$ctc.' reported burglary yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no burglaries to report today at this time. However, there is '.$ctc.' reported burglary yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                                if($crT == "homicide"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no homicides to report today at this time. However, there is '.$ctc.' reported homicide yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no homicides to report today at this time. However, there is '.$ctc.' reported homicide yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                                if($crT == "sexual assault"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no sexual assaults to report today at this time. However, there is '.$ctc.' reported sexual assault yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no sexual assaults to report today at this time. However, there is '.$ctc.' reported sexual assault yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                                if($crT == "drugs"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, there are no drugs, or narcotic law violations to report today at this time. However, there is '.$ctc.' reported drug, or narcotic law violation yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no drugs, or narcotic law violations to report today at this time. However, there is '.$ctc.' reported drug, or narcotic law violation yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                            }else if($ctc > 1 && $x_ago == "1 days"){
+                                                
+                                                if($crT == "assault"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no assaults to report today at this time. However, there was '.$ctc.' reported assaults yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no assaults to report today at this time. However, there was '.$ctc.' reported assault yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                                if($crT == "theft"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no thefts to report today at this time. However, there was '.$ctc.' reported thefts yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no thefts to report today at this time. However, there was '.$ctc.' reported theft yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                                if($crT == "robbery"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, I do not have any robberies to report today at this time. However, there was '.$ctc.' reported robberies yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, I do not have any robberies to report today at this time. However, there was '.$ctc.' reported robbery yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                                if($crT == "burglary"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no burglaries to report today at this time. However, there was '.$ctc.' reported burglaries yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no burglaries to report today at this time. However, there was '.$ctc.' reported burglary yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                                if($crT == "homicide"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no homicides to report today at this time. However, there was '.$ctc.' reported homicides yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no homicides to report today at this time. However, there was '.$ctc.' reported homicide yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                                if($crT == "sexual assault"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no sexual assaults to report today at this time. However, there was '.$ctc.' reported sexual assaults yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no sexual assaults to report today at this time. However, there was '.$ctc.' reported sexual assault yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                                if($crT == "drugs"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no drugs, or narcotic law violations to report today at this time. However, there was '.$ctc.' reported drug or narcotic law violations yesterday, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no drug, or narcotic law violations to report today at this time. However, there was '.$ctc.' reported drug, or narcotic law violation, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                                
+                                            }else if($ctc == 1){
+                                                
+                                                if($crT == "assault"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no assaults to report today at this time. However, there is '.$ctc.' reported assault '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no assaults to report today at this time. However, there is '.$ctc.' reported assault '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                                if($crT == "theft"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no thefts to report today at this time. However, there is '.$ctc.' reported theft '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no thefts to report today at this time. However, there is '.$ctc.' reported theft '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                                if($crT == "robbery"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, I do not have any robberies to report today at this time. However, there is '.$ctc.' reported robbery '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, I do not have any robberies to report today at this time. However, there is '.$ctc.' reported robbery '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                                if($crT == "burglary"){
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no burglaries to report today at this time. However, there is '.$ctc.' reported burglary '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no burglaries to report today at this time. However, there is '.$ctc.' reported burglary '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                                if($crT == "homicide"){
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no homicides to report today at this time. However, there is '.$ctc.' reported homicide '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no homicides to report today at this time. However, there is '.$ctc.' reported homicide '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                                if($crT == "sexual assault"){
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no sexual assaults to report today at this time. However, there is '.$ctc.' reported sexual assault '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no sexual assaults to report today at this time. However, there is '.$ctc.' reported sexual assault '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                                if($crT == "drugs"){
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no drugs, or narcotic law violations to report today at this time. However, there is '.$ctc.' reported drug, or narcotic law violation '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no drug, or narcotic law violations to report today at this time. However, there is '.$ctc.' reported drug, or narcotic law violation '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                }
+                                            }else{
+                                                
+                                                if($crT == "assault"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no assaults to report today at this time. However, there were '.$ctc.' assaults '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no assaults to report today at this time. However, there were '.$ctc.' assaults '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                }
+                                                if($crT == "theft"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no thefts to report today at this time. However, there were '.$ctc.' reported thefts '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no thefts to report today at this time. However, there were '.$ctc.' reported thefts '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                    
+                                                }
+                                                if($crT == "robbery"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, I do not have any robberies to report today at this time. However, there were '.$ctc.' reported robberies '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, I do not have any robberies to report today at this time. However, there were '.$ctc.' reported robberies '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                    
+                                                }
+                                                if($crT == "burglary"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no burglaries to report today at this time. However, there were '.$ctc.' reported burglaries '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no burglaries to report today at this time. However, there were '.$ctc.' reported burglaries '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                    
+                                                }
+                                                if($crT == "homicide"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no homicides to report today at this time. However, there were '.$ctc.' reported homicides '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no homicides to report today at this time. However, there were '.$ctc.' reported homicides '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                    
+                                                }
+                                                if($crT == "sexual assault"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no sexual assaults to report today at this time. However, there were '.$ctc.' reported sexual assaults '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no sexual assaults to report today at this time. However, there were '.$ctc.' reported sexual assaults '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                    
+                                                }
+                                                if($crT == "drugs"){
+                                                    
+                                                    if($d_val == null){
+                                                        $say = '<speak><p>Fortunately, There are no drugs, or narcotic law violations to report today at this time. However, there were '.$ctc.' reported drugs, or narcotic law violations '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }else{
+                                                        $say = '<speak><p>Fortunately, In the '.addTH($d_val).' district, There are no drugs, or narcotic law violations to report today at this time. However, there were '.$ctc.' reported drugs, or narcotic law violations '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
+                                                        
+                                                    }
+                                                    
+                                                    
+                                                }
+                                                
+                                                
+                                            }
+                                            
+                                            $txt = array("version"=>"1.0","sessionAttributes"=>array("SQL"=>$f_URL,"presentTime"=>"today","crimeType"=>$crT),"response"=>array("outputSpeech"=>array("type"=>"SSML","ssml"=>$say),"reprompt"=>null,"shouldEndSession"=>false));
+                                            
+                                            $ret = json_encode($txt);
+                                            
+                                            
+                                        }
+                                        
+                                    }
+                                    
+                                    
+                                }
+                                
+                                
+                            }
+                            
+                     
+                            
+                            
+                            echo $ret;
+                            writeToLog($ret);
+                            
+                            
+                            
                              
 
                         }else{
@@ -1750,11 +1818,11 @@
                                 
 //                                 $tyArr = array();
 //                                 $sRob = "SELECT `Name` FROM `CrimeTypes` WHERE `Type` = 'Robbery'";
-//                                 $sRes = mysql_query($sRob);
+//                                 $sRes = mysqli_query($CONN, $sRob);
                                 
-//                                 if(mysql_num_rows($sRes) >= 1){
+//                                 if(mysqli_num_rows($sRes) >= 1){
                                     
-//                                     while($tows = mysql_fetch_array($sRes)){
+//                                     while($tows = mysqli_fetch_array($sRes)){
 //                                         $nam = $tows['Name'];
 //                                         array_push($tyArr,$nam);
 //                                     }
@@ -1805,12 +1873,12 @@
                                 
 //                                 $tyArr = array();
 //                                 $sRob = "SELECT `Name` FROM `CrimeTypes` WHERE `Type` = 'Assault'";
-//                                 $sRes = mysql_query($sRob);
+//                                 $sRes = mysqli_query($CONN, $sRob);
                             
                                 
-//                                 if(mysql_num_rows($sRes) >= 1){
+//                                 if(mysqli_num_rows($sRes) >= 1){
                                     
-//                                     while($tows = mysql_fetch_array($sRes)){
+//                                     while($tows = mysqli_fetch_array($sRes)){
 //                                         $nam = $tows['Name'];
 //                                         array_push($tyArr,$nam);
 //                                     }
@@ -1862,11 +1930,11 @@
                              
 //                              $tyArr = array();
 //                              $sRob = "SELECT `Name` FROM `CrimeTypes` WHERE `Type` = 'theft'";
-//                              $sRes = mysql_query($sRob);
+//                              $sRes = mysqli_query($CONN, $sRob);
                              
-//                              if(mysql_num_rows($sRes) >= 1){
+//                              if(mysqli_num_rows($sRes) >= 1){
                                  
-//                                  while($tows = mysql_fetch_array($sRes)){
+//                                  while($tows = mysqli_fetch_array($sRes)){
 //                                      $nam = $tows['Name'];
 //                                      array_push($tyArr,$nam);
 //                                  }
@@ -2123,8 +2191,58 @@
                         $u_has = $pre['Hash'];
                         $ut_ct = $pre['totalCount'] - 1 ;
                         $cu_ct = $pre['currentCount'];
+                         
+                         $ress = '';
+                         $speaK = '';
+                         $f_obj = '';
+                         $ct = 0;
+                         
+                         $us_ql = "SELECT * FROM `NewsStory` WHERE `ScrapeHash` = '$u_has' ORDER BY `PubDate` ASC LIMIT $ut_ct , $cu_ct";
+                         $us_res = mysqli_query($CONN, $us_ql);
+                         
+                         $roe = mysqli_fetch_array($us_res);
+                         $cattt = $roe['Category'];
+                         
+                         if($cattt == "Wanted"){
+                             //$speaK = "The Category is Wanted";
+                         }else if($cattt == "Missing Person"){
+                             //$speaK = "The Category is Missing Person";
+                         }else if($cattt == "Missing Juvenile"){
+                             //$speaK = "The Category is Missing Juvenile";
+                                 $desc = utf8_encode(cleanTxT($roe['Description']));
+                                 $speaK = '<p>'.$desc.'</p>';
+                         }else if($cattt == "Missing Endangered Person"){
+                             $speaK = "Missing Endangered Person";
+                         }
+                         
+
+                         
+                         
+                         $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$ut_ct,"currentCount"=>"1","Hash"=>$u_has),"response"=>
+                             array("outputSpeech"=>
+                                 array("type"=>"SSML","ssml"=>"<speak>".$speaK."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
+                         
+                         echo $ress;
+
+                    }
+                    
+                    if($aTT['attributes']['SQL'] !== null && $aTT['attributes']['crimeType'] !== null){
+                        $pre = $aTT['attributes'];
+                        $sqlz = $pre['SQL'];
+                        $cyT = $pre['crimeType'];
+                        $rex = mysqli_query($CONN, $sqlz);
+                        $roq = mysqli_fetch_array($rex);
                         
-                        echo readThisNews($u_has,$ut_ct,$cu_ct);
+                        $desc = utf8_encode(cleanTxT($roq['AddressBlock']));
+                        $speaK = '<p>'.$desc.'</p>';
+                        
+                        
+                        $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$ut_ct,"currentCount"=>"1","Hash"=>$u_has),"response"=>
+                            array("outputSpeech"=>
+                                array("type"=>"SSML","ssml"=>"<speak>".$speaK."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
+                        
+                        echo $ress;
+                        
                         
                     }
                     
@@ -2222,14 +2340,111 @@
         
         if($isNavi == "ER_SUCCESS_MATCH"){
             
-            if($navi == "continue"){
+            if($navi == "continue" || $navi == "next"){
 
+                if($aTTs['totalCount'] !== 0){ // check for total count
+                    
+                    $aTTs = $data['session']['attributes'];
+                    $u_has = $aTTs['Hash'];
+                    $ut_ct = $aTTs['totalCount'] - 1 ;
+                    $cu_ct = $aTTs['currentCount'];
+                    // echo readThisNews($u_has,$ut_ct,$cu_ct);
+                    $sqll = "SELECT * FROM `NewsStory` WHERE `ScrapeHash` = '$u_has' ORDER BY `PubDate` DESC LIMIT $ut_ct, $cu_ct";
+                    $rezz = mysqli_query($CONN, $sqll);
+                    if(mysqli_num_rows($rezz) >=1){
+                        $art = mysqli_fetch_array($rezz);
+                        $xttt = $art['Category'];
+                        
+                        if($xttt == "Wanted"){
+                            //$speaK = "The Category is Wanted";
+                            $desc = utf8_encode(cleanTxT($art['Description']));
+                            $speaK = '<p>'.$desc.'</p>';
+                        }else if($xttt == "Missing Person"){
+                            //$speaK = "The Category is Missing Person";
+                            $desc = utf8_encode(cleanTxT($art['Description']));
+                            $speaK = '<p>'.$desc.'</p>';
+                        }else if($xttt == "Missing Juvenile"){
+                            $speaK = "The Category is Missing Juvenile";
+                            $desc = utf8_encode(cleanTxT($art['Description']));
+                            $speaK = '<p>'.$desc.'</p>';
+                        }else if($xttt == "Missing Endangered Person"){
+                            //$speaK = "Missing Endangered Person";
+                            $desc = utf8_encode(cleanTxT($art['Description']));
+                            $speaK = '<p>'.$desc.'</p>';
+                        }else{
+                            $desc = utf8_encode(cleanTxT($art['Description']));
+                            $speaK = '<p>'.$desc.'</p>';
+                        }
+                        
+                        
+                        $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$ut_ct,"currentCount"=>"1","Hash"=>$u_has),"response"=>
+                            array("outputSpeech"=>
+                                array("type"=>"SSML","ssml"=>"<speak>".$speaK."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
+                        
+                        echo $ress;
+                        
+                    }else{
+                        // nothing returned mysql
+                    
+                    }
+                    
+                    
+                    
+                }else{
+                    
+                    // no more stories left to tell
+                }
+                
+                
+               
+                
+                
+            }
+            
+            if($navi == "repeat"){
+                
                 $aTTs = $data['session']['attributes'];
                 $u_has = $aTTs['Hash'];
-                $ut_ct = $aTTs['totalCount'] - 1 ;
+                $ut_ct = $aTTs['totalCount'];
                 $cu_ct = $aTTs['currentCount'];
-                echo readThisNews($u_has,$ut_ct,$cu_ct);
-
+                
+                $sqll = "SELECT * FROM `NewsStory` WHERE `ScrapeHash` = '$u_has' ORDER BY `PubDate` DESC LIMIT $ut_ct, $cu_ct";
+                $rezz = mysqli_query($CONN, $sqll);
+                if(mysqli_num_rows($rezz) >=1){
+                    $art = mysqli_fetch_array($rezz);
+                    $xttt = $art['Category'];
+                    
+                    if($xttt == "Wanted"){
+                        //$speaK = "The Category is Wanted";
+                        $desc = utf8_encode(cleanTxT($art['Description']));
+                        $speaK = '<p>'.$desc.'</p>';
+                    }else if($xttt == "Missing Person"){
+                        //$speaK = "The Category is Missing Person";
+                        $desc = utf8_encode(cleanTxT($art['Description']));
+                        $speaK = '<p>'.$desc.'</p>';
+                    }else if($xttt == "Missing Juvenile"){
+                        $speaK = "The Category is Missing Juvenile";
+                        $desc = utf8_encode(cleanTxT($art['Description']));
+                        $speaK = '<p>'.$desc.'</p>';
+                    }else if($xttt == "Missing Endangered Person"){
+                        //$speaK = "Missing Endangered Person";
+                        $desc = utf8_encode(cleanTxT($art['Description']));
+                        $speaK = '<p>'.$desc.'</p>';
+                    }else{
+                        $desc = utf8_encode(cleanTxT($art['Description']));
+                        $speaK = '<p>'.$desc.'</p>';
+                    }
+                    
+                    
+                    $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$ut_ct,"currentCount"=>"1","Hash"=>$u_has),"response"=>
+                        array("outputSpeech"=>
+                            array("type"=>"SSML","ssml"=>"<speak>".$speaK."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
+                    
+                    echo $ress;
+                    
+                }
+                
+                
                 
             }
             
@@ -2244,7 +2459,7 @@
                 
                 $array = array();
                 $ch = "SELECT `TimeStamp`,`Hash` FROM `CurrentHash` WHERE `HashName` = 'NewsStory'";
-                $reyt = mysql_query($ch);
+                $reyt = mysqli_query($CONN, $ch);
                 
                 $speaK = '';
                 $f_obj = '';
@@ -2252,23 +2467,23 @@
                 //$obj_arr = array();
                 $cat_ct = array();
                 
-                if(mysql_num_rows($reyt) >=1){
+                if(mysqli_num_rows($reyt) >=1){
                     
-                    $row = mysql_fetch_array($reyt);
+                    $row = mysqli_fetch_array($reyt);
                     $hash = $row['Hash'];
                     $tDATE = $row['TimeStamp'];
                     $sql = "SELECT SQL_CALC_FOUND_ROWS * FROM `NewsStory` WHERE `ScrapeHash` = '$hash' ORDER BY `PubDate` DESC LIMIT 0,1";
                     $rec_ct = "SELECT FOUND_ROWS() AS ROWS";
-                    $rep = mysql_query($sql);
+                    $rep = mysqli_query($CONN, $sql);
                     
                     
-                    if(mysql_num_rows($rep) >= 1){
+                    if(mysqli_num_rows($rep) >= 1){
                         
-                        $rep_ct = mysql_query($rec_ct);
-                        $tl_ctt = mysql_fetch_array($rep_ct);
+                        $rep_ct = mysqli_query($CONN, $rec_ct);
+                        $tl_ctt = mysqli_fetch_array($rep_ct);
                         $total_ct = $tl_ctt['ROWS'];
                         
-                        while($row = mysql_fetch_array($rep)){
+                        while($row = mysqli_fetch_array($rep)){
                            
                             if($ct == 0){
                                 $f_obj = $row['PubDate'];
@@ -2481,10 +2696,10 @@
 //                     $array = array();
 //                     $val = $data['request']['intent']['slots']['districtNums']['value'];
 //                     $sql = "SELECT `Title`,`Description` FROM `NewsStory` WHERE `DistrictNumber` = '$val' ORDER BY `TimeStamp` DESC LIMIT 0,1";
-//                     $res = mysql_query($sql);
+//                     $res = mysqli_query($CONN, $sql);
 //                     $fv = 0;
             
-//                         while($row = mysql_fetch_array($res)){
+//                         while($row = mysqli_fetch_array($res)){
 //                             $to = str_replace("Wanted: ","",$row['Title']);
 //                             $fv = utf8_encode($row['Description']);
                             
