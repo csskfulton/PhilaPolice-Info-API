@@ -54,7 +54,9 @@
         function cvNum($you){
             
             if(strpos($you,"000")>=1){
-                return $you;
+                $num_ar = explode("000",$you);
+                $hun = $num_ar[0];
+                return $hun." thousand";
                 
             }else{
                 
@@ -72,7 +74,7 @@
         
         if(strpos($loc,"BLOCK")>=1){
             $arB = explode(" BLOCK ",$loc);
-            $nADD = cvNum($arB[0])." block of, ";
+            $nADD = cvNum($arB[0])." block of ";
             $txt2 = $arB[1];
             
             
@@ -663,57 +665,57 @@
                     }
                     
                     
-                    if($dist == "25"){
-                        $secc = "in the Hunting Park, and Feltonville section of the city.";
-                    }           
-                    if($dist == "24"){
-                        $secc = "in the Port Richmond, and Juniata Park section of the city.";
-                    }
-                    if($dist == "26"){
-                        $secc = "in the Kensington, and Fishtown section of the city.";
-                    }                  
-                    if($dist == "39"){
-                        $secc = "in the East Falls, and Tioga section of the city.";
-                    }
-                    if($dist == "35"){
-                        $secc = "in the West Oak Lane, and Onley section of the city.";
-                    }
-                    if($dist == "14"){
-                        $secc = "in the Mount Airy, and Germantown section of the city.";
-                    }
-                    if($dist == "15"){
-                        $secc = "in the Frankford, and Tacony section of the city.";
-                    }
-                    if($dist == "9"){
-                        $secc = "in the Rittenhouse Square, and Fairmount section of the city.";
-                    }
-                    if($dist == "22"){
-                        $secc = "in the Center City, and Chinatown section of the city.";
-                    }
-                    if($dist == "19"){
-                        $secc = "in the Overbrook, and Parkside section of the city.";
-                    }
-                    if($dist == "18"){
-                        $secc = "Cobbs Creek, and University City section of the city.";
-                    }
-                    if($dist == "16"){
-                        $secc = "Cobbs Creek, and University City section of the city.";
-                    }
-                    if($dist == "5"){
-                        $secc = "in the Roxborough, and Manayunk section of the city.";
-                    }
-                    if($dist == "6"){
-                        $secc = "in the Frankford, and Tacony section of the city.";
-                    }
-                    if($dist == "2"){
-                        $secc = "in the Oxford Circle, and Lawncrest section of the city.";
-                    }
-                    if($dist == "7"){
-                        $secc = "in the Bustleton, and Somerton section of the city.";
-                    }
-                    if($dist == "8"){
-                        $secc = "in the Holmesburg, and Millbrook section of the city.";
-                    }
+//                     if($dist == "25"){
+//                         $secc = "in the Hunting Park, and Feltonville section of the city.";
+//                     }           
+//                     if($dist == "24"){
+//                         $secc = "in the Port Richmond, and Juniata Park section of the city.";
+//                     }
+//                     if($dist == "26"){
+//                         $secc = "in the Kensington, and Fishtown section of the city.";
+//                     }                  
+//                     if($dist == "39"){
+//                         $secc = "in the East Falls, and Tioga section of the city.";
+//                     }
+//                     if($dist == "35"){
+//                         $secc = "in the West Oak Lane, and Onley section of the city.";
+//                     }
+//                     if($dist == "14"){
+//                         $secc = "in the Mount Airy, and Germantown section of the city.";
+//                     }
+//                     if($dist == "15"){
+//                         $secc = "in the Frankford, and Tacony section of the city.";
+//                     }
+//                     if($dist == "9"){
+//                         $secc = "in the Rittenhouse Square, and Fairmount section of the city.";
+//                     }
+//                     if($dist == "22"){
+//                         $secc = "in the Center City, and Chinatown section of the city.";
+//                     }
+//                     if($dist == "19"){
+//                         $secc = "in the Overbrook, and Parkside section of the city.";
+//                     }
+//                     if($dist == "18"){
+//                         $secc = "Cobbs Creek, and University City section of the city.";
+//                     }
+//                     if($dist == "16"){
+//                         $secc = "Cobbs Creek, and University City section of the city.";
+//                     }
+//                     if($dist == "5"){
+//                         $secc = "in the Roxborough, and Manayunk section of the city.";
+//                     }
+//                     if($dist == "6"){
+//                         $secc = "in the Frankford, and Tacony section of the city.";
+//                     }
+//                     if($dist == "2"){
+//                         $secc = "in the Oxford Circle, and Lawncrest section of the city.";
+//                     }
+//                     if($dist == "7"){
+//                         $secc = "in the Bustleton, and Somerton section of the city.";
+//                     }
+//                     if($dist == "8"){
+//                         $secc = "in the Holmesburg, and Millbrook section of the city.";
+//                     }
                     
                     
                     
@@ -748,7 +750,7 @@
                     $location = fixAddress($location);
            
                     
-                    $txt .= "<p>In the ".$dist."th district, on ".$daa.", around ".$timeF.", A ".$pol." ".$sex.", age ".$age.", was wounded ".$wound.", on the ".$location.", ".$secc."</p>";
+                    $txt .= "<p>In the ".$dist."th district, on ".$daa.", around ".$timeF.", A ".$pol." ".$sex.", age ".$age.", was wounded ".$wound.", on the ".$location."</p>";
                     //array_push($array,$txt);
                             
                 }
@@ -818,134 +820,7 @@
         
         return $tty;
     }
-    
-    
-    
-    
-    
-    
-    function readThisNews($hah,$tlc,$cct){
-        
-        $ress = '';
-        $speaK = '';
-        $f_obj = '';
-        $ct = 0;
-        
-        $us_ql = "SELECT * FROM `NewsStory` WHERE `ScrapeHash` = '$hah' ORDER BY `PubDate` ASC LIMIT $tlc , $cct";
-        $us_res = mysqli_query($CONN, $us_ql);
-        
-            $roe = mysqli_fetch_array($us_res);
-            $cattt = $roe['Title'];
-                
-//                 if($roe['Category'] == "Wanted"){
-//                     $title = $roe['Title'];
-//                     //array_push($cat_ct,$roe['Category']);
-                    
-                    
-//                     if(preg_match('/(Suspects)/is',$title)){
-//                         $hal = str_replace("Suspects for ",'',$title);
-//                         $desc = utf8_encode(cleanTxT($roe['Description']));
-//                         $speaK = '<s>there are multiple suspects wanted for a '.$hal.'</s><p>'.$desc.'</p>';
-//                         // array_push($obj_arr, $speaK);
-//                     }
-                    
-//                     if(preg_match('/(Suspect)(\s+)/is',$title)){
-//                         $hal = str_replace("Suspect for ",'',$title);
-//                         $desc = utf8_encode(cleanTxT($roe['Description']));
-//                         $speaK = '<s>a suspect is wanted for a '.$hal.'</s><p>'.$desc.'</p>';
-//                         // array_push($obj_arr, $speaK);
-//                     }
-                    
-                    
-//                     writeToLog("WANTED "+$speaK);
-//                 }
-                
-//                 else if($roe['Category'] == "Missing Person"){
-//                     $title = str_replace(" ? "," ",utf8_decode($roe['Title']));
-//                     //array_push($cat_ct,$roe['Category']);
-                    
-//                     if(preg_match('/(Missing)(\s+)(Person)/is',$title)){
-//                         $hal = str_replace("Missing Person ",'',$title);
-                        
-//                         if(preg_match('/(\s+)(From)(\s+)(the)(\s+)/is',$hal)){
-//                             $split = explode(" From the ",$hal);
-//                             $name = $split[0];
-//                             $distz = $split[1];
-//                             $desc = utf8_encode(cleanTxT($roe['Description']));
-//                             $speaK = '<p>a person is reportedly missing by the name '.$name.' from the '.$distz.'</p><p>'.$desc.'</p>';
-//                             //  array_push($obj_arr, $speaK);
-//                         }else{
-//                             $desc = utf8_encode(cleanTxT($roe['Description']));
-//                             $speaK = '<p>a person is reportedly missing by the name of '.$hal.'</p><p>'.$desc.'</p>';
-//                             //  array_push($obj_arr, $speaK);
-//                         }
-//                     }
-                    
-//                     writeToLog("MISSING PERSON "+$speaK);
-//                 }
-                
-//                 else{
-// //                     $title = $roe['Title'];
-// //                     if(preg_match('/(Missing)( )(Juvenile)/is',$title)){
-                        
-// //                     }
-
-//                     $desc = "balls";
-//                     $name = "Hello";
-//                     $distz = "catfish";
-                    
-                    
-
-//                     $speaK = '<p>a person is reportedly missing by the name '.$name.' from the '.$distz.'</p><p>'.$desc.'</p>';
-                    
-//                     writeToLog("SOMETHING ELSE "+$speaK);
-//                 }
-                
-                
-                $tlc = "1";
-                $hah = "jfidf9dfjidf";
-                
-                if($cattt == "Wanted"){
-                    $speaK = "The Category is Wanted";
-                }else if($cattt == "Missing Person"){
-                    $speaK = "The Category is Missing Person";
-                }else if($cattt == "Missing Juvenile"){
-                    $speaK = "The Category is Missing Juvenile";
-                }else if($cattt == "Missing Endangered Person"){
-                    $speaK = "Missing Endangered Person";
-                }
-                
-                writeToLog("SOMETHING ELSE ".$roe['StoryAuthor']);
-                
-            
-            
-        
-            
-        
-        
-        $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$tlc,"currentCount"=>"1","Hash"=>$hah),"response"=>
-            array("outputSpeech"=>
-                array("type"=>"SSML","ssml"=>"<speak>".$speaK."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
-        
- 
-        return $ress;
-        
-        
-    }
-    
-    
-    
-    
-    
-    
-    
-    function getTodayStats($crT,$d_val){
-        
-        
-        
-        
-        
-    }
+      
     
     
     function readAnswer($objs,$dtype){
@@ -1332,11 +1207,8 @@
                     
                     $td2 = date('Y-m-d');
                     
-                        if($isRob == "ER_SUCCESS_MATCH"){
-                            
-                            //echo getTodayStats($crT,$d_val);
+                        if($isRob == "ER_SUCCESS_MATCH"){ /// MATCH CRIMETYPE
                          
-                            
                             $ret = '';
                             
                             $tyArr = array();
@@ -1400,20 +1272,9 @@
                                             date_default_timezone_set('US/Eastern');
                                             $td2 = date('Y-m-d');
                                             $x_ago = dateDifference($f_date,$td2,"%d days");
-                                            writeToLog("XDAYZ ago ".$x_ago);
-                                            writeToLog("XDAYZ ctc ".$ctc);
-                                            writeToLog("XDAYZ dval ".$d_val);
-                                            writeToLog("XDAYZ cType ".$crT);
                                             $cvv = strtotime($f_date);
                                             $nDate = date('l F jS ',$cvv);
                                             
-                                            if($d_val !== null){
-                                                $f_URL = "SELECT * FROM `CrimeIncidents` WHERE `DispatchDate` = '$f_date' AND `CrimeName` IN ($fin) AND `DistrictNumber` = $d_val ORDER BY `DispatchTime` DESC";
-                                                
-                                            }else{
-                                                $f_URL = "SELECT * FROM `CrimeIncidents` WHERE `DispatchDate` = '$f_date' AND `CrimeName` IN ($fin) ORDER BY `DispatchTime` DESC";
-                                                
-                                            }
                                             
                                             /// IF ONE ONLY ONE RECORD RETURN
                                             if($ctc == 1 && $x_ago == "1 days"){
@@ -1738,7 +1599,11 @@
                                                 
                                             }
                                             
-                                            $txt = array("version"=>"1.0","sessionAttributes"=>array("SQL"=>$f_URL,"presentTime"=>"today","crimeType"=>$crT),"response"=>array("outputSpeech"=>array("type"=>"SSML","ssml"=>$say),"reprompt"=>null,"shouldEndSession"=>false));
+                                            if($d_val == null){
+                                                $d_val = 0;
+                                            }
+                                            
+                                            $txt = array("version"=>"1.0","sessionAttributes"=>array("presentTime"=>"today","crimeType"=>$crT,"currentCount"=>1,"totalCount"=>$ctc,"districtNum"=>$d_val,"category"=>$fin,"dDate"=>$f_date),"response"=>array("outputSpeech"=>array("type"=>"SSML","ssml"=>$say),"reprompt"=>null,"shouldEndSession"=>false));
                                             
                                             $ret = json_encode($txt);
                                             
@@ -1754,7 +1619,7 @@
                             }
                             
                      
-                            
+                            // NO CRIME TYPE RETURNED FROM QUERY
                             
                             echo $ret;
                             writeToLog($ret);
@@ -1765,8 +1630,9 @@
 
                         }else{
                             
+                            /// ERROR NEEDED, TODAY SPECFIED BUT NO CRIME-TYPE PROVIDED
                             ///GET SHOOTING FROM TODAY's DATE
-                            $curl_jason = getAPI_Info('https://phl.carto.com/api/v2/sql?q=SELECT%20*%20FROM%20shootings%20WHERE%20date_%20=%20%27'.$td2.'%20%27');
+                            //$curl_jason = getAPI_Info('https://phl.carto.com/api/v2/sql?q=SELECT%20*%20FROM%20shootings%20WHERE%20date_%20=%20%27'.$td2.'%20%27');
                             
                         }
                    
@@ -1814,170 +1680,7 @@
                     if($ttc == 0){
                         
                         if($isRob == "ER_SUCCESS_MATCH"){
-                            
-//                             if($crT == "robbery"){
-                                
-//                                 $tyArr = array();
-//                                 $sRob = "SELECT `Name` FROM `CrimeTypes` WHERE `Type` = 'Robbery'";
-//                                 $sRes = mysqli_query($CONN, $sRob);
-                                
-//                                 if(mysqli_num_rows($sRes) >= 1){
-                                    
-//                                     while($tows = mysqli_fetch_array($sRes)){
-//                                         $nam = $tows['Name'];
-//                                         array_push($tyArr,$nam);
-//                                     }
-                                    
-//                                     $sir = implode("','", $tyArr);
-//                                     $fin = urlencode("'".$sir."'");
-                                    
-//                                     $curl_jason2 = getAPI_Info('https://phl.carto.com/api/v2/sql?q=SELECT%20dispatch_date%20FROM%20incidents_part1_part2%20WHERE%20text_general_code%20IN%20('.$fin.')%20ORDER%20%20BY%20dispatch_date%20DESC%20NULLS%20LAST%20LIMIT%20%201');
-//                                     $x_dat = $curl_jason2['rows'][0]['dispatch_date'];
-//                                     $ix_url = 'https://phl.carto.com/api/v2/sql?q=SELECT%20*%20FROM%20incidents_part1_part2%20WHERE%20text_general_code%20IN%20('.$fin.')%20AND%20dispatch_date%20%3E=%20%20%27'.$x_dat.'%27';
-//                                     $x_more = getAPI_Info($ix_url);
-//                                     $x_ct = $x_more['total_rows'];
-//                                     date_default_timezone_set('US/Eastern');
-//                                     $td2 = date('Y-m-d');
-//                                     $x_ago = dateDifference($x_dat,$td2,"%d days");
-                                    
-//                                     //IF ONE RECORD RETURN (SINGULAR)
-//                                     if($x_ago == 1){
-                                        
-//                                         $cvv = strtotime($x_dat);
-//                                         $nDate = date('l F jS ',$cvv);
-                                        
-//                                         $say = '<speak><p>I do not have any robbries to report at the moment. However, there is '.$x_ct.' robbery to report from yesterday, '.$nDate.', Would you like to hear the details?</p></speak>';
-                                        
-//                                     }else{
-                                        
-//                                         $say = '<speak><p>I do not have any robbries to report at the moment. However, there were '.$x_ct.' reported robbries '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                        
-//                                     }
-                                    
-                                    
-//                                     $txt = array("version"=>"1.0","sessionAttributes"=>array("crimeType"=>"robbery","Lastdate"=>$x_dat,"fetchURL"=>$ix_url),"response"=>array("outputSpeech"=>array("type"=>"SSML","ssml"=>$say),"reprompt"=>null,"shouldEndSession"=>false));
-                                    
-//                                     echo json_encode($txt);
-//                                 }
-                                
-                                
-                                
-//                             }
 
-                            
-                            
-                            
-                            
-                            
-//                             if($crT == "assualt"){
-                                
-                                
-//                                 $tyArr = array();
-//                                 $sRob = "SELECT `Name` FROM `CrimeTypes` WHERE `Type` = 'Assault'";
-//                                 $sRes = mysqli_query($CONN, $sRob);
-                            
-                                
-//                                 if(mysqli_num_rows($sRes) >= 1){
-                                    
-//                                     while($tows = mysqli_fetch_array($sRes)){
-//                                         $nam = $tows['Name'];
-//                                         array_push($tyArr,$nam);
-//                                     }
-                                    
-//                                     $sir = implode("','", $tyArr);
-//                                     $fin = urlencode("'".$sir."'");
-                                    
-//                                     $curl_jason2 = getAPI_Info('https://phl.carto.com/api/v2/sql?q=SELECT%20dispatch_date%20FROM%20incidents_part1_part2%20WHERE%20text_general_code%20IN%20('.$fin.')%20ORDER%20%20BY%20dispatch_date%20DESC%20NULLS%20LAST%20LIMIT%20%201');
-//                                     $x_dat = $curl_jason2['rows'][0]['dispatch_date'];
-//                                     $x_more = getAPI_Info('https://phl.carto.com/api/v2/sql?q=SELECT%20dispatch_date%20FROM%20incidents_part1_part2%20WHERE%20text_general_code%20IN%20('.$fin.')%20AND%20dispatch_date%20%3E=%20%20%27'.$x_dat.'%27');
-//                                     $x_ct = $x_more['total_rows'];
-//                                     date_default_timezone_set('US/Eastern');
-//                                     $td2 = date('Y-m-d');
-//                                     $x_ago = dateDifference($x_dat,$td2,"%d days");
-                                    
-//                                     //IF ONE RECORD RETURN (SINGULAR)
-//                                     if($x_ago == 1){
-                                        
-//                                         $cvv = strtotime($x_dat);
-//                                         $nDate = date('l F jS ',$cvv);
-                                        
-//                                         $say = '<speak><p>I do not have any assaults to report at the moment. However, there is '.$x_ct.' assault to report from yesterday, '.$nDate.', Would you like to hear the details?</p></speak>';
-                                        
-//                                     }else{
-                                        
-//                                         $say = '<speak><p>I do not have any assaults to report at the moment. However, there was '.$x_ct.' assault '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                        
-//                                     }
-                                    
-                                    
-//                                     $txt = array("version"=>"1.0","sessionAttributes"=>"","response"=>array("outputSpeech"=>array("type"=>"SSML","ssml"=>$say),"reprompt"=>null,"shouldEndSession"=>false));
-                                    
-//                                     echo json_encode($txt);
-                              
-//                             }
-                            
-                            
-//                          }
-                         
-
-                            
-                            
-                            
-                            
-                            
-                            
-//                          if($crT == "theft"){
-                             
-                             
-//                              $tyArr = array();
-//                              $sRob = "SELECT `Name` FROM `CrimeTypes` WHERE `Type` = 'theft'";
-//                              $sRes = mysqli_query($CONN, $sRob);
-                             
-//                              if(mysqli_num_rows($sRes) >= 1){
-                                 
-//                                  while($tows = mysqli_fetch_array($sRes)){
-//                                      $nam = $tows['Name'];
-//                                      array_push($tyArr,$nam);
-//                                  }
-                                 
-//                                  $sir = implode("','", $tyArr);
-//                                  $fin = urlencode("'".$sir."'");
-                                 
-//                                  $curl_jason2 = getAPI_Info('https://phl.carto.com/api/v2/sql?q=SELECT%20dispatch_date%20FROM%20incidents_part1_part2%20WHERE%20text_general_code%20IN%20('.$fin.')%20ORDER%20%20BY%20dispatch_date%20DESC%20NULLS%20LAST%20LIMIT%20%201');
-//                                  $x_dat = $curl_jason2['rows'][0]['dispatch_date'];
-//                                  $x_more = getAPI_Info('https://phl.carto.com/api/v2/sql?q=SELECT%20dispatch_date%20FROM%20incidents_part1_part2%20WHERE%20text_general_code%20IN%20('.$fin.')%20AND%20dispatch_date%20%3E=%20%20%27'.$x_dat.'%27');
-//                                  $x_ct = $x_more['total_rows'];
-//                                  date_default_timezone_set('US/Eastern');
-//                                  $td2 = date('Y-m-d');
-//                                  $x_ago = dateDifference($x_dat,$td2,"%d days");
-                                 
-//                                  //IF ONE RECORD RETURN (SINGULAR)
-//                                  if($x_ago == 1){
-                                     
-//                                      $cvv = strtotime($x_dat);
-//                                      $nDate = date('l F jS ',$cvv);
-                                     
-//                                      $say = '<speak><p>I do not have any thefts to report at the moment. However, there is '.$x_ct.' theft to report from yesterday, '.$nDate.', Would you like to hear the details?</p></speak>';
-                                     
-//                                  }else{
-                                     
-//                                      $say = '<speak><p>I do not have any thefts to report at the moment. However, there were '.$x_ct.' thefts '.$x_ago.' ago, '.$nDate.', would you like to hear the details?</p></speak>';
-                                     
-//                                  }
-                                 
-                                 
-//                                  $txt = array("version"=>"1.0","sessionAttributes"=>"","response"=>array("outputSpeech"=>array("type"=>"SSML","ssml"=>$say),"reprompt"=>null,"shouldEndSession"=>false));
-                                 
-//                                  echo json_encode($txt);
-                                 
-//                              }
-                             
-                             
-//                          }
-                         
-                         
-                            
-                            
                                         
                         }else{
                             
@@ -1991,7 +1694,7 @@
                             
                             $f_more = getAPI_Info('https://phl.carto.com/api/v2/sql?q=SELECT%20count%20(date_)%20FROM%20shootings%20WHERE%20date_%20=%20%27'.$td1.'%27');
                             $s_ctz = $f_more['rows'][0]['count'];
-                            
+                           
                             
                             date_default_timezone_set('US/Eastern');
                             $td2 = date('Y-m-d');
@@ -2010,7 +1713,7 @@
                                         
                                     }else{
                                         //// IF MULTI SHOOTINGS AND ONE DAY
-                                        $txxt = '<speak><p>I do not have any shootings to report today.</p><p>However, there was '.$s_ctz.' shooting '.$x_ago.' ago, '.$daa.'</p><p>Would you like to hear the details</p></speak>';
+                                        $txxt = '<speak><p>I do not have any shootings to report today.</p><p>However, there was '.$s_ctz.' shootings '.$x_ago.' ago, '.$daa.'</p><p>Would you like to hear the details</p></speak>';
                                         
                                     }
                                     
@@ -2019,23 +1722,28 @@
                                     $txxt = '<speak><p>I do not have any shootings to report today.</p><p>However, there were '.$s_ctz.' shootings '.$x_ago.' ago, '.$daa.'</p><p>Would you like to hear the details</p></speak>';
                                     
                                 }
+                                
+                                $txt = array("version"=>"1.0","sessionAttributes"=>array("shooting"=>"true","shootingDate"=>$td1,"shootingCount"=>$s_ctz),"response"=>array("outputSpeech"=>array("type"=>"SSML","ssml"=>$txxt),"reprompt"=>null,"shouldEndSession"=>false));
+                                
+                                echo json_encode($txt);
+                                
                             
                            
-                            echo '{
-                            	"version": "1.0",
-                                "sessionAttributes": {
-                                    "shootingDate": "'.$td1.'"
-                                 },
-                            	"response": {
-                            		"outputSpeech": {
-                            			"type": "SSML",
-                                        "ssml": "'.$txxt.'"
-                            		},
-                            		"reprompt": null,
-                                    "shouldEndSession": false
+//                             echo '{
+//                             	"version": "1.0",
+//                                 "sessionAttributes": {
+//                                     "shootingDate": "'.$td1.'"
+//                                  },
+//                             	"response": {
+//                             		"outputSpeech": {
+//                             			"type": "SSML",
+//                                         "ssml": "'.$txxt.'"
+//                             		},
+//                             		"reprompt": null,
+//                                     "shouldEndSession": false
                                             
-                            	}
-                            }';
+//                             	}
+//                             }';
                         }
                         
                         
@@ -2067,23 +1775,16 @@
                              
                          }else{
                              
+                             
+                             $arr = $curl_jason['rows'];
+                             $txt = fetchSootArray($arr);
+                             $sa = "<speak>".$txt."</speak>";
                             
-                             
-                             $sa = '<p>In the last week, starting from '.$jjk.'. There have been '.$ttc.' shootings in the city, according to my knowledge. Would you like to hear the details?</p>';
-                             
-                             //$txt = fetchSootArray($arr);
-                             
-                             echo '{
-                            	"version": "1.0",
-                            	"response": {
-                            		"outputSpeech": {
-                            			"type": "SSML",
-                                        "ssml": "'."<speak>".$sa."</speak>".'"
-                            		},
-                            		"reprompt": null,
-                            		"sessionAttributes": {}
-                            	}
-                            }';
+
+                             $say = array("version"=>"1.0","sessionAttributes"=>"",
+                                 "response"=>array("outputSpeech"=>array("type"=>"SSML","ssml"=>$sa),
+                                     "reprompt"=>null,"shouldEndSession"=>false));
+                                 echo json_encode($say);
                              
                          }
                          
@@ -2098,7 +1799,7 @@
                          
                          $sa = '<p>In the last month, starting from '.$td2.'. There have been '.$ttc.' shootings in the city, according to my knowledge. Would you like to hear the details?</p>';
                          
-                         //$txt = fetchSootArray($arr);
+                         //$txt = hhSootArray($arr);
                          
                          echo '{
                             	"version": "1.0",
@@ -2126,49 +1827,7 @@
 //////////////////////////////////////////////////////////// END INTENT fetchStatus //////////////////////////////////////////
                     
                     
-                    //        if($itDis == "STARTED"){
-                    //             echo '{
-                    //                 	"version": "1.0",
-                    //                 	"response": {
-                    //                 		"directives": [{
-                    //                     			"type": "Dialog.Delegate"
-                    //                     		}],
-                    //                     		"shouldEndSession": false
-                    //                     	},
-                    //                     	"sessionAttributes": {}
-                    //                     }';
-                    //         }
-                    
-                    //         if($itDis == "IN_PROGRESS"){
-                    //             $val = $data['request']['intent']['slots']['presentTime']['value'];
-                    //                     echo '{
-                    //                             	"version": "1.0",
-                    //                             	"response": {
-                    //                             		"directives": [{
-                        //                             			"type": "Dialog.Delegate",
-                        //                             			"updatedIntent": {
-                        //                             				"name": "fetchStats",
-                        //                             				"slots": {
-                        //                             					"countVal": {
-                        //                             						"name": "countVal",
-                        //                             						"value": "null"
-                        //                             					},
-                        //                                                 "answer": {
-                        //                                 					"name": "answer",
-                        //                                 					"value": "null"
-                        //                             				    },
-                        //                             					"presentTime": {
-                        //                             						"name": "presentTime",
-                        //                             						"value": "'.$val.'"
-                        //                             					}
-                        //                             				}
-                        //                             			}
-                        //                             		}],
-                        //                             		"shouldEndSession": false
-                        //                             	},
-                        //                             	"sessionAttributes": {}
-                        //                             }';
-                        //         }
+
                     
      
                         
@@ -2179,7 +1838,7 @@
     
     if($itReq == "IntentRequest" && $itNam == "ackResponse"){
         $anw = $data['request']['intent']['slots']['answer']['resolutions']['resolutionsPerAuthority'][0]['status']['code'];
-        $val = $data['request']['intent']['slots']['answer']['value'];
+        $val = $data['request']['intent']['slots']['answer']['resolutions']['resolutionsPerAuthority'][0]['values'][0]['value']['name'];
             
             if($anw == "ER_SUCCESS_MATCH"){
                 
@@ -2200,6 +1859,7 @@
                          $f_obj = '';
                          $ct = 0;
                          
+                         
                          $us_ql = "SELECT * FROM `NewsStory` WHERE `ScrapeHash` = '$u_has' ORDER BY `PubDate` DESC LIMIT $ut_ct , $cu_ct";
                          $us_res = mysqli_query($CONN, $us_ql);
                          
@@ -2214,6 +1874,7 @@
                          $desc = utf8_encode(cleanTxT($roe['Description']));
                          $speaK = '<p>'.$desc.'</p>';
                          
+                         $rxx_ct ++;
                          
                          if($ut_ct == 0){
                              $spea = $newsNum.$speaK.$ending2; 
@@ -2221,7 +1882,9 @@
                                $spea = $newsNum.$speaK.$kepg;
                          }
                          
-                         $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$ut_ct,"currentCount"=>"1","Hash"=>$u_has,"readCount"=>$rxx_ct),"response"=>
+                         
+                         
+                         $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$ut_ct,"currentCount"=>1,"Hash"=>$u_has,"readCount"=>$rxx_ct),"response"=>
                              array("outputSpeech"=>
                                  array("type"=>"SSML","ssml"=>"<speak>".$spea."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
                          
@@ -2229,20 +1892,50 @@
 
                     }
                     
-                    if($aTT['attributes']['SQL'] !== null && $aTT['attributes']['crimeType'] !== null){
+                    if($aTT['attributes']['presentTime'] !== null && $aTT['attributes']['crimeType'] !== null){
                         $pre = $aTT['attributes'];
-                        $sqlz = $pre['SQL'];
+                        $ppTime = $pre['presentTime'];
+                        $cCount = $pre['currentCount'];
+                        $tCount = $pre['totalCount'] -1;
                         $cyT = $pre['crimeType'];
-                        $rex = mysqli_query($CONN, $sqlz);
+                        $dNumz = $pre['districtNum'];
+                        $catt = $pre['category'];
+                        $dDate = $pre['dDate'];
+                        
+                            if($dNumz == 0){
+                                $f_URL = "SELECT * FROM `CrimeIncidents` WHERE `DispatchDate` = '$dDate' AND `CrimeName` IN ($catt) ORDER BY `DispatchTime` DESC LIMIT $tCount, $cCount";
+                                
+                            }else{
+                                $f_URL = "SELECT * FROM `CrimeIncidents` WHERE `DispatchDate` = '$dDate' AND `CrimeName` IN ($catt) AND `DistrictNumber` = $dNumz ORDER BY `DispatchTime` DESC LIMIT $tCount, $cCount";
+                                
+                            }
+                        
+                       
+                        $rex = mysqli_query($CONN, $f_URL);
                         $roq = mysqli_fetch_array($rex);
                         
                         $desc = utf8_encode(cleanTxT($roq['AddressBlock']));
                         $speaK = '<p>'.$desc.'</p>';
+                        $tiime = date('l F jS,',strtotime($roq['DispatchDate']));
+                        $d_time = date("g:i a",strtotime($roq['DispatchTime']));
+                        $bllk = fixAddress($roq['AddressBlock']);
+                        $crime = $roq['CrimeName'];
+                        $more = ", do you want to hear the next incident?";
+                        $noMore = "<p>, there are no more incidents to report at this time, would you like me to help you with something else?</p>";
+                        
+                        if($tCount == 0){
+                            $free = "<p>on ".$tiime." the Philadelphia Police were dispatched at ".$d_time.", to the ".$bllk." for a ".$crime.$noMore."</p>";
+                            
+                        }else{
+                            $free = "<p>on ".$tiime." the Philadelphia Police were dispatched at ".$d_time.", to the ".$bllk." for a ".$crime.$more."</p>";
+                            
+                        }
                         
                         
-                        $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$ut_ct,"currentCount"=>"1","Hash"=>$u_has),"response"=>
+                        
+                        $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$tCount,"currentCount"=>$cCount,"dDate"=>$dDate,"category"=>$catt,"districtNum"=>$dNumz,"presentTime"=>$ppTime,"crimeType"=>$cyT),"response"=>
                             array("outputSpeech"=>
-                                array("type"=>"SSML","ssml"=>"<speak>".$speaK."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
+                                array("type"=>"SSML","ssml"=>"<speak>".$free."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
                         
                         echo $ress;
                         
@@ -2283,45 +1976,24 @@
                         
                     }
                     
+                    if($aTT['attributes']['shootingDate'] !== null && $aTT['attributes']['shooting'] == "true"){
+                        
+                        $shDate = $aTT['attributes']['shootingDate'];
+                        $url = 'https://phl.carto.com/api/v2/sql?q=SELECT%20*%20FROM%20shootings%20WHERE%20date_%20=%20%27'.$shDate.'%20%27';
+                        $f_more = getAPI_Info($url);
+                        $readThis = fetchSootArray($f_more['rows']);
+                        $end = "<p>, that is the last reported shooting. would you like me to help you with something else?</p>";
+                        writeToLog($url);
+                        
+                        $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("currentCount"=>"1"),"response"=>
+                            array("outputSpeech"=>
+                                array("type"=>"SSML","ssml"=>"<speak>".$readThis.$end."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
+                        
+                        echo $ress;
+                        
+                    }
                     
-//                     if(array_key_exists("attributes",$aTT)){
-//                         $s_dae = $aTT['attributes']['shootingDate'];
-//                         $re_url = $aTT['attributes']['SQL'];
-//                         $int_na = $aTT['attributes']['presentTime'];
-//                         $cr_cty = $aTT['attributes']['crimeType'];
-                        
-                        
-                        
-//                         if($int_na == "today"){
-                            
-//                             echo readAnswer($re_url,$cr_cty);
-                                
 
-//                         }
-                        
-//                         if($s_dae !== null){
-                            
-//                             $datA = getAPI_Info('https://phl.carto.com/api/v2/sql?q=SELECT%20*%20FROM%20shootings%20WHERE%20date_%20=%20%27'.$s_dae.'%20%27');
-//                             $txt = fetchSootArray($datA['rows']);
-                            
-//                             echo '{
-//                                 	"version": "1.0",
-//                                 	"response": {
-//                                 		"outputSpeech": {
-//                                 			"type": "SSML",
-//                                             "ssml": "'."<speak>".$txt."</speak>".'"
-//                                 		},
-//                                 		"reprompt": null,
-//                                 		"sessionAttributes": {}
-//                                 	   }
-//                                    }';
-                        
-//                         }
-                        
-
-                        
-                        
-//                     }
                     
                  }
                  
@@ -2379,7 +2051,7 @@
             
             if($navi == "continue" || $navi == "next"){
 
-                if($aTTs['totalCount'] >= 1){ // check for total count
+                if($data['session']['attributes']['totalCount'] >= 1){ // check for total count
                     
                     $aTTs = $data['session']['attributes'];
                     $u_has = $aTTs['Hash'];
@@ -2387,7 +2059,7 @@
                     $cu_ct = $aTTs['currentCount'];
                     $rx_ct = $aTTs['readCount'];
                     
-                    // echo readThisNews($u_has,$ut_ct,$cu_ct);
+                    
                     $sqll = "SELECT * FROM `NewsStory` WHERE `ScrapeHash` = '$u_has' ORDER BY `PubDate` DESC LIMIT $ut_ct, $cu_ct";
                     $rezz = mysqli_query($CONN, $sqll);
                     if(mysqli_num_rows($rezz) >=1){
@@ -2397,13 +2069,16 @@
                         $desc = utf8_encode(cleanTxT($art['Description']));
                         $speaK = '<p>'.$desc.'</p>';
                         
-                        $rx_ct ++;
+                        
                         
                         $newsNum = "<p>story number"." ".$rx_ct.",</p> ";
                         $kepg = " <p>would you like me to read the next story?</p>";
                         $spea = $newsNum.$speaK.$kepg;
                         
-                        $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$ut_ct,"currentCount"=>"1","Hash"=>$u_has,"readCount"=>$rx_ct),"response"=>
+                        
+                        $rx_ct ++;
+                        
+                        $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$ut_ct,"currentCount"=>1,"Hash"=>$u_has,"readCount"=>$rx_ct),"response"=>
                             array("outputSpeech"=>
                                 array("type"=>"SSML","ssml"=>"<speak>".$spea."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
                         
@@ -2420,7 +2095,7 @@
                 
                 
                 
-                if($aTTs['totalCount'] == 0){
+                if($aTTs['totalCount'] == 0 || $aTTs['totalCount'] == "0"){
                     
                     writeToLog("LANDED HERE");
                     
@@ -2435,8 +2110,7 @@
                 }
                 
                 
-              
-                
+
                 
             }
             
@@ -2548,7 +2222,7 @@
                             
                         
                         
-                        echo json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$total_ct,"currentCount"=>"1","Hash"=>$hash,"readCount"=>"1"),"response"=>
+                        echo json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$total_ct,"currentCount"=>1,"Hash"=>$hash,"readCount"=>1),"response"=>
                             array("outputSpeech"=>
                                 array("type"=>"SSML","ssml"=>"<speak>".$sayy."</speak>"),"shouldEndSession"=>false,"reprompt"=>array("outputSpeech"=>array("type"=>"SSML","ssml"=>"<speak>sooo?<s>your not going to say anything?</s></speak>")))));
                          
@@ -2557,7 +2231,7 @@
                         
                     }else{
                         
-                        if($isDisA !== null){
+                        if($isDisA !== null){ /// DISTRICT  NUMBER PROVIDED
                             
                             $sql = "SELECT `TimeStamp` FROM `NewsStory` WHERE `DistrictNumber` = $isDisA ORDER BY `TimeStamp` DESC LIMIT 1";
                             $ret = mysqli_query($CONN, $sql);
@@ -2630,6 +2304,7 @@
         
         
         
+        
         if($stat == "ER_SUCCESS_NO_MATCH"){
             echo '{
                 	"version": "1.0",
@@ -2654,91 +2329,7 @@
         
     }
     
-    
-    
-//////////////////////////////////////////////////////////// END INTENT districtNews //////////////////////////////////////////
-    
-    
-        
-//         if($itDis == "STARTED"){
-            
-//             echo '{
-//                         	"version": "1.0",
-//                         	"response": {
-//                         		"directives": [{
-//                         			"type": "Dialog.Delegate"
-//                         		}],
-//                         		"shouldEndSession": false
-//                         	},
-//                         	"sessionAttributes": {}
-//                         }';
-            
-//         }
-        
-//       if($itDis == "IN_PROGRESS"){
-          
-//           $val = $data['request']['intent']['slots']['districtNums']['value'];
-          
-            
-            
-//             echo '{
-//                           "version": "1.0",
-//                           "response": {
-//                             "directives": [
-//                               {
-//                                 "type": "Dialog.Delegate",
-//                                 "updatedIntent": {
-//                                   "name": "districtNews",
-//                                   "slots": {
-//                                     "districtNums": {
-//                                       "name": "districtNums",
-//                                         "value": "'.$val.'"
-//                                     },
-//                                      "newsType": {
-//                                       "name": "newsType",
-//                                         "value": "latest"
-//                                     }
-//                                   }
-//                                 }
-//                               }
-//                             ],
-//                             "shouldEndSession": false
-//                           },
-//                           "sessionAttributes": {}
-//                         }';
-            
-            
-//         }
-        
-        
-//         if($itDis == "COMPLETED"){
-            
-//                     $array = array();
-//                     $val = $data['request']['intent']['slots']['districtNums']['value'];
-//                     $sql = "SELECT `Title`,`Description` FROM `NewsStory` WHERE `DistrictNumber` = '$val' ORDER BY `TimeStamp` DESC LIMIT 0,1";
-//                     $res = mysqli_query($CONN, $sql);
-//                     $fv = 0;
-            
-//                         while($row = mysqli_fetch_array($res)){
-//                             $to = str_replace("Wanted: ","",$row['Title']);
-//                             $fv = utf8_encode($row['Description']);
-                            
-//                          }
-                         
-                        
-//                          $spit = array("version"=>"1.0","response"=>
-//                              array("outputSpeech"=>
-//                                  array("type"=>"PlainText","text"=>$fv,"ssml"=>$fv),"reprompt"=>null,"sessionAttributes"=>""
-//                              ));
-                         
-                         
-//                          echo json_encode($spit);
-   
-        
-//     }
-
-    
-                	                
+                    	                
 
 
 
