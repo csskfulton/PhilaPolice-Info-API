@@ -736,14 +736,14 @@
                     }
                     
                     if($race == "B"){
-                        $pol = "Black";
+                        $pol = "black";
                     }
                     
                     if($gen == "M"){
-                        $sex = "Male";
+                        $sex = "male";
                     }
                     if($gen == "W"){
-                        $sex = "Women";
+                        $sex = "women";
                     }
                     
                     
@@ -823,283 +823,6 @@
       
     
     
-    function readAnswer($objs,$dtype){
-        $rt_Txt = '';
-        
-        $rez = mysqli_query($CONN, $objs);
-        if(mysqli_num_rows($rez) >=1){
-            $word = '';
-            
-            if($dtype == "robbery"){
-                
-                while($rots = mysqli_fetch_array($rez)){
-                    
-                    $disNum = addTH($rots['DistrictNumber']);
-                    $disT = date('h:i a', strtotime($rots['DispatchTime']));
-                    $blk = fixAddress($rots['AddressBlock']);
-                    $isFA = $rots['CrimeName'];
-                    
-                    if($isFA == "Robbery Firearm"){
-                        $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a reported armed robbery</p>';
-                        
-                    }
-                    
-                    if($isFA == "Robbery No Firearm"){
-                        $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a reported robbery</p>';
-                        
-                    }
-                    
-                }
-                
-                $txt = '<speak>'.$word.'</speak>';
-                
-                $say = array("version"=>"1.0","sessionAttributes"=>"","response"=>array("outputSpeech"=>array("type"=>"SSML","ssml"=>$txt),"reprompt"=>null,"shouldEndSession"=>false));
-                
-                $rt_Txt = json_encode($say);
-            }
-            
-            if($dtype == "assault"){
-
-                 while($rots = mysqli_fetch_array($rez)){
-        
-                         $disNum = addTH($rots['DistrictNumber']);
-                         $disT = date('h:i a', strtotime($rots['DispatchTime']));
-                         $blk = fixAddress($rots['AddressBlock']);
-                         $isFA = $rots['CrimeName'];
-        
-                             if($isFA == "Other Assaults"){
-                                 $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a reported assault </p>';
-        
-                             }else if($isFA == "Aggravated Assault Firearm"){
-                                 $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a reported aggravated assault with a firearm </p>';
-                                 
-                             }else if($isFA == "Rape"){
-                                 $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a reported rape</p>';
-                                 
-                             }else if($isFA == "Other Sex Offenses (Not Commercialized)"){
-                                 $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for reported sexual offenses </p>';
-                                 
-                             }else if($isFA == "Aggravated Assault No Firearm"){
-                                 $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a reported aggravated assault </p>';
-                                 
-                             }
-                             
-                             else{
-                                 $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a '.$isFA.'</p>';
-        
-                             }
-        
-        
-        
-                     }
-        
-                     $txt = '<speak>'.$word.'</speak>';
-        
-                     $say = array("version"=>"1.0","sessionAttributes"=>"","response"=>array("outputSpeech"=>array("type"=>"SSML","ssml"=>$txt),"reprompt"=>null,"shouldEndSession"=>false));
-        
-                     $rt_Txt = json_encode($say);
-                
-
-                
-            }
-            
-            if($dtype == "burglary"){
-                
-                while($rots = mysqli_fetch_array($rez)){
-                    
-                    $disNum = addTH($rots['DistrictNumber']);
-                    $disT = date('h:i a', strtotime($rots['DispatchTime']));
-                    $blk = fixAddress($rots['AddressBlock']);
-                    $isFA = $rots['CrimeName'];
-                    
-                    if($isFA == "Burglary Residential"){
-                        $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a reported residential burglary</p>';
-                        
-                    }else if($isFA == "Burglary Non-Residential"){
-                        $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a reported burglary</p>';
-                        
-                    }
-                    
-                    else{
-                        $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a '.$isFA.'</p>';
-                        
-                    }
-                    
-                    
-                    
-                }
-                
-                $txt = '<speak>'.$word.'</speak>';
-                
-                $say = array("version"=>"1.0","sessionAttributes"=>"","response"=>array("outputSpeech"=>array("type"=>"SSML","ssml"=>$txt),"reprompt"=>null,"shouldEndSession"=>false));
-                
-                $rt_Txt = json_encode($say);
-                
-                
-            }
-            
-            if($dtype == "homicide"){
-                
-                while($rots = mysqli_fetch_array($rez)){
-                    
-                    $disNum = addTH($rots['DistrictNumber']);
-                    $disT = date('h:i a', strtotime($rots['DispatchTime']));
-                    $blk = fixAddress($rots['AddressBlock']);
-                    $isFA = $rots['CrimeName'];
-                    
-                    if($isFA == "Homicide - Criminal"){
-                        $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a reported criminal homicide</p>';
-                        
-                    }else if($isFA == "Homicide - Gross Negligence"){
-                        $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a homicide, gross negligence</p>';
-                        
-                    }
-                    
-                    else{
-                        $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a '.$isFA.'</p>';
-                        
-                    }
-                    
-                    
-                    
-                }
-                
-                $txt = '<speak>'.$word.'</speak>';
-                
-                $say = array("version"=>"1.0","sessionAttributes"=>"","response"=>array("outputSpeech"=>array("type"=>"SSML","ssml"=>$txt),"reprompt"=>null,"shouldEndSession"=>false));
-                
-                $rt_Txt = json_encode($say);
-                
-                
-            }
-            
-            if($dtype == "theft"){
-                
-                while($rots = mysqli_fetch_array($rez)){
-                    
-                    $disNum = addTH($rots['DistrictNumber']);
-                    $disT = date('h:i a', strtotime($rots['DispatchTime']));
-                    $blk = fixAddress($rots['AddressBlock']);
-                    $isFA = $rots['CrimeName'];
-                    
-                    if($isFA == "Motor Vehicle Theft"){
-                        $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a reported motor vehicle theft</p>';
-                        
-                    }else if($isFA == "Homicide - Gross Negligence"){
-                        $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a reported receiving stolen property incident</p>';
-                        
-                    }
-                    else if($isFA == "Recovered Stolen Motor Vehicle"){
-                        $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a reported recovered, stolen motor vehicle</p>';
-                        
-                    }
-                    else if($isFA == "Theft from Vehicle"){
-                        $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a reported theft from a vehicle</p>';
-                        
-                    }
-                    else if($isFA == "Thefts"){
-                        $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for multiple reported thefts</p>';
-                        
-                    }
-                    
-                    else{
-                        $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a '.$isFA.'</p>';
-                        
-                    }
-                    
-                    
-                    
-                }
-                
-                $txt = '<speak>'.$word.'</speak>';
-                
-                $say = array("version"=>"1.0","sessionAttributes"=>"","response"=>array("outputSpeech"=>array("type"=>"SSML","ssml"=>$txt),"reprompt"=>null,"shouldEndSession"=>false));
-                
-                $rt_Txt = json_encode($say);
-                
-                
-            }
-            
-            if($dtype == "sexual assault"){
-                
-                while($rots = mysqli_fetch_array($rez)){
-                    
-                    $disNum = addTH($rots['DistrictNumber']);
-                    $disT = date('h:i a', strtotime($rots['DispatchTime']));
-                    $blk = fixAddress($rots['AddressBlock']);
-                    $isFA = $rots['CrimeName'];
-                    
-                    if($isFA == "Rape"){
-                        $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a reported rape</p>';
-                        
-                    }else if($isFA == "Other Sex Offenses (Not Commercialized)"){
-                        $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for reported sexual offenses, not commercialized</p>';
-                        
-                    }
-                    
-                    else{
-                        $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a '.$isFA.'</p>';
-                        
-                    }
-                    
-                    
-                    
-                }
-                
-                $txt = '<speak>'.$word.'</speak>';
-                
-                $say = array("version"=>"1.0","sessionAttributes"=>"","response"=>array("outputSpeech"=>array("type"=>"SSML","ssml"=>$txt),"reprompt"=>null,"shouldEndSession"=>false));
-                
-                $rt_Txt = json_encode($say);
-                
-                
-            }
-            
-            if($dtype == "drugs"){
-                
-                while($rots = mysqli_fetch_array($rez)){
-                    
-                    $disNum = addTH($rots['DistrictNumber']);
-                    $disT = date('h:i a', strtotime($rots['DispatchTime']));
-                    $blk = fixAddress($rots['AddressBlock']);
-                    $isFA = $rots['CrimeName'];
-                    
-                    if($isFA == "Narcotic / Drug Law Violations"){
-                        $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a reported drug, or narcotic law violation</p>';
-                        
-                    }
-                    
-                    
-                    else{
-                       
-                        $word .= '<p>In the '.$disNum.' district, at about '.$disT.', the police were dispatched to the '.$blk.' for a '.$isFA.'</p>';
-                        
-                    }
-                    
-                    
-                    
-                }
-                
-                $txt = '<speak>'.$word.'</speak>';
-                
-                $say = array("version"=>"1.0","sessionAttributes"=>"","response"=>array("outputSpeech"=>array("type"=>"SSML","ssml"=>$txt),"reprompt"=>null,"shouldEndSession"=>false));
-                
-                $rt_Txt = json_encode($say);
-                
-                
-            }
-            
-            
-            
-            
-            
-            
-            
-        }
-        
-        return $rt_Txt;
-        
-    }
     
     
     
@@ -1167,7 +890,7 @@
             
             $response = array("version"=>"1.0","response"=>
                 array("outputSpeech"=>
-                    array("type"=>"SSML","ssml"=>$pw),"shouldEndSession"=>false,"reprompt"=>
+                    array("type"=>"SSML","ssml"=>$pw),"shouldEndSession"=>true,"reprompt"=>
                     array("outputSpeech"=>
                         array("type"=>"SSML","ssml"=>"<speak>sooo?<s>your not going to say anything?</s></speak>")),"sessionAttributes"=>""));
             
@@ -1603,7 +1326,7 @@
                                                 $d_val = 0;
                                             }
                                             
-                                            $txt = array("version"=>"1.0","sessionAttributes"=>array("presentTime"=>"today","crimeType"=>$crT,"currentCount"=>1,"totalCount"=>$ctc,"districtNum"=>$d_val,"category"=>$fin,"dDate"=>$f_date),"response"=>array("outputSpeech"=>array("type"=>"SSML","ssml"=>$say),"reprompt"=>null,"shouldEndSession"=>false));
+                                            $txt = array("version"=>"1.0","sessionAttributes"=>array("presentTime"=>"today","crimeType"=>$crT,"currentCount"=>1,"totalCount"=>$ctc,"districtNumber"=>$d_val,"category"=>$fin,"dDate"=>$f_date,"readCount"=>1),"response"=>array("outputSpeech"=>array("type"=>"SSML","ssml"=>$say),"reprompt"=>null,"shouldEndSession"=>false));
                                             
                                             $ret = json_encode($txt);
                                             
@@ -1901,6 +1624,7 @@
                         $dNumz = $pre['districtNum'];
                         $catt = $pre['category'];
                         $dDate = $pre['dDate'];
+                        $rdCount = $pre['readCount'];
                         
                             if($dNumz == 0){
                                 $f_URL = "SELECT * FROM `CrimeIncidents` WHERE `DispatchDate` = '$dDate' AND `CrimeName` IN ($catt) ORDER BY `DispatchTime` DESC LIMIT $tCount, $cCount";
@@ -1922,18 +1646,20 @@
                         $crime = $roq['CrimeName'];
                         $more = ", do you want to hear the next incident?";
                         $noMore = "<p>, there are no more incidents to report at this time, would you like me to help you with something else?</p>";
+                        $numD = addTH($roq['DistrictNumber']);
+                        $wDis = "in the ".$numD." district, ";
                         
                         if($tCount == 0){
-                            $free = "<p>on ".$tiime." the Philadelphia Police were dispatched at ".$d_time.", to the ".$bllk." for a ".$crime.$noMore."</p>";
+                            $free = "<p>".$wDis."on ".$tiime." the Philadelphia Police were dispatched at ".$d_time.", to the ".$bllk." for a ".$crime.$noMore."</p>";
                             
                         }else{
-                            $free = "<p>on ".$tiime." the Philadelphia Police were dispatched at ".$d_time.", to the ".$bllk." for a ".$crime.$more."</p>";
+                            $free = "<p>".$wDis."on ".$tiime." the Philadelphia Police were dispatched at ".$d_time.", to the ".$bllk." for a ".$crime.$more."</p>";
                             
                         }
                         
+                        $rdCount ++;
                         
-                        
-                        $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$tCount,"currentCount"=>$cCount,"dDate"=>$dDate,"category"=>$catt,"districtNum"=>$dNumz,"presentTime"=>$ppTime,"crimeType"=>$cyT),"response"=>
+                        $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$tCount,"currentCount"=>$cCount,"dDate"=>$dDate,"category"=>$catt,"districtNumber"=>$dNumz,"presentTime"=>$ppTime,"crimeType"=>$cyT,"readCount"=>$rdCount),"response"=>
                             array("outputSpeech"=>
                                 array("type"=>"SSML","ssml"=>"<speak>".$free."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
                         
@@ -1963,7 +1689,7 @@
                             $speaK = '<p>'.$desc.'</p>';
                             
                             
-                            $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("currentCount"=>"1"),"response"=>
+                            $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("currentCount"=>"1","totalCount"=>$ttCT,"isDistrictNews"=>"true","districtNumber"=>$disNu,"pubDate"=>$pDate),"response"=>
                                 array("outputSpeech"=>
                                     array("type"=>"SSML","ssml"=>"<speak>".$speaK."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
                             
@@ -1990,6 +1716,61 @@
                                 array("type"=>"SSML","ssml"=>"<speak>".$readThis.$end."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
                         
                         echo $ress;
+                        
+                    }
+                    
+                    
+                    if($aTT['attributes']['crimeHash'] !== null && $aTT['attributes']['crimeIncidents'] == "true"){
+                       
+                        $dHash = $aTT['attributes']['crimeHash'];
+                        $dNum = $aTT['attributes']['districtNumber'];
+                        $cCount = $aTT['attributes']['currentCount'];
+                        $tTotal = $aTT['attributes']['totalCount'] -1;
+                        $rdCount = $aTT['attributes']['readCount'] + 1;
+                        
+                        
+                        
+                        if($dNum == 0){
+                            $sqz = "SELECT * FROM `CrimeIncidents` WHERE `HashTag` = '$dHash' ORDER BY `DispatchDate` DESC LIMIT $tTotal,$cCount";
+                        }else{
+                            $sqz = "SELECT * FROM `CrimeIncidents` WHERE `HashTag` = '$dHash' AND `DistrictNumber` = '$dNum' ORDER BY `DispatchDate` DESC LIMIT $tTotal,$cCount";
+                        }
+                        
+                        
+
+                        $ref = mysqli_query($CONN, $sqz);
+                        $rox = mysqli_fetch_array($ref);
+                        $disDate = date('l F jS ', strtotime($rox['DispatchDate']));
+                        $disTime = date('h:i a',strtotime($rox['DispatchTime']));
+                        $addBlk = fixAddress($rox['AddressBlock']);
+                        $distN = addTH($rox['DistrictNumber']);
+                        $crmN = $rox['CrimeName'];
+                        $incd  = "incident ".$rdCount;
+                        
+                        if($tTotal == 0){
+                            $next = "<p>that is the last criminal incident, would you like me to help you with something else?</p>";
+                            
+                        }else{
+                            $next = "<p>would you like to hear the next incident?</p>";
+                            
+                        }
+                        
+                        
+                        
+                        $lastTx = "<p>".$incd.", In the ".$distN." district, ".$disDate.", ".$disTime.", the Philadelphia Police where dispatched to the ".$addBlk.", for ".$crmN.", ".$next."</p>";
+                        
+                        if($dNum == 0){
+                            $distN = 0;
+                        }else{
+                            $distN = addTH($rox['DistrictNumber']);
+                        }
+                        
+                        $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$tTotal,"currentCount"=>$cCount,"crimeHash"=>$dHash,"districtNumber"=>$distN,"readCount"=>$rdCount,"crimeIncidents"=>"true"),"response"=>
+                            array("outputSpeech"=>
+                                array("type"=>"SSML","ssml"=>"<speak>".$lastTx."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
+                        
+                        echo $ress;
+                        
                         
                     }
                     
@@ -2059,35 +1840,55 @@
                     $cu_ct = $aTTs['currentCount'];
                     $rx_ct = $aTTs['readCount'];
                     
+                    $isDist = $aTTs['isDistrictNews'];
+                    $disNu = $aTTs['districtNumber'];
+                    $pDate = $aTTs['pubDate'];
                     
-                    $sqll = "SELECT * FROM `NewsStory` WHERE `ScrapeHash` = '$u_has' ORDER BY `PubDate` DESC LIMIT $ut_ct, $cu_ct";
-                    $rezz = mysqli_query($CONN, $sqll);
-                    if(mysqli_num_rows($rezz) >=1){
-                        $art = mysqli_fetch_array($rezz);
-                        
-                        
-                        $desc = utf8_encode(cleanTxT($art['Description']));
-                        $speaK = '<p>'.$desc.'</p>';
-                        
-                        
-                        
-                        $newsNum = "<p>story number"." ".$rx_ct.",</p> ";
-                        $kepg = " <p>would you like me to read the next story?</p>";
-                        $spea = $newsNum.$speaK.$kepg;
-                        
-                        
-                        $rx_ct ++;
-                        
+                    if($isDist == "true" && $ut_ct <=0){
+                        $lastTx = "<p>that is the last news story to report, would you like me to help you with something else?</p>";
                         $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$ut_ct,"currentCount"=>1,"Hash"=>$u_has,"readCount"=>$rx_ct),"response"=>
                             array("outputSpeech"=>
-                                array("type"=>"SSML","ssml"=>"<speak>".$spea."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
+                                array("type"=>"SSML","ssml"=>"<speak>".$lastTx."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
                         
                         echo $ress;
                         
+                        
                     }else{
-                        // nothing returned mysql
-                    
+                        
+                        $sqll = "SELECT * FROM `NewsStory` WHERE `ScrapeHash` = '$u_has' ORDER BY `PubDate` DESC LIMIT $ut_ct, $cu_ct";
+                        $rezz = mysqli_query($CONN, $sqll);
+                        if(mysqli_num_rows($rezz) >=1){
+                            $art = mysqli_fetch_array($rezz);
+                            
+                            
+                            $desc = utf8_encode(cleanTxT($art['Description']));
+                            $speaK = '<p>'.$desc.'</p>';
+                            
+                            
+                            
+                            $newsNum = "<p>story number"." ".$rx_ct.",</p> ";
+                            $kepg = " <p>would you like me to read the next story?</p>";
+                            $spea = $newsNum.$speaK.$kepg;
+                            
+                            
+                            $rx_ct ++;
+                            
+                            $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$ut_ct,"currentCount"=>1,"Hash"=>$u_has,"readCount"=>$rx_ct),"response"=>
+                                array("outputSpeech"=>
+                                    array("type"=>"SSML","ssml"=>"<speak>".$spea."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
+                            
+                            echo $ress;
+                            
+                        }else{
+                            // nothing returned mysql
+                            
+                        }
+                        
+                        
                     }
+                    
+                    
+                    
                     
                     
                     
@@ -2120,25 +1921,133 @@
                 $u_has = $aTTs['Hash'];
                 $ut_ct = $aTTs['totalCount'];
                 $cu_ct = $aTTs['currentCount'];
+                $isDist = $aTTs['isDistrictNews'];
+                $disNu = $aTTs['districtNumber'];
+                $pDate = $aTTs['pubDate'];
+                $crmType = $aTTs['crimeType'];
+                $cate = $aTTs['category'];
+                $dDate = $aTTs['dDate'];
+                $crimInd = $aTTs['crimeIncidents'];
+                $crmHash = $aTTs['crimeHash'];
+                $redCtt = $aTTs['readCount'];
                 
-                $sqll = "SELECT * FROM `NewsStory` WHERE `ScrapeHash` = '$u_has' ORDER BY `PubDate` DESC LIMIT $ut_ct, $cu_ct";
-                $rezz = mysqli_query($CONN, $sqll);
-                if(mysqli_num_rows($rezz) >=1){
-                    $art = mysqli_fetch_array($rezz);
-
+                
+                if($crimInd !== null && $crmHash !== null){
                     
-                    $desc = utf8_encode(cleanTxT($art['Description']));
-                    $speaK = '<p>'.$desc.'</p>';
+                    if($disNu == 0){
+                        $sqz = "SELECT * FROM `CrimeIncidents` WHERE `HashTag` = '$crmHash' ORDER BY `DispatchDate` DESC LIMIT $ut_ct,$cu_ct";
+                    }else{
+                        $sqz = "SELECT * FROM `CrimeIncidents` WHERE `HashTag` = '$crmHash' AND `DistrictNumber` = '$disNu' ORDER BY `DispatchDate` DESC LIMIT $ut_ct,$cu_ct";
+                    }
                     
-                    $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$ut_ct,"currentCount"=>"1","Hash"=>$u_has),"response"=>
+                    $ref = mysqli_query($CONN, $sqz);
+                    $rox = mysqli_fetch_array($ref);
+                    $distN = addTH($rox['DistrictNumber']);
+                    $disDate = date('l F jS ', strtotime($rox['DispatchDate']));
+                    $disTime = date('h:i a',strtotime($rox['DispatchTime']));
+                    $addBlk = fixAddress($rox['AddressBlock']);
+                    $crmN = $rox['CrimeName'];
+                    $incd  = "incident ".$redCtt;
+                    $next = "<p>would you like to hear the next incident?</p>";
+                    
+                    $lastTx = "<p>".$incd.", In the ".$distN." district, ".$disDate.", ".$disTime.", the Philadelphia Police where dispatched to the ".$addBlk.", for ".$crmN.", ".$next."</p>";
+                    
+                    $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$ut_ct,"currentCount"=>$cu_ct,"crimeHash"=>$crmHash,"districtNumber"=>$disNu,"readCount"=>$redCtt,"crimeIncidents"=>"true"),"response"=>
                         array("outputSpeech"=>
-                            array("type"=>"SSML","ssml"=>"<speak>".$speaK."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
+                            array("type"=>"SSML","ssml"=>"<speak>".$lastTx."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
                     
                     echo $ress;
-                    
+                
                 }
                 
                 
+                
+                if($crmType !== null && $cate !== null){
+                    
+                    
+                    if($disNu == 0){
+                        $f_URL = "SELECT * FROM `CrimeIncidents` WHERE `DispatchDate` = '$dDate' AND `CrimeName` IN ($cate) ORDER BY `DispatchTime` DESC LIMIT $ut_ct, $cu_ct";
+                        
+                    }else{
+                        $f_URL = "SELECT * FROM `CrimeIncidents` WHERE `DispatchDate` = '$dDate' AND `CrimeName` IN ($cate) AND `DistrictNumber` = $disNu ORDER BY `DispatchTime` DESC LIMIT $ut_ct, $cu_ct";
+                        
+                    }
+                    
+                    
+                     $rex = mysqli_query($CONN, $f_URL);
+                     $roq = mysqli_fetch_array($rex);
+                    
+                     $desc = utf8_encode(cleanTxT($roq['AddressBlock']));
+                     $speaK = '<p>'.$desc.'</p>';
+                     $tiime = date('l F jS,',strtotime($roq['DispatchDate']));
+                     $d_time = date("g:i a",strtotime($roq['DispatchTime']));
+                     $bllk = fixAddress($roq['AddressBlock']);
+                     $crime = $roq['CrimeName'];
+                     $more = ", do you want to hear the next incident?";
+                     $noMore = "<p>, there are no more incidents to report at this time, would you like me to help you with something else?</p>";
+                     $numD = addTH($roq['DistrictNumber']);
+                     $wDis = "in the ".$numD." district, ";
+                    
+                     if($ut_ct == 0){
+                        $free = "<p>".$wDis."on ".$tiime." the Philadelphia Police were dispatched at ".$d_time.", to the ".$bllk." for a ".$crime.$noMore."</p>";
+                        
+                    }else{
+                        $free = "<p>".$wDis."on ".$tiime." the Philadelphia Police were dispatched at ".$d_time.", to the ".$bllk." for a ".$crime.$more."</p>";
+                        
+                    }
+                    
+                    
+                    
+                    //$rdCount ++;
+                    
+                    $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$ut_ct,"currentCount"=>$cu_ct,"dDate"=>$dDate,"category"=>$cate,"districtNumber"=>$disNu,"presentTime"=>$ppTime,"crimeType"=>$cyT,"readCount"=>$rdCount),"response"=>
+                        array("outputSpeech"=>
+                            array("type"=>"SSML","ssml"=>"<speak>".$free."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
+                    
+                    echo $ress;
+                    
+                    
+                    
+                }else{
+                    
+                    
+                    if($isDist == "true"){
+                        $sqll = "SELECT * FROM `NewsStory` WHERE `DistrictNumber` = '$disNu' AND `TimeStamp` LIKE '%$pDate%'";
+                    }else{
+                        $sqll = "SELECT * FROM `NewsStory` WHERE `ScrapeHash` = '$u_has' ORDER BY `PubDate` DESC LIMIT $ut_ct, $cu_ct";
+                    }
+                    
+                    $rezz = mysqli_query($CONN, $sqll);
+                    if(mysqli_num_rows($rezz) >=1){
+                        $art = mysqli_fetch_array($rezz);
+                        
+                        
+                        $desc = utf8_encode(cleanTxT($art['Description']));
+                        $speaK = '<p>'.$desc.'</p>';
+                        
+                        if($isDist == "true"){
+                            $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("pubDate"=>$pDate,"districtNumber"=>$disNu,"isDistrictNews"=>"true","totalCount"=>$ut_ct,"currentCount"=>"1","Hash"=>$u_has),"response"=>
+                                array("outputSpeech"=>
+                                    array("type"=>"SSML","ssml"=>"<speak>".$speaK."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
+                            
+                            
+                        }else{
+                            $ress = json_encode(array("version"=>"1.0","sessionAttributes"=>array("totalCount"=>$ut_ct,"currentCount"=>"1","Hash"=>$u_has),"response"=>
+                                array("outputSpeech"=>
+                                    array("type"=>"SSML","ssml"=>"<speak>".$speaK."</speak>"),"shouldEndSession"=>false,"reprompt"=>null)));
+                            
+                        }
+                        
+                        
+                        echo $ress;
+                        
+                    }
+                    
+                    
+                    
+                }
+                
+  
                 
             }
             
@@ -2258,14 +2167,25 @@
                             $disNUM = $isDisA;
                             $isDisA = addTH($isDisA);
                             
+                            if($x_ago == "0 days"){
+                                $x_ago = "today";
+                            }
+                            else if($x_ago == "1 days"){
+                                $x_ago = "yesterday";
+                            }
+                            else{
+                                $x_ago = $x_ago." ago,";
+                                
+                            }
+                            
                             if($ctA == "1"){ //change message to provoke user to say something else
                                 //singular
-                                $sayy = '<s>Here is the latest police news for the '.$isDisA.' district, As of '.$x_ago.' ago, on '.$ti_dd.', There is '.$ctA.' story to report</s> '.$ending1;
+                                $sayy = '<s>Here is the latest police news for the '.$isDisA.' district, As of '.$x_ago.' on '.$ti_dd.', There is '.$ctA.' story to report</s> '.$ending1;
                                 
                                 
                             }else{
                                 //plural
-                                $sayy = '<s>Here is the latest police news for the '.$isDisA.' district, As of '.$x_ago.' ago, on '.$ti_dd.', There are '.$ctA.' stories to report</s> '.$endings;
+                                $sayy = '<s>Here is the latest police news for the '.$isDisA.' district, As of '.$x_ago.' on '.$ti_dd.', There are '.$ctA.' stories to report</s> '.$endings;
                                 
                             }
                             
@@ -2292,6 +2212,67 @@
                         
                 /// FAILED TO FIND CURRENT HASH
                     
+                
+                
+            }
+            
+            
+            
+            
+            if($val == "crime"){
+                
+                if($isDisA !== null){
+                    $sql = "SELECT `HashTag` AS 'Hash' FROM `CrimeIncidents` WHERE `DistrictNumber` = '$isDisA' ORDER BY `DispatchDate` DESC LIMIT 0,1";
+                    
+                }else{
+                    $sql = "SELECT `Hash` FROM `CurrentHash` WHERE `HashName` = 'CrimeIncidents'";
+                }
+                
+                $sql_res = mysqli_query($CONN,$sql);
+                
+                if(mysqli_num_rows($sql_res) >= 1){
+                    $ret = mysqli_fetch_array($sql_res);
+                    $hash = $ret['Hash'];
+                    
+                    if($isDisA !== null){
+                        $n_sql = "SELECT SQL_CALC_FOUND_ROWS * FROM `CrimeIncidents` WHERE `HashTag` = '$hash' AND `DistrictNumber` = '$isDisA' ORDER BY `DispatchDate` DESC LIMIT 0,1";
+                    }else{
+                        $n_sql = "SELECT SQL_CALC_FOUND_ROWS * FROM `CrimeIncidents` WHERE `HashTag` = '$hash' ORDER BY `DispatchDate` DESC LIMIT 0,1";
+                        
+                    }
+                    
+                    $rec_ct = "SELECT FOUND_ROWS() AS ROWS";
+                    
+                    $res2 = mysqli_query($CONN, $n_sql);
+                    $res3 = mysqli_query($CONN, $rec_ct);
+                    
+                    if(mysqli_num_rows($res2) >= 1){
+                        $row = mysqli_fetch_array($res3);
+                        $row1 = mysqli_fetch_array($res2);
+                        $count = $row['ROWS'];
+                        $nTime = date('l F jS ', strtotime($row1['DispatchDate']));
+                        
+                        if($isDisA !== null){
+                            $sayy = "<p>In the ".addTH($isDisA)." district,  as of ".$nTime.",Their are ".$count." criminal incidents to report, would you like to hear them</p>";
+                            
+                        }else{
+                            $sayy = "<p>Their are ".$count." criminal incidents to report, would you like to hear them</p>";
+                            $isDisA = 0;
+                        }
+                        
+                        
+                        echo json_encode(array("version"=>"1.0","sessionAttributes"=>array("currentCount"=>1,"totalCount"=>$count,"crimeIncidents"=>"true","crimeHash"=>$hash,"districtNumber"=>$isDisA,"readCount"=>0),"response"=>
+                            array("outputSpeech"=>
+                                array("type"=>"SSML","ssml"=>"<speak>".$sayy."</speak>"),"shouldEndSession"=>false,"reprompt"=>array("outputSpeech"=>array("type"=>"SSML","ssml"=>"<speak>sooo?<s>your not going to say anything?</s></speak>")))));
+                        
+                        
+                    }else{
+                        // NO RECORD RETURNED FOR CRIME INCIDENTS
+                    }
+                    
+                }else{
+                    ///NO RECORD RETRNED FRO CURRENT HASH       
+                }
                 
                 
             }
