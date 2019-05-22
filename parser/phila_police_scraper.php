@@ -27,6 +27,25 @@
 			file_put_contents('p_pd.log', $s_txt."\n",FILE_APPEND);
 		}
 		
+		function getRandomUserAgent(){
+		    
+		    $userAgents=array(
+		        
+		        "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6",
+		        "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)",
+		        "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.04506.30)",
+		        "Opera/9.20 (Windows NT 6.0; U; en)",
+		        "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; en) Opera 8.50",
+		        "Mozilla/4.0 (compatible; MSIE 6.0; MSIE 5.5; Windows NT 5.1) Opera 7.02 [en]",
+		        "Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; fr; rv:1.7) Gecko/20040624 Firefox/0.9",
+		        "Mozilla/5.0 (Macintosh; U; PPC Mac OS X; en) AppleWebKit/48 (like Gecko) Safari/48"
+		    );
+		    
+		    $random = rand(0,count($userAgents)-1);
+		    
+		    return $userAgents[$random];
+		}
+		
 		function wcType($text){
 			if(strpos($text, "Robbery")){
 				return "Robbery";
@@ -260,9 +279,24 @@
 		date_default_timezone_set('US/Eastern');
 		writeToLog("\n"."////STARTING SCRAPER SCRIPT//// ");
 		writeToLog("StartTimeStamp: ".time());
-		$rss = new rss_php;
-		$rss->load($RSS_URL);
+		
+		$curl = curl_init($RSS_URL);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+		$curl_response = curl_exec($curl);
+		
+		if($curl_response === FALSE){
+		    writeToLog("FAILED TO LOAD RSS FEED ".$RSS_URL);
+		}
+		
+		
 		writeToLog("Loading Page....: ".$RSS_URL);
+		curl_close($curl);
+		
+		$rss = new rss_php;
+		$rss->loadRSS($curl_response);
+		
 		$items = $rss->getItems();
 
 			$ct = count($items);
@@ -298,6 +332,10 @@
 				
 					$isThere = "SELECT `GUID` FROM `NewsStory` WHERE `GUID` = '$obj_id'";
 					$answ = mysqli_query($CONN, $isThere);
+					
+					if($DIS_NUM == "" || empty($DIS_NUM)){
+					    $DIS_NUM = 0;
+					}
 					
 						if(mysqli_num_rows($answ) <= 0){
 							
@@ -422,7 +460,7 @@
 				    $out = $feet['outside'];
 				    $fatal = $feet['fatal'];
 				    
-				    $isT = "SELECT `DataID` FROM `Shooting` WHERE `DataID` = '$d_id' OR `ObjID` = '$obj_id'";
+				    $isT = "SELECT `DataID` FROM `Shooting` WHERE `ObjID` = '$obj_id'";
 				    $reg = mysqli_query($CONN, $isT);
 				    
 				    if(mysqli_num_rows($reg) >= 1){
@@ -613,28 +651,28 @@
 ////////////////////////////////////////////////////////////// START DISTRICT PAGE SCRAPER  //////////////////////////////////////////////
 		
 	$sites = array(
- 					  "http://www.phillypolice.com/districts/18th",
- 					  "http://www.phillypolice.com/districts/25th",
- 					  "http://www.phillypolice.com/districts/24th",
- 					  "http://www.phillypolice.com/districts/26th",
- 					  "http://www.phillypolice.com/districts/17th",
-  					  "http://www.phillypolice.com/districts/22nd",
+ 					  "http://www.phillypolice.com/districts/18th/",
+ 					  "http://www.phillypolice.com/districts/25th/",
+ 					  "http://www.phillypolice.com/districts/24th/",
+ 					  "http://www.phillypolice.com/districts/26th/",
+ 					  "http://www.phillypolice.com/districts/17th/",
+  					  "http://www.phillypolice.com/districts/22nd/",
 //				  "http://fuckwit.me/test.html"
- 					  "http://www.phillypolice.com/districts/39th",
- 					  "http://www.phillypolice.com/districts/35th",
- 					  "http://www.phillypolice.com/districts/14th",
- 					  "http://www.phillypolice.com/districts/19th",
- 					  "http://www.phillypolice.com/districts/16th",
- 					  "http://www.phillypolice.com/districts/12th",
- 					  "http://www.phillypolice.com/districts/15th",
- 					  "http://www.phillypolice.com/districts/3rd",
- 					  "http://www.phillypolice.com/districts/6th",
- 					  "http://www.phillypolice.com/districts/9th",
- 					  "http://www.phillypolice.com/districts/2nd",
- 					  "http://www.phillypolice.com/districts/5th",
- 					  "http://www.phillypolice.com/districts/7th",
- 					  "http://www.phillypolice.com/districts/8th",
-					  "http://www.phillypolice.com/districts/1st"
+ 					  "http://www.phillypolice.com/districts/39th/",
+ 					  "http://www.phillypolice.com/districts/35th/",
+ 					  "http://www.phillypolice.com/districts/14th/",
+ 					  "http://www.phillypolice.com/districts/19th/",
+ 					  "http://www.phillypolice.com/districts/16th/",
+ 					  "http://www.phillypolice.com/districts/12th/",
+ 					  "http://www.phillypolice.com/districts/15th/",
+ 					  "http://www.phillypolice.com/districts/3rd/",
+ 					  "http://www.phillypolice.com/districts/6th/",
+ 					  "http://www.phillypolice.com/districts/9th/",
+ 					  "http://www.phillypolice.com/districts/2nd/",
+ 					  "http://www.phillypolice.com/districts/5th/",
+ 					  "http://www.phillypolice.com/districts/7th/",
+ 					  "http://www.phillypolice.com/districts/8th/",
+					  "http://www.phillypolice.com/districts/1st/"
 					      
 					 );
 					 
@@ -649,8 +687,24 @@
 			$alr = 0;		 
 			 
 			 for($oo=0;$oo<$loop_count;$oo++){
+			     
+			     $curl = curl_init();
+			     curl_setopt($curl, CURLOPT_URL, $sites[$oo]);
+			     curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+			     curl_setopt($curl, CURLOPT_USERAGENT, getRandomUserAgent());
+			     curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
+			     curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+			     $curl_response = curl_exec($curl);
+			     
+			     if($curl_response === FALSE){
+			         writeToLog("FAILED TO LOAD WEB SITE ".$sites[$oo]);
+			     }
+			     
+			     
+			     writeToLog("Loading Page....: ".$RSS_URL);
+			     curl_close($curl);
 			 		
-				$html = file_get_html($sites[$oo]);
+				$html = str_get_html($curl_response);
 				writeToLog("CURRENTLY SCRAPING: ".$sites[$oo].' '.time());  
 				$infoDiv = $html->find('div.span3',1);
 				if(!empty($infoDiv)){
@@ -1011,10 +1065,25 @@
 	
 	
 	
+            	$VIX_URL = "https://www.phillypolice.com/news/unsolved-crime-surveillance-videos/";	//SITE URL
+            	
+            	
+            	$curl = curl_init($VIX_URL);
+            	curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+            	curl_setopt($curl, CURLOPT_USERAGENT, getRandomUserAgent());
+            	// curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
+            	// curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+            	$curl_response = curl_exec($curl);
+            	
+            	if($curl_response === FALSE){
+            	    writeToLog("FAILED TO LOAD UC VIDEOS");
+            	}
+            	
+            	curl_close($curl);
 	
 	
 				//$uchtml = file_get_html("https://10.0.0.206/phillyPD/uscvideos.html");
-				$uchtml = file_get_html("https://www.phillypolice.com/news/unsolved-crime-surveillance-videos/");
+				$uchtml = str_get_html($curl_response);
 				// $infoDiv = $html->find('div.span3',1);
 				// $addI = $infoDiv->find('p',0)->plaintext;
 				// $loc_prts = explode("Google Maps", $addI);
