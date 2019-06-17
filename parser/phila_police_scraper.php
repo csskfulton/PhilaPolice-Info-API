@@ -780,8 +780,17 @@
 	             		$time_loc = $stg->plaintext;
 									
 	       			}
+	       			
+	       			if(preg_match("/(PM)/is",$item->plaintext)){
+	       			    $loc_add = explode("PM",$item->plaintext);
+	       			}
+	       			
+	       			if(preg_match("/(AM)/is",$item->plaintext)){
+	       			    $loc_add = explode("AM",$item->plaintext);
+	       			}
 					
-						$loc_add = explode("PM",$item->plaintext);
+						//$loc_add = explode("PM",$item->plaintext);
+						
 						$addr = trim(preg_replace('/\s\s+/', ' ', $loc_add[1]));
 						
 						$is_cal = "SELECT `MeetDate`,`MeetLocation` FROM `Calendar` WHERE `MeetDate` = '$time_loc' AND `MeetLocation` = '$addr'";
@@ -914,7 +923,7 @@
 				// echo $psa_area.'</br>';
 				// echo $p.'</br>';
 				
-					$is_psa = "SELECT `DistrictNumber`,`PSAAreaNum`,`LieutenantName` FROM `PSA` WHERE `DistrictNumber` = '$DIS_N' 
+					$is_psa = "SELECT `ID`,`DistrictNumber`,`PSAAreaNum`,`LieutenantName` FROM `PSA` WHERE `DistrictNumber` = '$DIS_N' 
 								AND `PSAAreaNum` = '$psa_area' AND `LieutenantName` = '$lt_name'";
 					$res_is_chk = mysqli_query($CONN, $is_psa);
 					
@@ -957,7 +966,11 @@
 								
 						}else if(mysqli_num_rows($res_is_chk) >=1){
 						    // PSA Already UPDATE GOOD
-						        
+						    $fex = mysqli_fetch_array($res_is_chk);
+						    $idd = $fex['ID'];
+						    
+						        $up = "UPDATE `PSA` SET `isCurrent` = 1 WHERE `ID` = '$idd'";
+						        $rus = mysqli_query($CONN, $up);
 						        
 						      
 						        
