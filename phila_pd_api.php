@@ -2,17 +2,17 @@
 
 
         //INCLUDE NEWSOBJECT CLASS
-        include('NewsObject.php');
-        include('DistrictInfoObject.php');
-        include('PSAObject.php');
-        include('CalendarObject.php');
-        include('UCVideoObject.php');
-        include('ShootingObject.php');
-        include('CrimeObject.php');
+        include('php/NewsObject.php');
+        include('php/DistrictInfoObject.php');
+        include('php/PSAObject.php');
+        include('php/CalendarObject.php');
+        include('php/UCVideoObject.php');
+        include('php/ShootingObject.php');
+        include('php/CrimeObject.php');
     
 	    // MySQL Server Settings
         define("MYSQL_SERVER", 'localhost');
-        define("MYSQL_USERNAME", 'root');
+        define("MYSQL_USERNAME", 'gerry');
         define("MYSQL_PASSWORD", 'Keithistheking');
         define("MYSQL_DATABASE",'PhillyPolice');
        
@@ -23,10 +23,12 @@
         $IMG_DIR = "http://10.20.30.10/phillyPD/images/"; // IMAGE DIRECTORY
         $data = json_decode(file_get_contents('php://input'),true);
         
+        
+        
         // ERRORS MESSAGES
         $NO_DATABASE = json_encode(array("error"=>"true","msg"=>"Database Does Not Exist"));
         $NO_CONNECTION = json_encode(array("error"=>"true","msg"=>"Could Not Connect To Database"));
-        $MYSQL_ERROR = json_encode(array("error"=>"true","msg"=>mysql_error()));
+        $MYSQL_ERROR = json_encode(array("error"=>"true","msg"=>mysqli_error()));
         $INVALID_DEVICE_ID = json_encode(array("error"=>"true","msg"=>"INVALID DEVICE ID"));
         $INVALID_DEVICE = json_encode(array("error"=>"true","msg"=>"INVALID DEVICE BEING USED"));
         $ZERO_HASH_KEYS = json_encode(array("error"=>"true","msg"=>"NO HASH KEYS FOUND"));
@@ -72,6 +74,89 @@
 
 			    return $div;
 
+			}
+			
+			
+			function trimLieName($add){
+			    
+			    $nam = $add;
+			    
+			    $patt = "/(LT)( )(LT)(\.)/is";
+			    $patt1 = "/(LT)( )(Lt)(\.)/is";
+			    $patt2 = "/(LT)( )/is";
+			    
+			    if(preg_match($patt, $add)){
+			        $nam = str_replace("LT LT. ","Lt. ",$add);
+			        
+			    }
+			    
+			    if(preg_match($patt1, $add)){
+			        $nam = str_replace("LT Lt. ","Lt. ",$add);
+			        
+			    }
+			    
+			    
+			    
+			    return $nam;
+			}
+			
+			function trimAdd($add){
+			    
+			    $nam = $add;
+			    
+			    $patt = "/(,)( )(Philadelphia)/is";
+			    $patt1 = "/(,)( )(Phila)/is";
+			    $patt2 = "/(,)( )(phila)/is";
+			    $patt3 = "/(,)(Philadelphia)/is";
+			    $patt4 = "/(Philadelphia,)( )(PA)/is";
+			    $patt5 = "/(.)( )(Phila.)( )(Pa)/is";
+			    
+			    
+			    if(preg_match($patt, $add)){
+			        $hal = explode(", Philadelphia",$nam);
+			        $nam = $hal[0];
+			    }
+			    
+			    if(preg_match($patt1, $add)){
+			        $hal = explode(", Phila",$nam);
+			        $nam = $hal[0];
+			    }
+			    
+			    if(preg_match($patt2, $add)){
+			        $hal = explode(", phila",$nam);
+			        $nam = $hal[0];
+			    }
+			    
+			    if(preg_match($patt3, $add)){
+			        $hal = explode(",Philadelphia",$nam);
+			        $nam = $hal[0];
+			    }
+			    
+			    if(preg_match($patt4, $add)){
+			        $hal = explode("Philadelphia,",$nam);
+			        $nam = $hal[0];
+			    }
+			    if(preg_match($patt5, $add)){
+			        $hal = explode(". Phila.",$nam);
+			        $nam = $hal[0];
+			    }
+			    
+			    
+			    return $nam;
+			}
+			
+			function fixCapName($add){
+			    
+			    $nam = $add;
+			    
+			    $patt = "/(https)/is";
+			    
+			    if(!preg_match($patt, $add)){
+			        $nam = "https://www.phillypolice.com".$add;
+			        
+			    }
+			    
+			    return $nam;
 			}
 			
 			
@@ -323,10 +408,10 @@
 		        $array = array();
 		        $array1 = array();
 		        $array2 = array();
-		        $query = "SELECT * FROM `DistrictInfo` WHERE `DistrictNumber` = '$dist_num'";
-		        $query1 = "SELECT * FROM `PSA` WHERE `DistrictNumber` = '$dist_num'";
+		        $query = "SELECT * FROM `DistrictInfo` WHERE `DistrictNumber` = '$dist_num' ORDER BY `TimeStamp` DESC LIMIT 0,1";
+		        $query1 = "SELECT * FROM `PSA` WHERE `DistrictNumber` = '$dist_num' AND `isCurrent` = 1 ORDER BY `PSAAreaNum` ASC";
 		        //$query2 = "SELECT * FROM `DistrictCalendar` WHERE `DistrictNumber` = '$dist_num' AND `DistrictDate` > DATE_FORMAT(NOW(), '%b %e, %Y %h :%i %p') LIMIT 0,3";
-		        $query2 = "SELECT * FROM `Calendar` WHERE `DistrictNumber` = '$dist_num' ORDER BY `Calendar`.`TimeStamp` DESC LIMIT 0,7";
+		        $query2 = "SELECT * FROM `Calendar` WHERE `DistrictNumber` = '$dist_num' ORDER BY `ID` DESC LIMIT 0,7";
 		        
 		        $result = mysqli_query($CONN, $query)or die('Bad Query '.mysql_error());
 		        if(mysqli_num_rows($result) >0){
@@ -338,7 +423,7 @@
 		            $disObj->setPhoneNumber($row['Phone']);
 		            $disObj->setEmailAddress($row['EmailAddress']);
 		            $disObj->setCaptainName($row['CaptainName']);
-		            $disObj->setCaptainImageURL($row['CaptainURL']);
+		            $disObj->setCaptainImageURL(fixCapName($row['CaptainURL']));
 		            $disObj->setDetectiveDivision($row['DetectiveDivision']);
 
 		            
@@ -353,7 +438,7 @@
 		            $psaObj->setDistrictNumber($row1['DistrictNumber']);
 		            $psaObj->setEmailAddress($row1['Email']);
 		            $psaObj->setPSAAreaNumber($row1['PSAAreaNum']);
-		            $psaObj->setLieutenantName($row1['LieutenantName']);
+		            $psaObj->setLieutenantName(trimLieName($row1['LieutenantName']));
 		            array_push($array1,$psaObj);
 
 		            
@@ -369,7 +454,7 @@
 		            $calObj->setDistrictNumber($row2['DistrictNumber']);
 		            $calObj->setTitle($row2['Title']);
 		            $calObj->setMeetDate($row2['MeetDate']);
-		            $calObj->setMeetLocation($row2['MeetLocation']);
+		            $calObj->setMeetLocation(trimAdd($row2['MeetLocation']));
 		            array_push($array2, $calObj);
 		            
 		            
@@ -767,10 +852,10 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                     $hash = $var['Hash'];
                     
                     if($dNum != 0){
-                        $sql = "SELECT SQL_CALC_FOUND_ROWS `ID`,`TimeStamp`,`DistrictNumber`,`PSAArea`,`DispatchTime`,`DispatchDate`,`AddressBlock`,`CrimeName`,`CrimeCode`,`LocationX`,`LocationY` FROM `CrimeIncidents` WHERE `HashTag` = '$hash' AND `DistrictNumber` = '$dNum'";
+                        $sql = "SELECT SQL_CALC_FOUND_ROWS `ID`,`TimeStamp`,`DistrictNumber`,`PSAArea`,`DispatchTime`,`DispatchDate`,`AddressBlock`,`CrimeName`,`CrimeCode`,`LocationX`,`LocationY` FROM `CrimeIncidents` WHERE `HashTag` = '$hash' AND `DistrictNumber` = '$dNum' ORDER BY `CrimeName`";
                         
                     }else{
-                        $sql = "SELECT SQL_CALC_FOUND_ROWS `ID`,`TimeStamp`,`DistrictNumber`,`PSAArea`,`DispatchTime`,`DispatchDate`,`AddressBlock`,`CrimeName`,`CrimeCode`,`LocationX`,`LocationY` FROM `CrimeIncidents` WHERE `HashTag` = '$hash'";
+                        $sql = "SELECT SQL_CALC_FOUND_ROWS `ID`,`TimeStamp`,`DistrictNumber`,`PSAArea`,`DispatchTime`,`DispatchDate`,`AddressBlock`,`CrimeName`,`CrimeCode`,`LocationX`,`LocationY` FROM `CrimeIncidents` WHERE `HashTag` = '$hash' ORDER BY `CrimeName`";
                         
                     }
                     $sql_c = "SELECT FOUND_ROWS() AS ROWS";
@@ -779,13 +864,16 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                     $roww_c = mysqli_fetch_array($rez_c);
                     
                     while($roww = mysqli_fetch_array($rez)){
+                        $thing = $roww['DispatchDate']." ".$roww['DispatchTime'];
+                        $tt = date('D M j, g:i a',strtotime($thing));
                         $crimeObj = new CrimeObject();
                         $crimeObj->setCrimeID($roww['ID']);
                         $crimeObj->setTimeStamp($roww['TimeStamp']);
                         $crimeObj->setDistrictNumber($roww['DistrictNumber']);
                         $crimeObj->setPSAArea($roww['PSAArea']);
                         $crimeObj->setDispatchTime($roww['DispatchTime']);
-                        $crimeObj->setDispatchDate($roww['DispatchDate']);
+                        //$crimeObj->setDispatchDate($roww['DispatchDate']);
+                        $crimeObj->setDispatchDate($tt);
                         $crimeObj->setAddress($roww['AddressBlock']);
                         $crimeObj->setCrimeType($roww['CrimeName']);
                         $crimeObj->setCrimeCode($roww['CrimeCode']);
