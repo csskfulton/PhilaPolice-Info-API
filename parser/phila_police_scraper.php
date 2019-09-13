@@ -18,7 +18,8 @@
 
 		$RSS_URL = "https://pr.phillypolice.com/feed/";	//SITE URL
 		//$RSS_URL = "http://10.20.30.11/feed.xml";	//SITE URL
-		
+		$HTTP_REQUEST_COUNT = 0;
+		$HTTP_DATA_CONTENT_COUNT = 0;
 		$HASH = sha1(time());
 
 	////////////////////////////////////////////START of FUNCTIONS/////////////////////////////////////////////////////
@@ -269,6 +270,19 @@
 		    
 		    return "police.co_".$num."@phila.gov";
 		}
+		
+		function byte_convert($bytes){
+		    $symbol = array('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
+		    
+		    $exp = 0;
+		    $converted_value = 0;
+		    if($bytes > 0){
+		        $exp = floor( log($bytes)/log(1024));
+		        $converted_value = ($bytes/pow(1024,floor($exp)));
+		    }
+		    
+		    return sprintf( '%.2f '.$symbol[$exp], $converted_value);
+		}
 			
 	////////////////////////////////////////////END of FUNCTIONS/////////////////////////////////////////////////////	
 	
@@ -278,7 +292,7 @@
 	
 		date_default_timezone_set('US/Eastern');
 		writeToLog("\n"."////STARTING SCRAPER SCRIPT//// ");
-		writeToLog("StartTimeStamp: ".time());
+		writeToLog("StartTimeStamp: ".date('Y-m-d H:i:s'));
 		
 		$curl = curl_init($RSS_URL);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
@@ -289,8 +303,9 @@
 		if($curl_response === FALSE){
 		    writeToLog("FAILED TO LOAD RSS FEED ".$RSS_URL);
 		}
-		
-		
+		$HTTP_REQUEST_COUNT ++;
+		$info = curl_getinfo($curl,CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+		$HTTP_DATA_CONTENT_COUNT = $info + $HTTP_DATA_CONTENT_COUNT;
 		writeToLog("Loading Page....: ".$RSS_URL);
 		curl_close($curl);
 		
@@ -305,6 +320,7 @@
 			$cff = 0; //news stories failed to insert
 			$caa = 0; // news stories that already exist
 			
+		
 			writeToLog("NUMBER OF OBJs IN NEWS FEED: ".$ct);
 			
 				for($i=0;$i<$ct;$i++){
@@ -342,13 +358,67 @@
 							$in_rec = "INSERT INTO `NewsStory` (`DistrictNumber`,`Title`,`URL`,`Description`,`GUID`,`PubDate`,`Category`,`ImageURL`,`TubeURL`,`ScrapeHash`,`StoryAuthor`)
 											VALUES('$DIS_NUM','$title','$link','$lgTxT','$obj_id','$pubDate','$category','$imgURL','$tubURL','$HASH','$author')";
 						 	
-						 	$res = mysqli_query($CONN, $in_rec) or die();
+						 	$res = mysqli_query($CONN, $in_rec);
 						 		
 						 		if($res){
 							 		$ctt++;
 									// $image = file_get_contents($imgURL);
 									// file_put_contents('imgs/test'.$i.'.jpg', $image);
-	
+							 		$dc = '/(DC\s)(\d{2})(-)(\d+)(-)(\d{6})/is';
+							 		$div = '/(\w+)(\s)(Detective|Detectives) (Division)/is';
+							 		$spec = '/(Special Victims Unit)/is';
+							 		$homi = '/(Homicide Division)/is';
+							 		$homi1 = '/(Homicide Unit)/is';
+							 		$maj = '/(Major Crimes Unit)/is';
+							 		$atf = '/(Arson Task Force)/is';
+							 		$aid = '/(Accident Investigation Division)/is';
+							 		
+							 		$sex = "SELECT `ID` FROM `NewsStory` WHERE GUID = '$obj_id'";
+							 		$xres = mysqli_query($CONN,$sex);
+							 		$xarr = mysqli_fetch_array($xres);
+							 		$id1 = $xarr['ID'];
+							 		
+							 		if(preg_match_all($dc,$desc,$match,PREG_PATTERN_ORDER)){
+							 		    
+							 		    if(preg_match($div,$desc,$match1)){
+							 		        $dDiv = $match1[0];
+							 		    }else if(preg_match($spec,$desc,$match2)){
+							 		        $dDiv = $match2[0];
+							 		    }else if(preg_match($homi,$desc,$match3)){
+							 		        $dDiv = $match3[0];
+							 		    }else if(preg_match($homi1,$desc,$match4)){
+							 		        $dDiv = $match4[0];
+							 		    }else if(preg_match($maj,$desc,$match5)){
+							 		        $dDiv = $match5[0];
+							 		    }else if(preg_match($atf,$desc,$match6)){
+							 		        $dDiv = $match6[0];
+							 		    }else if(preg_match($aid,$desc,$match7)){
+							 		        $dDiv = $match7[0];
+							 		    }else{
+							 		        $dDiv = 0;
+							 		    }
+							 		    
+							 		    for($i = 0; $i < count($match[0]); $i++){
+							 		        $dcNUM = $match[0][$i];
+							 		        $chk = "SELECT `DCNumber` FROM `DCNumber` WHERE `DCNumber` = '$dcNUM'";
+							 		        $rxt = mysqli_query($CONN,$chk);
+							 		        if(mysqli_num_rows($rxt) >=1){
+							 		            //"ALREADY EXIST </br>";
+							 		        }else{
+							 		            $io = "INSERT INTO `DCNumber`(`DCNumber`,`DistrictNumber`,`NewsStoryID`,`PubDate`,`DetectiveDivision`)VALUES('$dcNUM','$dist','$id','$pubDate','$dDiv');";
+							 		            //echo $io."</br>";
+							 		            mysqli_query($CONN, $io);
+							 		            // echo $io.'</br>';
+							 		        }
+							 		    }
+							 		    
+							 		    
+							 		}
+							 		
+							 		
+							 		
+							 		
+							 		
 						 		}else{
 							 		$cff++;
 						 		}
@@ -428,12 +498,22 @@
 				curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
 				curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
 				$curl_response = curl_exec($curl);
+				
+				
+				if($curl_response === FALSE){
+				    writeToLog("FAILED TO GO TO ".$ssURL);
+				}
+				
+				$HTTP_REQUEST_COUNT ++;
+				$info = curl_getinfo($curl,CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+				$HTTP_DATA_CONTENT_COUNT = $info + $HTTP_DATA_CONTENT_COUNT;
 				curl_close($curl);
 				$curl_jason = json_decode($curl_response, true);
 				
 				
 				
 				$arr = $curl_jason['rows'];
+				writeToLog("SHOOTING ROW COUNT: ".count($arr));
 				
 				foreach($arr as $feet){
 				    
@@ -483,6 +563,8 @@
 				    
 				}
 				
+				writeToLog("SHOOTING RECORDS INSERTED: ".$SHct);
+				
 				if($SHct >= 1){
 				    $up_hash = "INSERT INTO `ScrapeHashHistory` (`HashName`,`HashTag`) VALUES ('Shootings','$HASH')";
 				    $is_good = mysqli_query($CONN, $up_hash);
@@ -515,9 +597,10 @@
 				        
 				        
 				    }
+				    
+				}else{
+				    writeToLog("NO CHANGE IN SHOOTING RECORD");
 				}
-				
-				
 				
 				
 				
@@ -531,7 +614,7 @@
 				
 ////////////////////////////////////////////////////////////START CRIME INCIDENTS //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-				
+				writeToLog("START CRIME INCIDENTS SCRAPE");
 				date_default_timezone_set('US/Eastern');
 				$pDate = strtotime('today - 2 days');
 				$td2z = date('Y-m-d',$pDate);
@@ -548,7 +631,9 @@
 				    writeToLog("NO DATA RETURNED CURL RETURNED FALSE");
 				    writeToLog("CURL ERROR ".curl_error($curl));
 				}
-				
+				$HTTP_REQUEST_COUNT ++;
+				$info = curl_getinfo($curl,CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+				$HTTP_DATA_CONTENT_COUNT = $info + $HTTP_DATA_CONTENT_COUNT;
 				curl_close($curl);
 				$curl_jason = json_decode($curl_response, true);
 				$d_arr = $curl_jason['rows'];
@@ -590,6 +675,7 @@
 				    
 				}
 				
+				writeToLog("CRIME INCIDENTS INSERTED: ".$rw_ct);
 				
 				if($rw_ct >= 1){
 				    $up_hash = "INSERT INTO `ScrapeHashHistory` (`HashName`,`HashTag`) VALUES ('CrimeIncidents','$HASH')";
@@ -623,6 +709,8 @@
 				        
 				        
 				    }
+				}else{
+				    writeToLog("NOT CRIME INCIDENTS UPDATE: ");
 				}
 				
 				
@@ -633,15 +721,267 @@
 				
 ////////////////////////////////////////////////////////////END CRIME INCIDENTS //////////////////////////////////////////////////////////////////////////////////////////////////////
 				
+			
+				
+				
+				
+////////////////////////////////////////////////////////////START UNSOLVED MURDERS //////////////////////////////////////////////////////////////////////////////////////////////////////
+				
+				$usmArray = array("https://www.phillyunsolvedmurders.com/component/tags/tag/18th-district/",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/25th-district/",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/24th-district/",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/26th-district/",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/17th-district/",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/22nd-district/",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/39th-district/",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/35th-district/",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/14th-district/",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/19th-district/",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/16th-district/",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/12th-district/",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/15th-district/",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/3rd-district/",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/6th-district/",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/9th-district/",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/2nd-district/",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/5th-district/",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/7th-district/",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/8th-district/",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/1st-district/");
+				
+				$intCT = 0;
+				$intCT1 = 0;
+				
+				mysqli_set_charset($CONN, 'utf8mb4');
+				writeToLog("STARTING TO SCRAPE UNSOLVED MURDERS");
+				foreach($usmArray as $MURL){
+				    $agent = getRandomUserAgent();
+				    $site = 'https://www.phillyunsolvedmurders.com/';
+				    $curl = curl_init($MURL);
+				    writeToLog("GOING TO SITE: ".$MURL);
+				    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+				    //         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
+				    //         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+				    curl_setopt($curl, CURLOPT_REFERER, $site);
+				    curl_setopt($curl, CURLOPT_USERAGENT, $agent);
+				    $curl_response = curl_exec($curl);
+				    curl_close($curl);
+				    
+				    if($curl_response === FALSE){
+				       writeToLog("NO DATA RETURNED CURL RETURNED FALSE");
+				       writeToLog("CURL ERROR ".curl_error($curl));
+				    }else{
+				        $HTTP_REQUEST_COUNT ++;
+				        $info = curl_getinfo($curl,CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+				        $HTTP_DATA_CONTENT_COUNT = $info + $HTTP_DATA_CONTENT_COUNT;
+				        writeToLog("DATA RETURNED FROM SITE: ");
+				        $html = str_get_html($curl_response);
+				        $form = $html->find('#adminForm');
+				        foreach($form as $item){
+				            $ul = $item->find('ul.category');
+				            foreach($ul as $li){
+				                $h3 = $li->find('h3');
+				                foreach($h3 as $title){
+				                    $dcN = '(DC# \d{2}(-)\d{2}(-)\d{6})';
+				                    $tt = $title->plaintext;
+				                    if(preg_match($dcN,$tt,$match)){
+				                        $dc = $match[0];
+				                        $pt0 = explode(" - ",$tt);
+				                        $str = trim($pt0[0]);
+				                        $nurl = $title->getElementByTagName('a')->href;
+				                        $sel = "SELECT `DCNumber` FROM `UnsolvedMurders` WHERE `DCNumber` = '$dc'";
+				                        $res = mysqli_query($CONN, $sel);
+				                        if(mysqli_num_rows($res)>=1){
+				                            
+				                        }else{
+				                            
+				                            $agent = getRandomUserAgent();
+				                            $site = 'https://www.phillyunsolvedmurders.com'.$nurl;
+				                            $curl2 = curl_init($site);
+				                            curl_setopt($curl2, CURLOPT_RETURNTRANSFER, 1);
+				                            //         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
+				                            //         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+				                            curl_setopt($curl2, CURLOPT_REFERER, $site);
+				                            curl_setopt($curl2, CURLOPT_USERAGENT, $agent);
+				                            $curl_response2 = curl_exec($curl2);
+				                            curl_close($curl2);
+				                            if($curl_response2 === FALSE){
+				                           
+				                            }else{
+				                                $HTTP_REQUEST_COUNT ++;
+				                                $info = curl_getinfo($curl2,CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+				                                $HTTP_DATA_CONTENT_COUNT = $info + $HTTP_DATA_CONTENT_COUNT;
+				                                $html2 = str_get_html($curl_response2);
+				                                $spc = $html2->find('div#sp-component');
+				                                $DC = '';
+				                                $DESC = '';
+				                                $VIC = '';
+				                                
+				                                foreach($spc as $big){
+				                                    
+				                                    $head = $big->find('.entry-header');
+				                                    foreach($head as $h2){
+				                                        $pre = $h2->plaintext; // DC NUMBER
+				                                        $dcN = '(DC# \d{2}(-)\d{2}(-)\d{6})';
+				                                        
+				                                        if(preg_match($dcN,$pre,$match)){
+				                                            $DC = $match[0];
+				                                            $doe = preg_replace($dcN,"",$DC);
+				                                            $VIC = trim($doe);
+				                                            
+				                                        }else{
+				                                            $DC = $h2->plaintext;
+				                                        }
+				                                        
+				                                        
+				                                    }
+				                                    
+				                                    $div = $big->find('div[itemprop=articleBody] p');
+				                                    $txt= '';
+				                                    foreach($div as $p){
+				                                        $dap = $p->plaintext;
+				                                        if(preg_match('/(215-686-TIPS)/is',$dap)){
+				                                            $DESC .= $p->plaintext; // DECSRIPTION
+				                                            $real = mysqli_real_escape_string($CONN,$DESC);
+				                                    //        $real = str_replace(chr(194),"",$real);
+				                                            $in = "INSERT INTO `UnsolvedMurders`(`DCNumber`,`VictimName`,`NewsURL`,`ScrapeHash`,`Description`)VALUES('$dc','$str','$nurl','$HASH','$real')";
+				                                            $req = mysqli_query($CONN,$in);
+				                                            if($req){
+				                                                $intCT ++;
+				                                            }else{
+				                                                writeToLog("INSERT FAILED ".$in);
+				                                            }
+				                                            
+				                                            break;
+				                                            
+				                                        }
+				                                        
+				                                        if($DESC == ''){
+				                                            $DESC = $p->plaintext;
+				                                        }else{
+				                                            $DESC .= $p->plaintext;
+				                                        }
+				                                        
+				                                    }
+				                                    
+				                                    
+				                                    
+				                                    $tell = $big->find('ul#sige_0');
+				                                    
+				                                    if($tell){
+				                                        
+				                                        foreach($tell as $li){
+				                                            $spn = $li->getElementByTagName('a')->getElementByTagName('img')->src;
+				                                            //echo $spn."</br>";
+				                                            $ser = "SELECT `DCNumber` FROM `USMImages` WHERE `DCNumber` = '$DC'";
+				                                            //echo $ser."<br>";
+				                                            $rey = mysqli_query($CONN,$ser);
+				                                            if(mysqli_num_rows($rey) >= 1){
+				                                                //echo "recorsExist <br>";
+				                                            }else{
+				                                                $ni = "INSERT INTO `USMImages` (`UCMurderURL`,`DCNumber`,`ScrapeHash`)VALUES('$spn','$DC','$HASH')";
+				                                                $req1 = mysqli_query($CONN,$ni);
+				                                                if($req1){
+				                                                    $intCT1 ++;
+				                                                }else{
+				                                                    writeToLog("INSERT FAILED ");
+				                                                }
+				                                            }
+				                                            
+				                                            
+				                                        }
+				                                        
+				                                    }else{
+				                                        
+				                                        
+				                                        
+				                                    }
+				                                    
+				                                    
+				                                    
+				                                    
+				                                    
+				                                }
+				                                
+				                                
+				                            }
+				                            
+				                        }
+				                    }else{
+				                        writeToLog("No Match IN DC TITLE: ".$tt);
+				                    }
+				                    
+				                }
+				                
+				            }
+				        }
+				    }
+				    
+				    
+				    
+				}
+				
+				writeToLog("UNSOLVED MURDERS INSERTED: ".$intCT);
+				writeToLog("UNSOLVED MURDERS IMAGES: ".$intCT1);
+				
+				if($intCT >= 1){
+				    
+				    
+				    
+				    
+				    
+				    $up_hash = "INSERT INTO `ScrapeHashHistory` (`HashName`,`HashTag`) VALUES ('USMurders','$HASH')";
+				    $is_good = mysqli_query($CONN, $up_hash);
+				    
+				    if($is_good){
+				        $is_there = "SELECT `HashName` FROM `CurrentHash` WHERE `HashName` = 'USMurders'";
+				        $is_res = mysqli_query($CONN, $is_there);
+				        if(mysqli_num_rows($is_res) >=1){
+				            $up_date = "UPDATE `CurrentHash` SET `TimeStamp` = NOW(), `Hash` = '$HASH' WHERE `HashName` = 'USMurders'";
+				            $res_fin = mysqli_query($CONN, $up_date);
+				            if($res_fin){
+				                writeToLog("HASH UPDATED FOR USMurders TABLE IN DATABASE");
+				            }else{
+				                // FAILED TO UPDATE THE CURRENT HASH --
+				            }
+				            
+				            
+				        }else{
+				            $in_to = "INSERT INTO `CurrentHash` (`HashName`,`Hash`)VALUES('USMurders','$HASH')";
+				            $res_d = mysqli_query($CONN, $in_to);
+				            if($res_d){
+				                writeToLog("HASH UPDATED FOR USMurders TABLE IN DATABASE");
+				            }else{
+				                //Failed to insert --
+				            }
+				            
+				        }
+				        
+				        
+				        
+				        
+				    }
+				    
+				    
+				    
+				    
+				    
+				    
+				    
+				}else{
+				    writeToLog("NO UNSOLVED MURDERS UPDATED");
+				}
+				
+// 				if($intCT1 >= 1){
+				    
+// 				}
 				
 				
 				
 				
 				
-				
-				
-				
-				
+////////////////////////////////////////////////////////////END UNSOLVED MURDERS //////////////////////////////////////////////////////////////////////////////////////////////////////
+
 				
 				
 				
@@ -657,7 +997,6 @@
  					  "http://www.phillypolice.com/districts/26th/",
  					  "http://www.phillypolice.com/districts/17th/",
   					  "http://www.phillypolice.com/districts/22nd/",
-//				  "http://fuckwit.me/test.html"
  					  "http://www.phillypolice.com/districts/39th/",
  					  "http://www.phillypolice.com/districts/35th/",
  					  "http://www.phillypolice.com/districts/14th/",
@@ -700,7 +1039,9 @@
 			         writeToLog("FAILED TO LOAD WEB SITE ".$sites[$oo]);
 			     }
 			     
-			     
+			     $HTTP_REQUEST_COUNT ++;
+			     $info = curl_getinfo($curl,CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+			     $HTTP_DATA_CONTENT_COUNT = $info + $HTTP_DATA_CONTENT_COUNT;
 			     writeToLog("Loading Page....: ".$RSS_URL);
 			     curl_close($curl);
 			 		
@@ -1092,6 +1433,9 @@
             	    writeToLog("FAILED TO LOAD UC VIDEOS");
             	}
             	
+            	$HTTP_REQUEST_COUNT ++;
+            	$info = curl_getinfo($curl,CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+            	$HTTP_DATA_CONTENT_COUNT = $info + $HTTP_DATA_CONTENT_COUNT;
             	curl_close($curl);
 	
 	
@@ -1203,6 +1547,10 @@
 								
 							}
 					}				
+					
+					
+					writeToLog("HTTP REQUEST COUNT: ".$HTTP_REQUEST_COUNT);
+					writeToLog("HTTP REQUEST DATA SIZE: ".byte_convert($HTTP_DATA_CONTENT_COUNT));
 
 									if($ucc >=1){
 										$up_uc = "INSERT INTO `ScrapeHashHistory` (`HashName`,`HashTag`)VALUES('UCVideos','$HASH')";

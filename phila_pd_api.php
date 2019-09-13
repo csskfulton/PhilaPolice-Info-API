@@ -76,6 +76,24 @@
 
 			}
 			
+// 			function trimCat($cat){
+			    
+// 			   $words = array("Missing Juvenile",
+// 			        "Crime Alerts",
+// 			        "Traffic Alerts",
+// 			        "News",
+// 			        "Missing Endangered Person",
+// 			        "Missing Persons",
+// 			         "Missing Endangered Juvenile");
+			   
+// 			   if(in_array($cat, $words)){
+// 			       return $cat;
+// 			   }else{
+// 			       return 0;
+// 			   }
+			    
+			    
+// 			}
 			
 			function trimLieName($add){
 			    
@@ -95,10 +113,323 @@
 			        
 			    }
 			    
-			    
-			    
 			    return $nam;
 			}
+			
+			function trimTitle($title,$istrue){
+			    
+			    $sfc = '/(Suspect\(s\)|Suspects|Suspect)( for)/is';
+			    //$sfc = '/(Wanted )|Suspect|s( for)/is';
+			    $enl1 = '/(in the )(\d+)(\w+)( District)/is';
+			    $enl = '/(in the)/is';
+			    $mip = '/(Missing Person)/is';
+			    $miR = '/(Missing Person )(-)/is';
+			    $mit = '/(Missing Tender Age)/is';
+			    $ema = '/(Endangered Missing Adult)/is';
+			    $emb = '/(Endangered Missing Baby)/is';
+			    $emj = '/(Endangered Missing Juvenile)/is';
+			    $emp = '/(Endangered Missing Person )(-)/is';
+			    $fbi = '/(FBI\/PPD Violent Crimes Task Force Search for)/is';
+			    $map = '/(Missing Adult Person)/is';
+			    $mee = '/(Missing Elderly Endangered Person)/is';
+			    $me1 = '/(Missing Endangered Elderly |\- Person )/is';
+			    $mej = '/(Missing Endangered Juvenile)/is';
+			    $me6 = '/(Missing Endangered Juveniles)/is';
+			    $me9 = '/(Missing Endangered Person )/is';
+			    $me91 = '/(Missing Endangered Person )(-)/is';
+			    $mta = '/(Missing Endangered Tender Age)/is';
+			    $mt1 = '/(Missing Endangered Tender age)/is';
+			    $mi2 = '/(Missing Juvenile )(-)/is';
+			    $mjp = '/(Missing Juvenile Person)/is';
+			    $mt2 = '/(Missing Tender Age)/is';
+			    $ftd = '/(From the )(\d+)(\w+)( District)/is';
+			    
+			    if(preg_match($sfc,$title,$match)){
+			        $pt1 = str_replace($match[0],"",$title);
+			        if($istrue == "true"){
+			            $newL = preg_replace($enl1,"",$pt1);
+			            return  $newL;
+			        }else if($istrue == "false"){
+			            $newL = preg_replace($enl,"-",$pt1);
+			            return  $newL;
+			        }
+			        
+			    }else if(preg_match($ema,$title,$match5)){
+			        $pt1 = str_replace($match5[0],"",$title);
+			        return $pt1;
+			    }else if(preg_match($emb,$title,$match6)){
+			        $pt1 = str_replace($match6[0],"",$title);
+			        return $pt1;
+			    }else if(preg_match($emj,$title,$match7)){
+			        $pt1 = str_replace($match7[0],"",$title);
+			        return $pt1;
+			    }else if(preg_match($emp,$title,$match8)){
+			        $pt1 = str_replace($match8[0],"",$title);
+			        return $pt1;
+			    }else if(preg_match($fbi,$title,$match10)){
+			        $pt1 = str_replace($match10[0],"",$title);
+			        if($istrue == "true"){
+			            $pt1 = preg_replace($enl1,"",$pt1);
+			            return $pt1;
+			        }else if($istrue == "false"){
+			            $pt1 = preg_replace($enl,"-",$pt1);
+			            return $pt1;
+			        }
+			        
+			    }else if(preg_match($map,$title,$match11)){
+			        $pt1 = str_replace($match11[0],"",$title);
+			        if($istrue == "true"){
+			            $ptz = preg_replace($ftd,"",$pt1);
+			            $ptx = str_replace("-","",$ptz);
+			            return $ptx;
+			            
+			        }else if($istrue == "false"){
+			            
+			            return $pt1;
+			        }
+			    }else if(preg_match($mee,$title,$match12)){
+			        $pt1 = str_replace($match12[0],"",$title);
+			        return $pt1;
+			    }else if(preg_match($me1,$title,$match13)){
+			        $pt1 = str_replace($match13[0],"",$title);
+			        return $pt1;
+			    }else if(preg_match($mej,$title,$match14)){
+			        $pt1 = str_replace($match14[0],"",$title);
+			        if($istrue == "true"){
+			            $ptz = preg_replace($ftd,"",$pt1);
+			            $ptx = str_replace("-","",$ptz);
+			            return $ptx;
+			            
+			        }else if($istrue == "false"){
+			            
+			            return $pt1;
+			        }
+			    }else if(preg_match($me6,$title,$match15)){
+			        $pt1 = str_replace($match15[0],"",$title);
+			        return $pt1;
+			    }else if(preg_match($mta,$title,$match16)){
+			        $pt1 = str_replace($match16[0],"",$title);
+			        return $pt1;
+			    }else if(preg_match($me91,$title,$match91)){
+			        $pt1 = str_replace($match91[0],"",$title);
+			        if($istrue == "true"){
+			            $ptz = preg_replace($ftd,"",$pt1);
+			            $ptx = str_replace("-","",$ptz);
+			            return $ptx;
+			            
+			        }else if($istrue == "false"){
+			            
+			            return $pt1;
+			        }
+			    }else if(preg_match($me9,$title,$match18)){
+			        $pt1 = str_replace($match18[0],"",$title);
+			        return $pt1;
+			    }else if(preg_match($mt1,$title,$match17)){
+			        $pt1 = str_replace($match17[0],"",$title);
+			        return $pt1;
+			    }else if(preg_match($mij,$title,$match2)){
+			        $pt1 = str_replace($match2[0],"",$title);
+			        return $pt1;
+			    }else if(preg_match($mi4,$title,$match3)){
+			        $pt1 = str_replace($match3[0],"",$title);
+			        // $pt1 = str_replace('-',"",$pt1);
+			        return $pt1;
+			    }else if(preg_match($mit,$title,$match4)){
+			        $pt1 = str_replace($match4[0],"",$title);
+			        return $pt1;
+			    }else if(preg_match($mt2,$title,$match22)){
+			        $pt1 = str_replace($match22[0],"",$title);
+			        return $pt1;
+			    }else if(preg_match($miR,$title,$match88)){
+			        $pt1 = str_replace($match88[0],"",$title);
+			        if($istrue == "true"){
+			            $ptz = preg_replace($ftd,"",$pt1);
+			            $ptx = str_replace("-","",$ptz);
+			            return $ptx;
+			            
+			        }else if($istrue == "false"){
+			           
+			            return $pt1;
+			        }
+			        
+			    }else if(preg_match($mip,$title,$match1)){
+			        $pt1 = str_replace($match1[0],"",$title);
+			        if($istrue == "true"){
+			            $ptz = preg_replace($ftd,"",$pt1);
+			            $ptx = str_replace("-","",$ptz);
+			            return $ptx;
+			            
+			        }else if($istrue == "false"){
+			          
+			            return $pt1;
+			        }
+			        
+			        
+			    }else if(preg_match($mi2,$title,$match23)){
+			        $pt1 = str_replace($match23[0],"",$title);
+			        if($istrue == "true"){
+			            $ptz = preg_replace($ftd,"",$pt1);
+			            $ptx = str_replace("-","",$ptz);
+			            return $ptx;
+			            
+			        }else if($istrue == "false"){
+			            
+			            return $pt1;
+			        }
+			    }else{
+			        return $title;
+			    }
+			    
+			    
+			}
+			
+ 			function trimCat($cat,$title){
+ 			    
+
+ 			    $crm = '/(Crime Alerts)/is';
+ 			    $dep = '/(Decomposed)/is';
+ 			    $hit = '/(Hit and Run)/is';
+ 			    $ina = '/(indecent assault)/is';
+ 			    $lsp = '/(lost Property)/is';
+ 			    $lur = '/(Lure)/is';
+ 			    $mep = '/(Missing Endangerd Person)/is';
+ 			    $mej = '/(Missing Endangered Juvenile)/is';
+ 			    $mep = '/(Missing Endangered Person)/is';
+ 			    $mex = '/(Missing Endangered Tender-age)/is';
+ 			    $mij = '/(Missing Juvenile)/is';
+ 			    $mix = '/(Missing Juvenile \-)/is';
+ 			    $mip = '/(Missing Person)/is';
+ 			    $mia = '/(Missing Person \-)/is';
+ 			    $mif = '/(Missing Persons)/is';
+ 			    $mta = '/(Missing Tender age)/is';
+ 			    $new = '/(News)/is';
+ 			    $rob = '/(Robbery)/is';
+ 			    $tra = '/(Traffic Alerts)/is';
+ 			    $van = '/(Vandalism)/is';
+ 			    $wan = '/(Wanted|Wnated)/is';
+ 			    
+ 			    
+ 			    if(preg_match($crm,$cat)){
+ 			        return 'Crime Alerts';
+ 			    }
+ 			    else if(preg_match($dep,$cat)){
+ 			        return 'Decomposed';
+ 			    }
+ 			    else if(preg_match($hit,$cat)){
+ 			        return 'Hit and Run';
+ 			    }
+ 			    else if(preg_match($ina,$cat)){
+ 			        return 'Indecent Assault';
+ 			    }
+ 			    if(preg_match($lsp,$cat)){
+ 			        return 'Lost Property';
+ 			    }
+ 			    else if(preg_match($lur,$cat)){
+ 			        return 'Lure';
+ 			    }
+ 			    else if(preg_match($mep,$cat)){
+ 			        return 'Missing Endangerd Person';
+ 			    }
+ 			    else if(preg_match($mej,$cat)){
+ 			        return 'Missing Endangered Juvenile';
+ 			    }
+ 			    else if(preg_match($mep,$cat)){
+ 			        return 'Missing Endangered Person';
+ 			        
+ 			    }else if(preg_match($mex,$cat)){
+ 			        return 'Missing Endangered Tender-Age';
+ 			    }
+ 			    else if(preg_match($mij,$cat)){
+ 			        return 'Missing Juvenile';
+ 			    }
+ 			    else if(preg_match($mix,$cat)){
+ 			        return 'Missing Juvenile';
+ 			    }
+ 			    else if(preg_match($mip,$cat)){
+ 			        return 'Missing Person';
+ 			    }
+ 			    else if(preg_match($mia,$cat)){
+ 			        return 'Missing Person';
+ 			    }
+ 			    else if(preg_match($mif,$cat)){
+ 			        return 'Missing Persons';
+ 			    }
+ 			    else if(preg_match($mta,$cat)){
+ 			        return 'Missing Tender-Age';
+ 			    }
+ 			    else if(preg_match($new,$cat)){
+ 			        return 'News';
+ 			    }
+ 			    else if(preg_match($rob,$cat)){
+ 			        return 'Robbery';
+ 			    }
+ 			    else if(preg_match($tra,$cat)){
+ 			        return 'Traffic Alerts';
+ 			    }
+ 			    else if(preg_match($van,$cat)){
+ 			        return 'Vandalism';
+ 			    }
+ 			    else if(preg_match($wan,$cat)){
+ 			        return 'Wanted';
+ 			        
+ 			    }else{
+ 			        
+ 			        
+ 			        $emb = '/(Endangered Missing Baby)/is';
+ 			        $emp = '/(Endangered Missing Person )(-)/is';
+ 			        $fbi = '/(FBI\/PPD Violent Crimes Task Force Search for)/is';
+ 			        $mej = '/(Missing Endangered Juvenile)/is';
+ 			        $me9 = '/(Missing Endangered Person )/is';
+ 			        $mi2 = '/(Missing Juvenile )(-)/is';
+ 			        $mi9 = '/(Missing Juvenile Person )(-)/is';
+ 			        $mip = '/(Missing Person)/is';
+ 			        $sfc = '/(Suspect\(s\)|Suspects|Suspect)( for)/is';
+ 			        $miss = '/(Missing)|(Juvenile)/is';
+ 			        
+ 			        if(preg_match($emb,$title)){
+ 			            return 'Endangered Missing Baby';
+ 			        }else if(preg_match($emp,$title)){
+ 			            return 'Endangered Missing Person';
+ 			        }else if(preg_match($fbi,$title)){
+ 			            return 'FBI\/PPD Violent Crimes Task Force';
+ 			        }else if(preg_match($mej,$title)){
+ 			            return 'Missing Endangered Juvenile';
+ 			        }else if(preg_match($mi9,$title)){
+ 			            return 'Missing Juvenile Person';
+ 			        }else if(preg_match($me9,$title)){
+ 			            return 'Missing Endangered Person';
+ 			        }else if(preg_match($mi2,$title)){
+ 			            return 'Missing Juvenile';
+ 			        }else if(preg_match($mip,$title)){
+ 			            return 'Missing Person';
+ 			        }else if(preg_match($miss,$title)){
+ 			            return 'Missing Person';
+ 			        }else{
+ 			            
+ 			            if($cat == "Crime Alerts" || $cat == "crime alerts"){
+ 			                return 'Crime Alerts';
+ 			            }else if($cat == "Surveillance" || $cat == "surveillance"){
+ 			                return 'Surveillance';
+ 			            }else if($cat == "Burglary" || $cat == "burglary"){
+ 			                return 'Burglary';
+ 			            }else if($cat == "Decomposed" || $cat == "decomposed"){
+ 			                return 'Decomposed';
+ 			            }else if($cat == "Hit and Run" || $cat == "hit and run"){
+ 			                return 'Hit and Run';
+ 			            }else if($cat == "Indecent Assault" || $cat == "indecent assault"){
+ 			                return 'Indecent Assault';
+ 			            }
+ 			            
+ 			            else{
+ 			                echo $cat;
+ 			            }
+ 			        }
+ 			        
+ 			        
+ 			    }
+			    
+ 			}
+			
 			
 			function trimAdd($add){
 			    
@@ -323,17 +654,20 @@
     		    $NEW_HASH = 0;
     		    
     		    
-    		    $get_sql = "SELECT `Hash` FROM `CurrentHash` WHERE `HashName` = 'NewsStory'";
+    		    $get_sql = "SELECT `TimeStamp`,`Hash` FROM `CurrentHash` WHERE `HashName` = 'NewsStory'";
+    		    
     		    $res = mysqli_query($CONN, $get_sql);
     		    
     		    if(mysqli_num_rows($res) >=1){
     		        
     		        $row = mysqli_fetch_array($res);
     		        $NEW_HASH = $row['Hash'];
-    		        
+    		        $tamp = $row['TimeStamp'];
+    		        $pDate = date('Y-m-d',strtotime($tamp));
     		        $array2 = array();
     		        $array = array();
-    		        $query = "SELECT SQL_CALC_FOUND_ROWS `ID`,`Category`,`PubDate`,`StoryAuthor`,`Title`,`Description`,`ImageURL`,`TubeURL` FROM `NewsStory` WHERE `ScrapeHash` = '$NEW_HASH' ORDER BY `PubDate` DESC LIMIT $srt,$end";
+    		        //$query = "SELECT SQL_CALC_FOUND_ROWS * FROM `NewsStory` WHERE `ScrapeHash` = '$NEW_HASH' ORDER BY `PubDate` DESC LIMIT $srt,$end";
+    		        $query = "SELECT SQL_CALC_FOUND_ROWS * FROM `NewsStory` WHERE `PubDate` LIKE '%$pDate%' ORDER BY `PubDate` DESC LIMIT $srt,$end";
     		        $cquery = "SELECT FOUND_ROWS() AS ROWS";
     		        $result = mysqli_query($CONN, $query);
     		        $cresult = mysqli_query($CONN, $cquery);
@@ -342,13 +676,12 @@
     		        while($row = mysqli_fetch_array($result)){
     		            
     		            $newzObj = new NewsObject();
-    		            $newzObj->setCategory($row['Category']);
+    		            $newzObj->setCategory($row['Category'],$row['Title']);
     		            $newzObj->setPubDate(date('M j, g:i A',strtotime($row['PubDate'])));
     		            $newzObj->setStoryAuthor($row['StoryAuthor']);
     		            $newzObj->setNewsStoryID($row['ID']);
     		            $newzObj->setDescription(cleanUpHTML(utf8_encode($row['Description'])));
-    		            $newzObj->setTitle($row['Title']);
-   		                //$newzObj->setTitle(cleanUpHTML(utf8_encode($row['Description'])));
+    		            $newzObj->setTitle(trimTitle($row['Title'],"false"));
 
     		            $imgURLL = $row['ImageURL'];
     		            $SQLL = "SELECT `LocalImageURL` FROM `Images` WHERE `RemoteImageURL` = '$imgURLL'";
@@ -513,19 +846,22 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
         $ct = mysqli_fetch_array($cresult);
         while($row = mysqli_fetch_array($result)){ 
             
-            $captionURL = $row['ImageURL'];
-            $sel = "SELECT `LocalImageURL` FROM `Images` WHERE `RemoteImageURL` = '$captionURL'";
-            $r_Q = mysqli_query($CONN, $sel);
+//             $captionURL = $row['ImageURL'];
+//             $sel = "SELECT `LocalImageURL` FROM `Images` WHERE `RemoteImageURL` = '$captionURL'";
+//             $r_Q = mysqli_query($CONN, $sel);
             
-            if(mysqli_num_rows($r_Q) >=1){
-                $rowz = mysqli_fetch_array($r_Q);
-                $pre = $rowz['LocalImageURL'];
-                $captionURL = $IMG_DIR.$pre;
-                $newzObj->setImageURL($IMG_DIR.$pre);
+//             if(mysqli_num_rows($r_Q) >=1){
+//                 $rowz = mysqli_fetch_array($r_Q);
+//                 $pre = $rowz['LocalImageURL'];
+//                 $captionURL = $IMG_DIR.$pre;
+//                 $newzObj->setImageURL($IMG_DIR.$pre);
                 
-            }
+//             }
+            
+            
             
             $newzObj = new NewsObject();
+            $newzObj->setImageURL($row['ImageURL']);
             $newzObj->setNewsStoryID($row['ID']);
             $newzObj->setDistrictNumber($row['DistrictNumber']);
             $excert = cleanUpHTML(utf8_encode($row['Description']));
@@ -534,7 +870,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
             $newzObj->setPubDate($date);
             $storyURL = trim($row['URL']);
             $newzObj->setURL($storyURL);
-            $newzObj->setTitle($row['Title']);
+            $newzObj->setTitle(trimTitle($row['Title'],"true"));
             $videoURL = $row['TubeURL'];
             if(empty($videoURL)){
                 $videoURL = "No Video";
@@ -545,7 +881,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
             if($cat == "missing person"){
                 $cat == "Missing Person";
             }
-                $newzObj->setCategory($cat);
+            $newzObj->setCategory(trimCat($cat,$row['Title']));
                 $newzObj->setStoryAuthor($row['StoryAuthor']);
                
             array_push($array, $newzObj);
@@ -705,8 +1041,13 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                 $hast = mysqli_fetch_array($resHash);
                 $hash = $hast['Hash'];
                 
-                $sql = "SELECT * FROM `Shooting` WHERE `HashTag` = '$hash'";
+                $sql = "SELECT SQL_CALC_FOUND_ROWS * FROM `Shooting` WHERE `HashTag` = '$hash'";
+                $sqlC = "SELECT FOUND_ROWS() AS ROWS";
                 $resLat = mysqli_query($CONN, $sql) or die('Bad Query '.mysql_error());
+                $resC = mysqli_query($CONN, $sqlC) or die('Bad Query '.mysql_error());
+                $arrC = mysqli_fetch_array($resC);
+                $ttCount = $arrC['ROWS'];
+                
                 if(mysqli_num_rows($resLat) >=1){
                     
                     while($row = mysqli_fetch_array($resLat)){
@@ -765,7 +1106,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                     }
                     
                     
-                    echo json_encode(array("Shootings"=>$objArr));
+                    echo json_encode(array("Shootings"=>$objArr,"TotalCount"=>$ttCount));
                     
                 }else{
                     // no record returned
@@ -807,6 +1148,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                     $isLate = "true";
                 }else{
                     // NOT equal to true
+                    $isLate = "false";
                 }
                 
                 
@@ -816,6 +1158,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                     $isLate = "true";
                 }else{
                     // NOT equal to true
+                    $isLate = "false";
                 }
                 
             }
@@ -838,26 +1181,56 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                     }
 
                 }
+                
+                if(!empty($_GET['Start']) && !empty($_GET['End'])){
+                    $srt = $_GET['Start'];
+                    $end = $_GET['End'];
+                }else if(!empty($data['Start']) && !empty($data['End'])){
+                    $srt = $data['Start'];
+                    $end = $data['End'];
+                }else{
+                    $srt = 0;
+                    $end = 10;
+                }
+                
+                
+                
  
             
             if($isLate == "true"){
-               
+            
+            
                 $objArray = array();
                 $query = "SELECT `Hash` FROM `CurrentHash` WHERE `HashName` = 'CrimeIncidents'";
                 $r_hash = mysqli_query($CONN, $query);
                 
                 if(mysqli_num_rows($r_hash) >=1){
-                    
                     $var = mysqli_fetch_array($r_hash);
                     $hash = $var['Hash'];
                     
+                }else{
+                    // NO HAS RETURNED
+                }
+                    
                     if($dNum != 0){
-                        $sql = "SELECT SQL_CALC_FOUND_ROWS `ID`,`TimeStamp`,`DistrictNumber`,`PSAArea`,`DispatchTime`,`DispatchDate`,`AddressBlock`,`CrimeName`,`CrimeCode`,`LocationX`,`LocationY` FROM `CrimeIncidents` WHERE `HashTag` = '$hash' AND `DistrictNumber` = '$dNum' ORDER BY `CrimeName`";
+                        $sql = "SELECT SQL_CALC_FOUND_ROWS `ID`,`TimeStamp`,`DistrictNumber`,`PSAArea`,`DispatchTime`,`DispatchDate`,`AddressBlock`,`CrimeName`,`CrimeCode`,`LocationX`,`LocationY` FROM `CrimeIncidents` WHERE `HashTag` = '$hash' AND `DistrictNumber` = '$dNum' ORDER BY `CrimeName` LIMIT $srt,$end";
                         
                     }else{
-                        $sql = "SELECT SQL_CALC_FOUND_ROWS `ID`,`TimeStamp`,`DistrictNumber`,`PSAArea`,`DispatchTime`,`DispatchDate`,`AddressBlock`,`CrimeName`,`CrimeCode`,`LocationX`,`LocationY` FROM `CrimeIncidents` WHERE `HashTag` = '$hash' ORDER BY `CrimeName`";
+                        $sql = "SELECT SQL_CALC_FOUND_ROWS `ID`,`TimeStamp`,`DistrictNumber`,`PSAArea`,`DispatchTime`,`DispatchDate`,`AddressBlock`,`CrimeName`,`CrimeCode`,`LocationX`,`LocationY` FROM `CrimeIncidents` WHERE `HashTag` = '$hash' ORDER BY `CrimeName` LIMIT $srt,$end";
                         
                     }
+                    
+            }else if($isLate == "false"){
+                
+                if($dNum != 0){
+                    $sql = "SELECT SQL_CALC_FOUND_ROWS `ID`,`TimeStamp`,`DistrictNumber`,`PSAArea`,`DispatchTime`,`DispatchDate`,`AddressBlock`,`CrimeName`,`CrimeCode`,`LocationX`,`LocationY` FROM `CrimeIncidents` AND `DistrictNumber` = '$dNum' ORDER BY `CrimeName` LIMIT $srt,$end";
+                    
+                }else{
+                    $sql = "SELECT SQL_CALC_FOUND_ROWS `ID`,`TimeStamp`,`DistrictNumber`,`PSAArea`,`DispatchTime`,`DispatchDate`,`AddressBlock`,`CrimeName`,`CrimeCode`,`LocationX`,`LocationY` FROM `CrimeIncidents` ORDER BY `CrimeName` LIMIT $srt,$end";
+                    
+                }
+            }
+                    
                     $sql_c = "SELECT FOUND_ROWS() AS ROWS";
                     $rez = mysqli_query($CONN,$sql);
                     $rez_c = mysqli_query($CONN,$sql_c);
@@ -872,7 +1245,6 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                         $crimeObj->setDistrictNumber($roww['DistrictNumber']);
                         $crimeObj->setPSAArea($roww['PSAArea']);
                         $crimeObj->setDispatchTime($roww['DispatchTime']);
-                        //$crimeObj->setDispatchDate($roww['DispatchDate']);
                         $crimeObj->setDispatchDate($tt);
                         $crimeObj->setAddress($roww['AddressBlock']);
                         $crimeObj->setCrimeType($roww['CrimeName']);
@@ -886,13 +1258,11 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                     
                     echo json_encode(array("CrimeIncidents"=>$objArray,"TotalCount"=>$roww_c['ROWS']));
                     
-                }else{
-                    // NO HAS RETURNED
-                }
+                
                 
                 
             
-            }
+            
             
             
             
@@ -1303,16 +1673,16 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 																$desc = cleanUpHTML(utf8_encode($n_row['Description']));
 																$s_date = date('M j, g:i A',strtotime($n_row['PubDate']));
 																$cat = $n_row['Category'];
-																//$img = $n_row['ImageURL'];
+																$iimg = $n_row['ImageURL'];
 																$news_id = $n_row['ID'];
 																$vid_URL = $n_row['TubeURL'];
 																$author = $n_row['StoryAuthor'];
 																$divv = convertdiv($dist);
 																
-																$fetc = "SELECT `LocalImageURL` FROM `Images` WHERE `NewsID` = '$news_id'";
-																$dex = mysqli_query($CONN, $fetc);
-																$rowx = mysqli_fetch_array($dex);
-																$iimg = $IMG_DIR.$rowx['LocalImageURL'];
+// 																$fetc = "SELECT `LocalImageURL` FROM `Images` WHERE `NewsID` = '$news_id'";
+// 																$dex = mysqli_query($CONN, $fetc);
+// 																$rowx = mysqli_fetch_array($dex);
+// 																$iimg = $IMG_DIR.$rowx['LocalImageURL'];
 																
 																if(empty($vid_URL)){
 																	$vid_URL = "No Video";
