@@ -28,7 +28,7 @@
         // ERRORS MESSAGES
         $NO_DATABASE = json_encode(array("error"=>"true","msg"=>"Database Does Not Exist"));
         $NO_CONNECTION = json_encode(array("error"=>"true","msg"=>"Could Not Connect To Database"));
-        $MYSQL_ERROR = json_encode(array("error"=>"true","msg"=>mysqli_error()));
+        $MYSQL_ERROR = json_encode(array("error"=>"true","msg"=>"MYSQL ERROR"));
         $INVALID_DEVICE_ID = json_encode(array("error"=>"true","msg"=>"INVALID DEVICE ID"));
         $INVALID_DEVICE = json_encode(array("error"=>"true","msg"=>"INVALID DEVICE BEING USED"));
         $ZERO_HASH_KEYS = json_encode(array("error"=>"true","msg"=>"NO HASH KEYS FOUND"));
@@ -676,7 +676,7 @@
     		        while($row = mysqli_fetch_array($result)){
     		            
     		            $newzObj = new NewsObject();
-    		            $newzObj->setCategory($row['Category'],$row['Title']);
+    		            $newzObj->setCategory(trimCat($row['Category'],$row['Title']));
     		            $newzObj->setPubDate(date('M j, g:i A',strtotime($row['PubDate'])));
     		            $newzObj->setStoryAuthor($row['StoryAuthor']);
     		            $newzObj->setNewsStoryID($row['ID']);
@@ -1129,7 +1129,155 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
         
         
         
-
+        
+        
+        
+//////////////////////////////////////////////////////////////////////////////////// START UNSOLVED MURDERS DATA API //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        
+        
+        
+        
+        else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['USMurders'] == "true" || $_SERVER['REQUEST_METHOD'] == 'POST' && $data['USMurders'] == "true")
+        {
+        
+        
+            if(!empty($_GET['DistrictNumber'])){
+                
+                if(preg_match(NUM_ONLY, $_GET['DistrictNumber'])){
+                    $dNum = $_GET['DistrictNumber'];
+                }else{
+                    $dNum = 0;
+                }
+                
+                
+            }else if(!empty($data['DistrictNumber'])){
+                
+                if(preg_match(NUM_ONLY, $data['DistrictNumber'])){
+                    $dNum = $data['DistrictNumber'];
+                }else{
+                    $dNum = 0;
+                }
+                
+            }else{
+                $dNum = 0;
+            }
+            
+            if(!empty($_GET['Start']) && !empty($_GET['End'])){
+                $srt = $_GET['Start'];
+                $end = $_GET['End'];
+            }else if(!empty($data['Start']) && !empty($data['End'])){
+                $srt = $data['Start'];
+                $end = $data['End'];
+            }else{
+                $srt = 0;
+                $end = 5;
+            }
+            
+            mysqli_set_charset($CONN, 'utf8mb4');
+            $array = array();
+            
+            
+            $sel = "SELECT SQL_CALC_FOUND_ROWS * FROM `UnsolvedMurders` WHERE `DCNumber` LIKE '%-$dNum-%' ORDER BY `MurderDate` DESC LIMIT $srt,$end";
+            $sel_r = "SELECT FOUND_ROWS() AS ROWS";
+            $res = mysqli_query($CONN, $sel);
+            $res_r = mysqli_query($CONN, $sel_r);
+            $nox = mysqli_fetch_array($res_r);
+            
+            if(mysqli_num_rows($res) >= 1){
+                
+                while($rows = mysqli_fetch_array($res)){
+                    $dcn = $rows['DCNumber'];
+                    $chl = "SELECT `UCMurderURL` FROM `USMImages` WHERE `DCNumber` ='$dcn'";
+                    $isP = mysqli_query($CONN, $chl);
+                    if(mysqli_num_rows($isP) >= 1){
+                        $array1 = array();
+                        while($rot = mysqli_fetch_array($isP)){
+                            array_push($array1,$rot['UCMurderURL']);
+                        }
+                    }else{
+                        $array1 = array();
+                    }
+                    
+                    if(preg_match('/(DC# )/is',$dcn,$damatch)){
+                        $ezy = str_replace($damatch[0],"",$dcn);
+                    }else{
+                        $ezy = $dcn;
+                    }
+                    
+                    $cho = "SELECT * FROM `NewsStory` WHERE `Description` LIKE '%$ezy%'";
+                    $zer = mysqli_query($CONN, $cho);
+                    if(mysqli_num_rows($zer) >= 1){
+                        $array2 = array();
+                        while($rot = mysqli_fetch_array($zer)){
+                            $newzObj = new NewsObject();
+                            $newzObj->setImageURL($rot['ImageURL']);
+                            $newzObj->setNewsStoryID($rot['ID']);
+                            $newzObj->setDistrictNumber($rot['DistrictNumber']);
+                            $excert = cleanUpHTML(utf8_encode($rot['Description']));
+                            $excert = str_replace("\xc2\xa0","",$excert);
+                            $newzObj->setDescription(trim($excert));
+                            $date = date('M j, g:i A',strtotime($rot['PubDate']));
+                            $newzObj->setPubDate($date);
+                            $storyURL = trim($rot['URL']);
+                            $newzObj->setURL($storyURL);
+                            $newzObj->setTitle(trimTitle($rot['Title'],"true"));
+                            $videoURL = $rot['TubeURL'];
+                            if(empty($videoURL)){
+                                $videoURL = "No Video";
+                            }
+                            $newzObj->setTubeURL($videoURL);
+                            $cat = $rot['Category'];
+                            
+                            if($cat == "missing person"){
+                                $cat == "Missing Person";
+                            }
+                            $newzObj->setCategory(trimCat($cat,$rot['Title']));
+                            $newzObj->setStoryAuthor($rot['StoryAuthor']);
+                            
+                            array_push($array2, $newzObj);
+                            
+                        }
+                    }else{
+                        $array2 = array();
+                    }
+                    
+                    $vcn = $rows['VictimName'];
+                    if(preg_match('/(DC# \d{2}(-)\d{2}(-)\d{6})/is',$vcn,$tt)){
+                        $vcn = str_replace($tt[0],"",$vcn);
+                    }
+                        
+                    $nrl = $rows['NewsURL'];
+                    $mda = date('l F jS, Y',strtotime($rows['MurderDate']));
+                    $ops = str_replace('"',"",$rows['Description']);
+                    $des = str_replace("\xc2\xa0","",$ops);
+                    $srp = $rows['ScrapeHash'];
+                    $obj = array("DCNumber"=>$dcn,"VictimName"=>$vcn,"MurderDate"=>$mda,"NewsURL"=>$nrl,"Description"=>$des,"ScrapeHash"=>$srp,"Images"=>$array1,"NewsStory"=>$array2);
+                    array_push($array,$obj);
+                    
+                }
+               
+            }else{
+                // NO MURDERS
+            }
+        
+        
+            echo json_encode(array("Unsolved Murders"=>$array,"TotalCount"=>$nox['ROWS']));
+        
+        
+        
+        
+        
+        
+        
+        }
+        
+        
+        
+//////////////////////////////////////////////////////////////////////////////////// END  of UNSOLVED MURDERS DATA API //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        
+        
+        
+        
         
         
         

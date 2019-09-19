@@ -291,6 +291,7 @@
     ///////////////////////////////////////////////////// START NEWS FEED SCRAPER //////////////////////////////////////////////////////
 	
 		date_default_timezone_set('US/Eastern');
+		mysqli_set_charset($CONN, 'utf8mb4');
 		writeToLog("\n"."////STARTING SCRAPER SCRIPT//// ");
 		writeToLog("StartTimeStamp: ".date('Y-m-d H:i:s'));
 		
@@ -752,7 +753,7 @@
 				$intCT = 0;
 				$intCT1 = 0;
 				
-				mysqli_set_charset($CONN, 'utf8mb4');
+				//mysqli_set_charset($CONN, 'utf8mb4');
 				writeToLog("STARTING TO SCRAPE UNSOLVED MURDERS");
 				foreach($usmArray as $MURL){
 				    $agent = getRandomUserAgent();
@@ -788,6 +789,9 @@
 				                        $dc = $match[0];
 				                        $pt0 = explode(" - ",$tt);
 				                        $str = trim($pt0[0]);
+				                        if(preg_match($dcN,$str,$moz)){
+				                            $str = str_replace($moz[0],"",$str);
+				                        }
 				                        $nurl = $title->getElementByTagName('a')->href;
 				                        $sel = "SELECT `DCNumber` FROM `UnsolvedMurders` WHERE `DCNumber` = '$dc'";
 				                        $res = mysqli_query($CONN, $sel);
@@ -873,7 +877,7 @@
 				                                        foreach($tell as $li){
 				                                            $spn = $li->getElementByTagName('a')->getElementByTagName('img')->src;
 				                                            //echo $spn."</br>";
-				                                            $ser = "SELECT `DCNumber` FROM `USMImages` WHERE `DCNumber` = '$DC'";
+				                                            $ser = "SELECT `UCMurderURL` FROM `USMImages` WHERE `UCMurderURL` = '$spn'";
 				                                            //echo $ser."<br>";
 				                                            $rey = mysqli_query($CONN,$ser);
 				                                            if(mysqli_num_rows($rey) >= 1){
