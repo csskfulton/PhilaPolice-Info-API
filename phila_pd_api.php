@@ -1187,6 +1187,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                 
                 while($rows = mysqli_fetch_array($res)){
                     $dcn = $rows['DCNumber'];
+                    $iDD = $rows['ID'];
                     $chl = "SELECT `UCMurderURL` FROM `USMImages` WHERE `DCNumber` ='$dcn'";
                     $isP = mysqli_query($CONN, $chl);
                     if(mysqli_num_rows($isP) >= 1){
@@ -1251,7 +1252,8 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                     $ops = str_replace('"',"",$rows['Description']);
                     $des = str_replace("\xc2\xa0","",$ops);
                     $srp = $rows['ScrapeHash'];
-                    $obj = array("DCNumber"=>$dcn,"VictimName"=>$vcn,"MurderDate"=>$mda,"NewsURL"=>$nrl,"Description"=>$des,"ScrapeHash"=>$srp,"Images"=>$array1,"NewsStory"=>$array2);
+                    
+                    $obj = array("USMurderID"=>$iDD,"DCNumber"=>$dcn,"VictimName"=>$vcn,"MurderDate"=>$mda,"NewsURL"=>$nrl,"Description"=>$des,"ScrapeHash"=>$srp,"Images"=>$array1,"NewsStory"=>$array2);
                     array_push($array,$obj);
                     
                 }
@@ -1765,6 +1767,8 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 								$isBkSub = $data['Bookmark_Submit'];
 								$isBkNews = $data['BookmarkNews'];
 								$isVid = $data['BookmarkVideos'];
+								$isUSM_News = $data['BookmarkUSMurderNews'];
+								$isUSM_List = $data['BookmarkUSMurderList'];
 								$story_ID = $data['BookmarkID'];
 								$rmBook = $data['BookmarkRemove'];
 								$is_news_id = $data['News'];
@@ -1783,7 +1787,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 									if($isNews == "true"){
 												
 										$sql = "SELECT `DeviceID` FROM `Bookmarks` WHERE `DeviceID` = '$device' AND `NewsStoryID` != 0";
-										$isDev = mysqli_query($CONN, $sql) or die("Bad Query ".mysql_error());
+										$isDev = mysqli_query($CONN, $sql);
 									
 										if(mysqli_num_rows($isDev) >=1){
 												
@@ -1794,11 +1798,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 											$count = mysqli_fetch_array($cresult);
 											
 												while($rows = mysqli_fetch_array($val)){
-													
-													// if($rows['NewsStoryID'] == 0){
-														// array_push($videos, $rows['UCVideoID']);
-													// }
-													
+											
 													 if($rows['UCVideoID'] == 0){
 														array_push($news, $rows['NewsStoryID']);
 													}
@@ -1817,9 +1817,14 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 															while($n_row = mysqli_fetch_array($res)){
 																	
 																$dist = $n_row['DistrictNumber'];
-																$title = $n_row['Title'];
+																$title = trimTitle($n_row['Title'],"true");
 																$desc = cleanUpHTML(utf8_encode($n_row['Description']));
-																$s_date = date('M j, g:i A',strtotime($n_row['PubDate']));
+																if(preg_match('/(DC )(\d{2}\-\d{2}\-\d{6})/is',$n_row['Description'],$may)){
+																    $dcNumb = $may[0];
+																}else{
+																    $dcNumb = "0";
+																}
+																$s_date = date('l M j, g:i A',strtotime($n_row['PubDate']));
 																$cat = $n_row['Category'];
 																$iimg = $n_row['ImageURL'];
 																$news_id = $n_row['ID'];
@@ -1827,18 +1832,13 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 																$author = $n_row['StoryAuthor'];
 																$divv = convertdiv($dist);
 																
-// 																$fetc = "SELECT `LocalImageURL` FROM `Images` WHERE `NewsID` = '$news_id'";
-// 																$dex = mysqli_query($CONN, $fetc);
-// 																$rowx = mysqli_fetch_array($dex);
-// 																$iimg = $IMG_DIR.$rowx['LocalImageURL'];
-																
 																if(empty($vid_URL)){
 																	$vid_URL = "No Video";
 																}
 																
 																
 																$n_obj = array("NewsID"=>$news_id,"District"=>$dist,"Title"=>$title,"Description"=>$desc,"Author"=>$author,
-																				"PubDate"=>$s_date,"Category"=>$cat,"ImageURL"=>$iimg,"TubeURL"=>$vid_URL,"Division"=>$divv);				
+																				"PubDate"=>$s_date,"Category"=>$cat,"ImageURL"=>$iimg,"TubeURL"=>$vid_URL,"Division"=>$divv,"DCNumber"=>$dcNumb);				
 															
 																array_push($news_array,$n_obj);
 																
@@ -1847,37 +1847,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 																				
 													}
 													
-													// if(empty($videos)){
-// 														
-													// }else{
-// 															
-														// $v_vals = join(',', $videos);
-														// $vid_story = "SELECT * FROM `UCVideos` WHERE `ID` IN ($v_vals) ";
-														// $res_v = mysqli_query($CONN, $vid_story);
-// 														
-															// while($v_row = mysqli_fetch_array($res_v)){
-																// $vid_title = $v_row['VideoTitle'];
-																// $desc = $v_row['Description'];
-																// $vid_ID = $v_row['VideoID'];
-																// $imgURL = $v_row['VideoImageURL'];
-																// $vid_Date = $v_row['VideoDate'];
-																// $div = $v_row['PoliceDivision'];
-																// $cat = $v_row['CrimeType'];
-																// $vid_URL = "https://www.youtube.com/embed/".$vid_ID;
-// 																
-																// $v_obj = array("Division"=>$div,"Title"=>$vid_title,"Description"=>$desc,
-																				// "PubDate"=>$vid_Date,"Category"=>$cat,"ImageURL"=>$imgURL,"TubeURL"=>$vid_URL);
-// 																				
-																// array_push($videos_array,$v_obj);
-// 																
-															// }
-// 															
-// 															
-// 															
-													// }
-												
-												
-												
+
 												echo json_encode(array("Bookmarks"=>array("NewsStory"=>$news_array),"TotalCount"=>$count['ROWS']),JSON_NUMERIC_CHECK);
 													
 												
@@ -1885,6 +1855,65 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 											echo json_encode(array("error"=>"INVALID DEVICE"));
 										}	
 										
+									}
+									
+									else if($isUSM_List == "true"){
+									       
+									    $sql = "SELECT `ID`,`USMurderID` FROM `Bookmarks` WHERE `DeviceID` = '$device' AND `USMurderID` != 0 ORDER BY `TimeStamp` DESC LIMIT 0,5";
+									    $sql_c = "SELECT COUNT(`DeviceID`) AS ROWS FROM `Bookmarks` WHERE `USMurderID` != 0 AND `DeviceID` = '$device'";
+									    $res = mysqli_query($CONN, $sql);
+									    $res1 = mysqli_query($CONN, $sql_c);
+									    $rep = mysqli_fetch_array($res1);
+									    
+									    $usm_array = array();
+									    $obj_arr = array();
+									    
+									    if(mysqli_num_rows($res) >=1 ){
+									        // ROWS RETURND
+									       
+									        while($roz = mysqli_fetch_array($res)){
+									              array_push($usm_array,$roz['USMurderID']);
+									        }
+									        
+									    }else{
+									        // NO ROWS RETURNED
+									    }
+									    
+									    if(empty($usm_array)){
+									        
+									    }else{
+									        
+									        $vals = join(',', $usm_array);
+									        $usm_story = "SELECT * FROM `UnsolvedMurders` WHERE `ID` IN ($vals) LIMIT 0,5";
+									        $rex = mysqli_query($CONN, $usm_story);
+									        
+									        
+									        if(mysqli_num_rows($rex) >=1 ){
+									            while($tor = mysqli_fetch_array($rex)){
+									                $dcn = $tor['DCNumber'];
+									                $vicn = $tor['VictimName'];
+									                $mdd = $tor['MurderDate'];
+									                $nurl = $tor['NewsURL'];
+									                $ndes = cleanUpHTML(utf8_encode($tor['Description']));
+									                
+									                $obj = array("DCNumber"=>$dcn,"VictimName"=>$vicn,"MurderDate"=>$mdd,"NewsURL"=>$nurl,"Description"=>$ndes);
+									                array_push($obj_arr,$obj);
+									                
+									            }
+									            
+									        }else{
+									            
+									        }
+									        
+									        
+									        
+									    }
+									    
+									    
+									    echo json_encode(array("Bookmarks"=>array("USMurders"=>$obj_arr),"TotalCount"=>$rep['ROWS']),JSON_NUMERIC_CHECK);
+									    
+									       
+									    
 									}
 									
 									else if($isUCVids == "true"){
@@ -1906,42 +1935,9 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 													if($rows['NewsStoryID'] == 0){
 														array_push($videos, $rows['UCVideoID']);
 													}
-													
-													 // if($rows['UCVideoID'] == 0){
-														// array_push($news, $rows['NewsStoryID']);
-													// }
 												
 												}
-												
-												///CHCEK FOR EMPTY VALUES IN NEWS ARRAY
-													// if(empty($news)){
-// 														
-													// }else{
-														// $s_vals = join(',', $news);
-														// $news_story = "SELECT * FROM `NewsStory` WHERE `ID` IN ($s_vals) ";
-														// $res = mysqli_query($CONN, $news_story);
-// 														
-															// while($n_row = mysqli_fetch_array($res)){
-																// $dist = $n_row['DistrictNumber'];
-																// $title = $n_row['Title'];
-																// $desc = $n_row['Description'];
-																// $s_date = date('M j, g:i A',strtotime($n_row['PubDate']));
-																// $cat = $n_row['Category'];
-																// $img = $n_row['ImageURL'];
-																// $vid_URL = $n_row['TubeURL'];
-																// $author = $n_row['StoryAuthor'];
-// 																
-// 																
-																// $n_obj = array("District"=>$dist,"Title"=>$title,"Description"=>$desc,"Author"=>$author,
-																				// "PubDate"=>$s_date,"Category"=>$cat,"ImageURL"=>$img,"TubeURL"=>$vid_URL);				
-// 															
-																// array_push($news_array,$n_obj);
-// 																
-															// }
-// 															
-// 																				
-													// }
-													
+
 													if(empty($videos)){
 														
 													}else{
@@ -2046,11 +2042,34 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 																if($in_res){
 																	echo json_encode(array("error"=>"false","Insert Record"=>"true","msg"=>"success"));
 																}else{
-																	echo json_encode(array("error"=>"true","Insert Record"=>"false","msg"=>mysql_error()));
+																	echo json_encode(array("error"=>"true","Insert Record"=>"false","msg"=>mysqli_error($CONN)));
 																}
 															
 														}
 													
+												}else if($isUSM_News == "true"){
+						
+												    
+												    $sql1 = "SELECT `DeviceID` FROM `Bookmarks` WHERE `USMurderID` = '$story_ID' AND `DeviceID` = '$device'";
+												    $res_q1 = mysqli_query($CONN, $sql1); //LOOK FOR BOOKMARK BEFOR INSERT
+												    
+												    if(mysqli_num_rows($res_q1) >=1){
+												        // BOOKMARK ALREADY EXIST
+												        echo json_encode(array("error"=>"true","Insert Record"=>"false","msg"=>"Record Already Exist"));
+												        
+												    }else{
+												        
+												        $in_q = "INSERT INTO `Bookmarks` (`DeviceID`,`NewsStoryID`,`UCVideoID`,`USMurderID`)VALUES('$device','0','0','$story_ID')";
+												        $res_in = mysqli_query($CONN, $in_q);
+												        
+												        if($res_in){
+												            echo json_encode(array("error"=>"false","Insert Record"=>"true","msg"=>"success"));
+												        }else{
+												            echo json_encode(array("error"=>"true","Insert Record"=>"false","msg"=>mysqli_error($CONN)));
+												        }
+												    }
+
+												    
 												}
 												
 												
