@@ -18,7 +18,7 @@
         var $TubeURL;
         var $DistrictDivision;
         var $HashTag;
-        
+        var $DCNumber;
         
         function setUCVideoID($UCVideoID) { $this->UCVideoID = $UCVideoID; }
         function getUCVideoID() { return $this->UCVideoID; }
@@ -46,6 +46,8 @@
         function getDistrictDivision() { return $this->DistrictDivision; }
         function setHashTag($HashTag) { $this->HashTag = $HashTag; }
         function getHashTag() { return $this->HashTag; }
+        function setDCNumber($DCNumber) { $this->DCNumber = $DCNumber; }
+        function getDCNumber() { return $this->DCNumber; }
         
         
     }

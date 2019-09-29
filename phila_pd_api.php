@@ -25,6 +25,7 @@
         
         
         
+        
         // ERRORS MESSAGES
         $NO_DATABASE = json_encode(array("error"=>"true","msg"=>"Database Does Not Exist"));
         $NO_CONNECTION = json_encode(array("error"=>"true","msg"=>"Could Not Connect To Database"));
@@ -46,6 +47,10 @@
         ///////FUNCTIONS/////////////////////
         ////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////
+        
+        function writeToLog($s_txt){
+            file_put_contents('test.log', $s_txt."\n",FILE_APPEND);
+        }
     	
 			function convertdiv($distNum){
 
@@ -226,13 +231,6 @@
 			        return $pt1;
 			    }else if(preg_match($mt1,$title,$match17)){
 			        $pt1 = str_replace($match17[0],"",$title);
-			        return $pt1;
-			    }else if(preg_match($mij,$title,$match2)){
-			        $pt1 = str_replace($match2[0],"",$title);
-			        return $pt1;
-			    }else if(preg_match($mi4,$title,$match3)){
-			        $pt1 = str_replace($match3[0],"",$title);
-			        // $pt1 = str_replace('-',"",$pt1);
 			        return $pt1;
 			    }else if(preg_match($mit,$title,$match4)){
 			        $pt1 = str_replace($match4[0],"",$title);
@@ -547,7 +545,286 @@
 			    
 			    return $fire;
 			}
+			
+			
+			function trimVideoTitle($url){
+			    
+			    $patt = '/(Theft From Auto)/is';
+			    $patt1 = '/(Commercial Robbery)/is';
+			    $patt2 = '/(Shooting Incident)/is';
+			    $patt3 = '/(Burglary)/is';
+			    $patt4 = '/(Home Invasion Robbery)/is';
+			    $patt5 = '/(Multiple Commercial Robberies)/is';
+			    $patt6 = '/(Robbery)/is';
+			    $patt7 = '/(Commercial Burglary)/is';
+			    $patt8 = '/(Multiple Robberies)/is';
+			    $patt9 = '/(Assault)/is';
+			    $patt10 = '/(Vandalism)/is';
+			    $patt11 = '/(Theft)/is';
+			    $patt12 = '/(Arson)/is';
+			    $patt13 = '/(Homicide)/is';
+			    $patt14 = '/(Home Invasion)/is';
+			    $patt14 = '/(Fraud)/is';
+			    $ddc = '/(DC\s\d{2}\s\d{2}\s\d{6})/is';
+			    $last = '/(Attempted|Commercial |Victim |Robbery |Comercial |Shooting |Aggravated )/is';
+			    
+			    if(preg_match($patt,$url,$mat)){
+			        $txt = preg_replace($patt,"",$url);
+			        if(preg_match($ddc,$txt,$opp)){
+			            $txt2 = preg_replace($ddc,"",$txt);
+			            if(preg_match($last,$txt2,$ruff)){
+			                return preg_replace($last,"",$txt2);
+			            }else{
+			                return $txt2;
+			            }
+			        }else{
+			            return $txt;
+			        }
+			    }else if(preg_match($patt1,$url,$mat1)){
+			        $txt = preg_replace($patt1,"",$url);
+			        if(preg_match($ddc,$txt,$opp)){
+			            $txt2 = preg_replace($ddc,"",$txt);
+			            if(preg_match($last,$txt2,$ruff)){
+			                return preg_replace($last,"",$txt2);
+			            }else{
+			                return $txt2;
+			            }
+			        }else{
+			            return $txt;
+			        }
+			    }else if(preg_match($patt2,$url,$mat2)){
+			        $txt = preg_replace($patt2,"",$url);
+			        if(preg_match($ddc,$txt,$opp)){
+			            $txt2 = preg_replace($ddc,"",$txt);
+			            if(preg_match($last,$txt2,$ruff)){
+			                return preg_replace($last,"",$txt2);
+			            }else{
+			                return $txt2;
+			            }
+			        }else{
+			            return $txt;
+			        }
+			    }else if(preg_match($patt3,$url,$mat3)){
+			        $txt = preg_replace($patt3,"",$url);
+			        if(preg_match($ddc,$txt,$opp)){
+			            $txt2 = preg_replace($ddc,"",$txt);
+			            if(preg_match($last,$txt2,$ruff)){
+			                return preg_replace($last,"",$txt2);
+			            }else{
+			                return $txt2;
+			            }
+			        }else{
+			            return $txt;
+			        }
+			    }else if(preg_match($patt4,$url,$mat4)){
+			        $txt = preg_replace($patt4,"",$url);
+			        if(preg_match($ddc,$txt,$opp)){
+			            $txt2 = preg_replace($ddc,"",$txt);
+			            if(preg_match($last,$txt2,$ruff)){
+			                return preg_replace($last,"",$txt2);
+			            }else{
+			                return $txt2;
+			            }
+			        }else{
+			            return $txt;
+			        }
+			    }else if(preg_match($patt5,$url,$mat5)){
+			        $txt = preg_replace($patt5,"",$url);
+			        if(preg_match($ddc,$txt,$opp)){
+			            $txt2 = preg_replace($ddc,"",$txt);
+			            if(preg_match($last,$txt2,$ruff)){
+			                return preg_replace($last,"",$txt2);
+			            }else{
+			                return $txt2;
+			            }
+			        }else{
+			            return $txt;
+			        }
+			    }else if(preg_match($patt6,$url,$mat6)){
+			        $txt = preg_replace($patt6,"",$url);
+			        if(preg_match($ddc,$txt,$opp)){
+			            $txt2 = preg_replace($ddc,"",$txt);
+			            if(preg_match($last,$txt2,$ruff)){
+			                return preg_replace($last,"",$txt2);
+			            }else{
+			                return $txt2;
+			            }
+			        }else{
+			            return $txt;
+			        }
+			    }else if(preg_match($patt7,$url,$mat7)){
+			        $txt = preg_replace($patt7,"",$url);
+			        if(preg_match($ddc,$txt,$opp)){
+			            $txt2 = preg_replace($ddc,"",$txt);
+			            if(preg_match($last,$txt2,$ruff)){
+			                return preg_replace($last,"",$txt2);
+			            }else{
+			                return $txt2;
+			            }
+			        }else{
+			            return $txt;
+			        }
+			    }else if(preg_match($patt8,$url,$mat8)){
+			        $txt = preg_replace($patt8,"",$url);
+			        if(preg_match($ddc,$txt,$opp)){
+			            $txt2 = preg_replace($ddc,"",$txt);
+			            if(preg_match($last,$txt2,$ruff)){
+			                return preg_replace($last,"",$txt2);
+			            }else{
+			                return $txt2;
+			            }
+			        }else{
+			            return $txt;
+			        }
+			    }else if(preg_match($patt9,$url,$mat9)){
+			        $txt = preg_replace($patt9,"",$url);
+			        if(preg_match($ddc,$txt,$opp)){
+			            $txt2 = preg_replace($ddc,"",$txt);
+			            if(preg_match($last,$txt2,$ruff)){
+			                return preg_replace($last,"",$txt2);
+			            }else{
+			                return $txt2;
+			            }
+			        }else{
+			            return $txt;
+			        }
+			    }else if(preg_match($patt10,$url,$mat10)){
+			        $txt = preg_replace($patt10,"",$url);
+			        if(preg_match($ddc,$txt,$opp)){
+			            $txt2 = preg_replace($ddc,"",$txt);
+			            if(preg_match($last,$txt2,$ruff)){
+			                return preg_replace($last,"",$txt2);
+			            }else{
+			                return $txt2;
+			            }
+			        }else{
+			            return $txt;
+			        }
+			    }else if(preg_match($patt11,$url,$mat11)){
+			        $txt = preg_replace($patt11,"",$url);
+			        if(preg_match($ddc,$txt,$opp)){
+			            $txt2 = preg_replace($ddc,"",$txt);
+			            if(preg_match($last,$txt2,$ruff)){
+			                return preg_replace($last,"",$txt2);
+			            }else{
+			                return $txt2;
+			            }
+			        }else{
+			            return $txt;
+			        }
+			    }else if(preg_match($patt12,$url,$mat12)){
+			        $txt = preg_replace($patt12,"",$url);
+			        if(preg_match($ddc,$txt,$opp)){
+			            $txt2 = preg_replace($ddc,"",$txt);
+			            if(preg_match($last,$txt2,$ruff)){
+			                return preg_replace($last,"",$txt2);
+			            }else{
+			                return $txt2;
+			            }
+			        }else{
+			            return $txt;
+			        }
+			    }else if(preg_match($patt13,$url,$mat13)){
+			        $txt = preg_replace($patt13,"",$url);
+			        if(preg_match($ddc,$txt,$opp)){
+			            $txt2 = preg_replace($ddc,"",$txt);
+			            if(preg_match($last,$txt2,$ruff)){
+			                return preg_replace($last,"",$txt2);
+			            }else{
+			                return $txt2;
+			            }
+			        }else{
+			            return $txt;
+			        }
+			    }else if(preg_match($patt14,$url,$mat14)){
+			        $txt = preg_replace($patt14,"",$url);
+			        if(preg_match($ddc,$txt,$opp)){
+			            $txt2 = preg_replace($ddc,"",$txt);
+			            if(preg_match($last,$txt2,$ruff)){
+			                return preg_replace($last,"",$txt2);
+			            }else{
+			                return $txt2;
+			            }
+			        }else{
+			            return $txt;
+			        }
+			    }else if(preg_match($patt14,$url,$mat14)){
+			        $txt = preg_replace($patt14,"",$url);
+			        if(preg_match($ddc,$txt,$opp)){
+			            $txt2 = preg_replace($ddc,"",$txt);
+			            if(preg_match($last,$txt2,$ruff)){
+			                return preg_replace($last,"",$txt2);
+			            }else{
+			                return $txt2;
+			            }
+			        }else{
+			            return $txt;
+			        }
+			    }else{
+			        return $url;
+			    }
+			    
+			    
+			}
 	
+			
+			function convertVideoTitle($url){
+			    
+			    $patt = '/(Theft From Auto)/is';
+			    $patt1 = '/(Commercial Robbery)/is';
+			    $patt2 = '/(Shooting Incident)/is';
+			    $patt3 = '/(Burglary)/is';
+			    $patt4 = '/(Home Invasion Robbery)/is';
+			    $patt5 = '/(Multiple Commercial Robberies)/is';
+			    $patt6 = '/(Robbery)/is';
+			    $patt7 = '/(Commercial Burglary)/is';
+			    $patt8 = '/(Multiple Robberies)/is';
+			    $patt9 = '/(Assault)/is';
+			    $patt10 = '/(Vandalism)/is';
+			    $patt11 = '/(Theft)/is';
+			    $patt12 = '/(Arson)/is';
+			    $patt13 = '/(Homicide)/is';
+			    $patt14 = '/(Home Invasion)/is';
+			    $patt14 = '/(Fraud)/is';
+			    
+			    if(preg_match($patt,$url,$mat)){
+			        return 'Theft From Auto';
+			    }else if(preg_match($patt1,$url,$mat1)){
+			        return 'Commercial Robbery';
+			    }else if(preg_match($patt2,$url,$mat2)){
+			        return 'Shooting Incident';
+			    }else if(preg_match($patt3,$url,$mat3)){
+			        return 'Burglary';
+			    }else if(preg_match($patt4,$url,$mat4)){
+			        return 'Home Invasion Robbery';
+			    }else if(preg_match($patt5,$url,$mat5)){
+			        return 'Multiple Commercial Robberies';
+			    }else if(preg_match($patt6,$url,$mat6)){
+			        return 'Robbery';
+			    }else if(preg_match($patt7,$url,$mat7)){
+			        return 'Commercial Burglary';
+			    }else if(preg_match($patt8,$url,$mat8)){
+			        return 'Multiple Robberies';
+			    }else if(preg_match($patt9,$url,$mat9)){
+			        return 'Assault';
+			    }else if(preg_match($patt10,$url,$mat10)){
+			        return 'Vandalism';
+			    }else if(preg_match($patt11,$url,$mat11)){
+			        return 'Theft';
+			    }else if(preg_match($patt12,$url,$mat12)){
+			        return 'Arson';
+			    }else if(preg_match($patt13,$url,$mat13)){
+			        return 'Homicide';
+			    }else if(preg_match($patt14,$url,$mat14)){
+			        return 'Home Invasion';
+			    }else if(preg_match($patt14,$url,$mat14)){
+			        return 'Fraud';
+			    }else{
+			        return $url;
+			    }
+			    
+			    
+			}
 			///////END of FUNCTIONS/////////////////////
 			////////////////////////////////////////////////////////////
 			////////////////////////////////////////////////////////////////////////////////
@@ -891,6 +1168,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
         }
         
         echo json_encode(array("Articles"=>$array,"TotalCount"=>$ct['ROWS']));
+        //writeToLog(json_encode(array("Articles"=>$array,"TotalCount"=>$ct['ROWS'])));
    
     }else{
         
@@ -961,11 +1239,19 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                     $ucVid->setNewsStoryID($row['NewsID']);
                     $ucVid->setTimeStamp($row['TimeStamp']);
                     $title = $row['VideoTitle'];
+                    if(preg_match('/(DC )(\d{2}( )\d{2}( )\d{6})/is',$title,$top)){
+                        $dcNUM = $top[0];
+                        $ucVid->setDCNumber($dcNUM);
+                    }else{
+                        $dcNUM = "0";
+                        $ucVid->setDCNumber($dcNUM);
+                    }
+                    
                     if(strpos($title," DC ") >=1){
                         $txt = explode(" DC",$title);
                         $title = $txt[0];
                     }
-                    $ucVid->setVideoTitle($title);
+                    $ucVid->setVideoTitle(html_entity_decode(trimVideoTitle($title)));
                     $vid_ID = $row['VideoID'];
                     $chg = "SELECT `Description` FROM `NewsStory` WHERE `TubeURL` LIKE '%$vid_ID%' LIMIT 0,1";
                     $r_chg = mysqli_query($CONN, $chg);
@@ -982,7 +1268,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                     $divv = convertdiv($row['DistrictNumber']);
                     $ucVid->setDistrictDivision($divv);
                     $ucVid->setDistrictNumber($row['DistrictNumber']);
-                    $ucVid->setCrimeType($row['CrimeType']);
+                    $ucVid->setCrimeType(convertVideoTitle($row['VideoTitle']));
                     $videoURL = "https://www.youtube.com/embed/".$vid_ID;
                     $ucVid->setTubeURL($videoURL);
 
@@ -1773,6 +2059,8 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 								$rmBook = $data['BookmarkRemove'];
 								$is_news_id = $data['News'];
 								$is_vid_id = $data['Video'];
+								$is_us_mur_is = $data['USMurder'];
+								$is_usmur_id = $data['USMurderID'];
 								$obj_news_id = $data['NewsID'];
 								$obj_vid_id = $data['VideoID'];
 								
@@ -1817,20 +2105,21 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 															while($n_row = mysqli_fetch_array($res)){
 																	
 																$dist = $n_row['DistrictNumber'];
-																$title = trimTitle($n_row['Title'],"true");
-																$desc = cleanUpHTML(utf8_encode($n_row['Description']));
+																$title = trim(trimTitle($n_row['Title'],"true"));
+																$desc = cleanUpHTML(utf8_encode(trim($n_row['Description'])));
 																if(preg_match('/(DC )(\d{2}\-\d{2}\-\d{6})/is',$n_row['Description'],$may)){
-																    $dcNumb = $may[0];
+																    $dcNumb = str_replace("DC ","DC# ",$may[0]);
 																}else{
 																    $dcNumb = "0";
 																}
-																$s_date = date('l M j, g:i A',strtotime($n_row['PubDate']));
-																$cat = $n_row['Category'];
+																$s_date = date('M j, Y',strtotime($n_row['PubDate']));
+																$cat = trimCat($n_row['Category'],$n_row['Title']);
 																$iimg = $n_row['ImageURL'];
 																$news_id = $n_row['ID'];
 																$vid_URL = $n_row['TubeURL'];
 																$author = $n_row['StoryAuthor'];
 																$divv = convertdiv($dist);
+																
 																
 																if(empty($vid_URL)){
 																	$vid_URL = "No Video";
@@ -1849,7 +2138,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 													
 
 												echo json_encode(array("Bookmarks"=>array("NewsStory"=>$news_array),"TotalCount"=>$count['ROWS']),JSON_NUMERIC_CHECK);
-													
+												//writeToLog(json_encode(array("Bookmarks"=>array("NewsStory"=>$news_array),"TotalCount"=>$count['ROWS']),JSON_NUMERIC_CHECK));
 												
 										}else{
 											echo json_encode(array("error"=>"INVALID DEVICE"));
@@ -1891,12 +2180,28 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 									        if(mysqli_num_rows($rex) >=1 ){
 									            while($tor = mysqli_fetch_array($rex)){
 									                $dcn = $tor['DCNumber'];
+									                $mID = $tor['ID'];
+									                $urlImg = "0";
+									                $qxr = "SELECT `UCMurderURL` FROM `USMImages` WHERE `DCNumber` = '$dcn'";
+									                $txr = mysqli_query($CONN, $qxr);
+									                if(mysqli_num_rows($txr) >= 1){
+									                    $aee = mysqli_fetch_array($txr);
+									                    $urlImg = $aee['UCMurderURL'];
+									                }else{
+									                    $nDD = str_replace("DC#","DC",$tor['DCNumber']);
+									                    $sdl = "SELECT `ImageURL` FROM `NewsStory` WHERE `Description` LIKE '%$nDD%'";
+									                    $ety = mysqli_query($CONN, $sdl);
+									                    if(mysqli_num_rows($ety) >= 1){
+									                        $zer = mysqli_fetch_array($ety);
+									                        $urlImg =  $zer['ImageURL'];
+									                    }
+									                }
 									                $vicn = $tor['VictimName'];
-									                $mdd = $tor['MurderDate'];
+									                $mdd = date('D. F jS, Y',strtotime($tor['MurderDate']));
 									                $nurl = $tor['NewsURL'];
 									                $ndes = cleanUpHTML(utf8_encode($tor['Description']));
 									                
-									                $obj = array("DCNumber"=>$dcn,"VictimName"=>$vicn,"MurderDate"=>$mdd,"NewsURL"=>$nurl,"Description"=>$ndes);
+									                $obj = array("USMurderID"=>$mID,"DCNumber"=>$dcn,"VictimName"=>$vicn,"MurderDate"=>$mdd,"NewsURL"=>$nurl,"Description"=>$ndes,"ImageURL"=>$urlImg);
 									                array_push($obj_arr,$obj);
 									                
 									            }
@@ -1911,8 +2216,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 									    
 									    
 									    echo json_encode(array("Bookmarks"=>array("USMurders"=>$obj_arr),"TotalCount"=>$rep['ROWS']),JSON_NUMERIC_CHECK);
-									    
-									       
+									     
 									    
 									}
 									
@@ -1948,14 +2252,14 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 														
 															while($v_row = mysqli_fetch_array($res_v)){
 
-																$vid_title = $v_row['VideoTitle'];
-																$desc = utf8_encode($v_row['Description']);
+															    $vid_title = trim(trimVideoTitle($v_row['VideoTitle']));
+															    $desc = cleanUpHTML(utf8_encode($v_row['Description']));
 																$vid_ID = $v_row['ID'];
 																$imgURL = $v_row['VideoImageURL'];
 																$vid_Date = $v_row['VideoDate'];
 																$div = $v_row['PoliceDivision'];
 																$distNum = $v_row['DistrictNumber'];
-																$cat = $v_row['CrimeType'];
+																$cat = convertVideoTitle($v_row['CrimeType']);
 																$vid_URL = "https://www.youtube.com/embed/".$vid_ID;
 																$divv = convertdiv($v_row['DistrictNumber']);
 																
@@ -1964,7 +2268,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
     																    $vid_title = $txt[0];
     																}
 																
-																$v_obj = array("VideoID"=>$vid_ID,"Division"=>$div,"Title"=>$vid_title,"Description"=>$desc,
+																$v_obj = array("VideoID"=>$vid_ID,"Division"=>$div,"Title"=>$vid_title,"Description"=>$desc,"District"=>$distNum,
 																				"PubDate"=>$vid_Date,"Category"=>$cat,"ImageURL"=>$imgURL,"TubeURL"=>$vid_URL,"Division"=>$divv);
 																				
 																array_push($videos_array,$v_obj);
@@ -1977,7 +2281,8 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 												
 												
 												echo json_encode(array("Bookmarks"=>array("UCVideos"=>$videos_array),"TotalCount"=>$count['ROWS']),JSON_NUMERIC_CHECK);
-													
+												writeToLog(json_encode(array("Bookmarks"=>array("UCVideos"=>$videos_array),"TotalCount"=>$count['ROWS']),JSON_NUMERIC_CHECK));
+												
 												
 										}else{
 											echo json_encode(array("error"=>"INVALID DEVICE"));
@@ -2134,7 +2439,28 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 													}
 													
 													
-											}
+												}else if($is_us_mur_is == "true"){
+												 
+												    $chl = "SELECT `ID` FROM `Bookmarks` WHERE `DeviceID` = '$device' AND `USMurderID` = '$is_usmur_id'";
+												    $ret = mysqli_query($CONN, $chl);
+												    if(mysqli_num_rows($ret) >=1){
+												        $rop = mysqli_fetch_array($ret);
+												        $id = $rop['ID'];
+												        $rv = "DELETE FROM `Bookmarks` WHERE `ID` = '$id'";
+												        $you = mysqli_query($CONN, $rv);
+												        if($you){
+												            
+												            echo json_encode(array("error"=>"false","msg"=>"Record Deleted"));
+												            
+												        }else{
+												            // DEL RECORD FAILED
+												            echo json_encode(array("error"=>"true","msg"=>"Record Deleted FAILED !!"));
+												        }
+												    }else{
+												        echo json_encode(array("error"=>"true","msg"=>"Record Does Not Exist"));
+												    }
+												    
+												}
 											
 											
 										}

@@ -25,7 +25,7 @@
 	////////////////////////////////////////////START of FUNCTIONS/////////////////////////////////////////////////////
 		
 		function writeToLog($s_txt){
-			file_put_contents('p_pd.log', $s_txt."\n",FILE_APPEND);
+		    file_put_contents(__DIR__.'/p_pd.log', $s_txt."\n",FILE_APPEND);
 		}
 		
 		function getRandomUserAgent(){
@@ -51,41 +51,43 @@
 			if(strpos($text, "Robbery")){
 				return "Robbery";
 			}
-			if(strpos($text, "Burglary")){
+			else if(strpos($text, "Burglary")){
 				return "Burglary";
 			}
-			if(strpos($text, "Theft")){
+			else if(strpos($text, "Theft")){
 				return "Theft";
 			}
-			if(strpos($text, "Shooting")){
+			else if(strpos($text, "Shooting")){
 				return "Shooting";
 			}
-			if(strpos($text, "Assault")){
+			else if(strpos($text, "Assault")){
 				return "Assault";
 			}
-			if(strpos($text, "Robberies")){
+			else if(strpos($text, "Robberies")){
 			    return "Robberies";
 			}
-			if(strpos($text, "Burglaries")){
+			else if(strpos($text, "Burglaries")){
 			    return "Burglary";
 			}
-			if(strpos($text, "Sexual Assault")){
+			else if(strpos($text, "Sexual Assault")){
 			    return "Sexual Assault";
 			}
-			if(strpos($text, "Counterfeiting")){
+			else if(strpos($text, "Counterfeiting")){
 			    return "Fraud";
 			}
-			if(strpos($text, "Aggravated Assault")){
+			else if(strpos($text, "Aggravated Assault")){
 			    return "Assault";
 			}
-			if(strpos($text, "Fraud")){
+			else if(strpos($text, "Fraud")){
 			    return "Fraud";
 			}
-			if(strpos($text, "Vandalism")){
+			else if(strpos($text, "Vandalism")){
 			    return "Vandalism";
+			}else {
+			    return "Crime";
 			}
 			
-			return $text;
+			
 		}
 		
 		function getDISnum($title){
@@ -291,7 +293,7 @@
     ///////////////////////////////////////////////////// START NEWS FEED SCRAPER //////////////////////////////////////////////////////
 	
 		date_default_timezone_set('US/Eastern');
-		mysqli_set_charset($CONN, 'utf8mb4');
+		//mysqli_set_charset($CONN, 'utf8mb4');
 		writeToLog("\n"."////STARTING SCRAPER SCRIPT//// ");
 		writeToLog("StartTimeStamp: ".date('Y-m-d H:i:s'));
 		
@@ -305,9 +307,8 @@
 		    writeToLog("FAILED TO LOAD RSS FEED ".$RSS_URL);
 		}
 		$HTTP_REQUEST_COUNT ++;
-		$info = curl_getinfo($curl,CURLINFO_CONTENT_LENGTH_DOWNLOAD);
-		$HTTP_DATA_CONTENT_COUNT = $info + $HTTP_DATA_CONTENT_COUNT;
-		writeToLog("Loading Page....: ".$RSS_URL);
+		
+		writeToLog("Loading RSS FEED....: ".$RSS_URL);
 		curl_close($curl);
 		
 		$rss = new rss_php;
@@ -345,7 +346,8 @@
 					$shortTxT = $html->plaintext;
 					$longTxT = $ext->plaintext;
 					//$lgTxT = htmlspecialchars_decode($longTxT,ENT_QUOTES);
-					$lgTxT = mysqli_real_escape_string($CONN, iconv("UTF-8", "ISO-8859-1//TRANSLIT", $longTxT));
+					$lgTxT = utf8_encode(mysqli_real_escape_string($CONN, iconv("UTF-8", "ISO-8859-1//TRANSLIT", $longTxT)));
+					//$lgTxT = mysqli_real_escape_string($CONN, htmlentities(mb_convert_encoding($longTxT,"ISO-8859-1","UTF-8")));
 				
 					$isThere = "SELECT `GUID` FROM `NewsStory` WHERE `GUID` = '$obj_id'";
 					$answ = mysqli_query($CONN, $isThere);
@@ -422,6 +424,8 @@
 							 		
 						 		}else{
 							 		$cff++;
+							 		writeToLog("FAILED QUERY ".$in_rec);
+							 		writeToLog("QUERY ERROR : ".mysqli_error($CONN));
 						 		}
 						
 						}else if(mysqli_num_rows($answ) == 1){
@@ -491,7 +495,7 @@
 				$td2 = date('Y-m-d',$pDate);
 				$SHct = 0;
 				$ssURL = 'https://phl.carto.com/api/v2/sql?q=SELECT%20*%20FROM%20shootings%20WHERE%20date_%20%3E=%20%27'.$td2.'%27%20AND%20date_%20%3C%20%27'.$td1.'%27';
-				writeToLog("Loading Page....: ".$ssURL);
+				writeToLog("Loading SHooting Page....: ".$ssURL);
 				
 				
 				$curl = curl_init($ssURL);
@@ -506,8 +510,7 @@
 				}
 				
 				$HTTP_REQUEST_COUNT ++;
-				$info = curl_getinfo($curl,CURLINFO_CONTENT_LENGTH_DOWNLOAD);
-				$HTTP_DATA_CONTENT_COUNT = $info + $HTTP_DATA_CONTENT_COUNT;
+				
 				curl_close($curl);
 				$curl_jason = json_decode($curl_response, true);
 				
@@ -633,8 +636,7 @@
 				    writeToLog("CURL ERROR ".curl_error($curl));
 				}
 				$HTTP_REQUEST_COUNT ++;
-				$info = curl_getinfo($curl,CURLINFO_CONTENT_LENGTH_DOWNLOAD);
-				$HTTP_DATA_CONTENT_COUNT = $info + $HTTP_DATA_CONTENT_COUNT;
+				
 				curl_close($curl);
 				$curl_jason = json_decode($curl_response, true);
 				$d_arr = $curl_jason['rows'];
@@ -728,30 +730,34 @@
 				
 ////////////////////////////////////////////////////////////START UNSOLVED MURDERS //////////////////////////////////////////////////////////////////////////////////////////////////////
 				
-				$usmArray = array("https://www.phillyunsolvedmurders.com/component/tags/tag/18th-district/",
-				"https://www.phillyunsolvedmurders.com/component/tags/tag/25th-district/",
-				"https://www.phillyunsolvedmurders.com/component/tags/tag/24th-district/",
-				"https://www.phillyunsolvedmurders.com/component/tags/tag/26th-district/",
-				"https://www.phillyunsolvedmurders.com/component/tags/tag/17th-district/",
-				"https://www.phillyunsolvedmurders.com/component/tags/tag/22nd-district/",
-				"https://www.phillyunsolvedmurders.com/component/tags/tag/39th-district/",
-				"https://www.phillyunsolvedmurders.com/component/tags/tag/35th-district/",
-				"https://www.phillyunsolvedmurders.com/component/tags/tag/14th-district/",
-				"https://www.phillyunsolvedmurders.com/component/tags/tag/19th-district/",
-				"https://www.phillyunsolvedmurders.com/component/tags/tag/16th-district/",
-				"https://www.phillyunsolvedmurders.com/component/tags/tag/12th-district/",
-				"https://www.phillyunsolvedmurders.com/component/tags/tag/15th-district/",
-				"https://www.phillyunsolvedmurders.com/component/tags/tag/3rd-district/",
-				"https://www.phillyunsolvedmurders.com/component/tags/tag/6th-district/",
-				"https://www.phillyunsolvedmurders.com/component/tags/tag/9th-district/",
-				"https://www.phillyunsolvedmurders.com/component/tags/tag/2nd-district/",
-				"https://www.phillyunsolvedmurders.com/component/tags/tag/5th-district/",
-				"https://www.phillyunsolvedmurders.com/component/tags/tag/7th-district/",
-				"https://www.phillyunsolvedmurders.com/component/tags/tag/8th-district/",
-				"https://www.phillyunsolvedmurders.com/component/tags/tag/1st-district/");
+				$usmArray = array("https://www.phillyunsolvedmurders.com/component/tags/tag/18th-district?limit=0",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/25th-district?limit=0",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/24th-district?limit=0",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/26th-district?limit=0",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/17th-district?limit=0",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/22nd-district?limit=0",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/39th-district?limit=0",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/35th-district?limit=0",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/14th-district?limit=0",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/19th-district?limit=0",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/16th-district?limit=0",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/12th-district?limit=0",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/15th-district?limit=0",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/3rd-district?limit=0",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/6th-district?limit=0",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/9th-district?limit=0",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/2nd-district?limit=0",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/5th-district?limit=0",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/7th-district?limit=0",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/8th-district?limit=0",
+				"https://www.phillyunsolvedmurders.com/component/tags/tag/1st-district?limit=0");
 				
 				$intCT = 0;
 				$intCT1 = 0;
+				$intchkCT = 0; //check DC numbers
+				$intALLCT = 0; //DC ALREADY EXIST;
+				$imgchkd = 0; 
+				$imgchkdEXT = 0;
 				
 				//mysqli_set_charset($CONN, 'utf8mb4');
 				writeToLog("STARTING TO SCRAPE UNSOLVED MURDERS");
@@ -773,9 +779,7 @@
 				       writeToLog("CURL ERROR ".curl_error($curl));
 				    }else{
 				        $HTTP_REQUEST_COUNT ++;
-				        $info = curl_getinfo($curl,CURLINFO_CONTENT_LENGTH_DOWNLOAD);
-				        $HTTP_DATA_CONTENT_COUNT = $info + $HTTP_DATA_CONTENT_COUNT;
-				        writeToLog("DATA RETURNED FROM SITE: ");
+
 				        $html = str_get_html($curl_response);
 				        $form = $html->find('#adminForm');
 				        foreach($form as $item){
@@ -783,7 +787,7 @@
 				            foreach($ul as $li){
 				                $h3 = $li->find('h3');
 				                foreach($h3 as $title){
-				                    $dcN = '(DC# \d{2}(-)\d{2}(-)\d{6})';
+				                    $dcN = '((DC#|DC# |DC#  )\d{2}(-)\d{2}(-)\d{6})';
 				                    $tt = $title->plaintext;
 				                    if(preg_match($dcN,$tt,$match)){
 				                        $dc = $match[0];
@@ -795,12 +799,14 @@
 				                        $nurl = $title->getElementByTagName('a')->href;
 				                        $sel = "SELECT `DCNumber` FROM `UnsolvedMurders` WHERE `DCNumber` = '$dc'";
 				                        $res = mysqli_query($CONN, $sel);
+				                        $intchkCT ++;
 				                        if(mysqli_num_rows($res)>=1){
-				                            
+				                            $intALLCT ++;
 				                        }else{
 				                            
 				                            $agent = getRandomUserAgent();
 				                            $site = 'https://www.phillyunsolvedmurders.com'.$nurl;
+				                            writeToLog("GOING TOO URL .....".$site);
 				                            $curl2 = curl_init($site);
 				                            curl_setopt($curl2, CURLOPT_RETURNTRANSFER, 1);
 				                            //         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
@@ -810,11 +816,10 @@
 				                            $curl_response2 = curl_exec($curl2);
 				                            curl_close($curl2);
 				                            if($curl_response2 === FALSE){
-				                           
+				                                writeToLog("FAIED TO GO TO SITE .....".$nurl);
 				                            }else{
 				                                $HTTP_REQUEST_COUNT ++;
-				                                $info = curl_getinfo($curl2,CURLINFO_CONTENT_LENGTH_DOWNLOAD);
-				                                $HTTP_DATA_CONTENT_COUNT = $info + $HTTP_DATA_CONTENT_COUNT;
+
 				                                $html2 = str_get_html($curl_response2);
 				                                $spc = $html2->find('div#sp-component');
 				                                $DC = '';
@@ -846,14 +851,23 @@
 				                                        $dap = $p->plaintext;
 				                                        if(preg_match('/(215-686-TIPS)/is',$dap)){
 				                                            $DESC .= $p->plaintext; // DECSRIPTION
-				                                            $real = mysqli_real_escape_string($CONN,$DESC);
+				                                            //$real = mysqli_real_escape_string($CONN,htmlentities(mb_convert_encoding($DESC,"ISO-8859-1","UTF-8")));
+				                                           $real = utf8_encode(mysqli_real_escape_string($CONN, iconv("UTF-8", "ISO-8859-1//TRANSLIT", $DESC)));
+				                                            $pattD = '/((?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Sept|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?))(\s)(\d{1,2})(\,)(\s)(\d{4})/is';
+				                                            if(preg_match($pattD,$real,$roxv)){
+				                                                $mmDate = date('Y-m-d',strtotime($roxv[0]));
+				                                            }else{
+				                                                $mmDate = "0";
+				                                            }
 				                                    //        $real = str_replace(chr(194),"",$real);
-				                                            $in = "INSERT INTO `UnsolvedMurders`(`DCNumber`,`VictimName`,`NewsURL`,`ScrapeHash`,`Description`)VALUES('$dc','$str','$nurl','$HASH','$real')";
+				                                            $vvN = mysqli_real_escape_string($CONN,htmlentities(mb_convert_encoding($str,"ISO-8859-1","UTF-8")));
+				                                            $in = "INSERT INTO `UnsolvedMurders`(`DCNumber`,`VictimName`,`NewsURL`,`ScrapeHash`,`Description`,`MurderDate`)VALUES('$dc','$vvN','$nurl','$HASH','$real','$mmDate')";
 				                                            $req = mysqli_query($CONN,$in);
 				                                            if($req){
 				                                                $intCT ++;
 				                                            }else{
 				                                                writeToLog("INSERT FAILED ".$in);
+				                                                writeToLog("INSERT ERROR ".mysqli_error($CONN));
 				                                            }
 				                                            
 				                                            break;
@@ -880,8 +894,10 @@
 				                                            $ser = "SELECT `UCMurderURL` FROM `USMImages` WHERE `UCMurderURL` = '$spn'";
 				                                            //echo $ser."<br>";
 				                                            $rey = mysqli_query($CONN,$ser);
+				                                            $imgchkd ++;
 				                                            if(mysqli_num_rows($rey) >= 1){
 				                                                //echo "recorsExist <br>";
+				                                                $imgchkdEXT ++;
 				                                            }else{
 				                                                $ni = "INSERT INTO `USMImages` (`UCMurderURL`,`DCNumber`,`ScrapeHash`)VALUES('$spn','$DC','$HASH')";
 				                                                $req1 = mysqli_query($CONN,$ni);
@@ -889,6 +905,7 @@
 				                                                    $intCT1 ++;
 				                                                }else{
 				                                                    writeToLog("INSERT FAILED ");
+				                                                    writeToLog("IMAGE FAILE TO SAVE ".mysqli_error($CONN));
 				                                                }
 				                                            }
 				                                            
@@ -927,6 +944,10 @@
 				
 				writeToLog("UNSOLVED MURDERS INSERTED: ".$intCT);
 				writeToLog("UNSOLVED MURDERS IMAGES: ".$intCT1);
+				writeToLog("IMAGES CHECKED ".$imgchkd);
+				writeToLog("IMAGES EXISTED ".$imgchkdEXT);
+				writeToLog("USMURDERS DCNUMBER CHECKED ".$intchkCT);
+				writeToLog("USMURDERS DCNUMBER THAT EXIST ALREADY ".$intALLCT);
 				
 				if($intCT >= 1){
 				    
@@ -1025,8 +1046,8 @@
 			
 	/////////////////////////////DIRTy FOR LOOP BEGINS ////////////////////////////
 			
-			writeToLog("STARTING LOOP at: ".time());
-			writeToLog("SITES BEING SCRAPED: ".$loop_count.' '.time());
+		    writeToLog("STARTING SCRAPING LOOP at: ".date('Y-m-d H:i:s'));
+			writeToLog("SCRAPING: ".$loop_count." SITES");
 			$alr = 0;		 
 			 
 			 for($oo=0;$oo<$loop_count;$oo++){
@@ -1046,11 +1067,11 @@
 			     $HTTP_REQUEST_COUNT ++;
 			     $info = curl_getinfo($curl,CURLINFO_CONTENT_LENGTH_DOWNLOAD);
 			     $HTTP_DATA_CONTENT_COUNT = $info + $HTTP_DATA_CONTENT_COUNT;
-			     writeToLog("Loading Page....: ".$RSS_URL);
+			     writeToLog("Loading District Sites ....: ".$sites[$oo]);
 			     curl_close($curl);
 			 		
 				$html = str_get_html($curl_response);
-				writeToLog("CURRENTLY SCRAPING: ".$sites[$oo].' '.time());  
+				//writeToLog("CURRENTLY SCRAPING: ".$sites[$oo].' '.time());  
 				$infoDiv = $html->find('div.span3',1);
 				if(!empty($infoDiv)){
 				    $addI = $infoDiv->find('p',0)->plaintext;
@@ -1136,14 +1157,16 @@
 					
 						//$loc_add = explode("PM",$item->plaintext);
 						
-						$addr = trim(preg_replace('/\s\s+/', ' ', $loc_add[1]));
+						$adFG = trim(preg_replace('/\s\s+/', ' ', $loc_add[1]));
+						$addr = mysqli_real_escape_string($CONN, $adFG);
 						
 						$is_cal = "SELECT `MeetDate`,`MeetLocation` FROM `Calendar` WHERE `MeetDate` = '$time_loc' AND `MeetLocation` = '$addr'";
 						$res_cal = mysqli_query($CONN, $is_cal);
 					
 							if(mysqli_num_rows($res_cal) <= 0){
+							    $m_title = mysqli_real_escape_string($CONN, $meet_title);
 								$sql_cal = "INSERT INTO `Calendar` (`DistrictNumber`,`Title`,`MeetDate`,`MeetLocation`,`ScrapeHash`)
-										VALUES('$DIS_N','$meet_title','$time_loc','$addr','$HASH')";
+										VALUES('$DIS_N','$m_title','$time_loc','$addr','$HASH')";
 						              
 						              if(!empty($meet_title)){
 						                  $res = mysqli_query($CONN, $sql_cal);
@@ -1155,15 +1178,20 @@
 									}else{
 										//insert faied for cal record
 										$dxx ++;
+										writeToLog("QUERY FAILED: ".$sql_cal);
+										writeToLog("QUERY ERROR: ".mysqli_error($CONN));
+										
 									}	
 							}else{
 								//cal record exist
 								$dzz ++;
 							}
 							
-								
-					
 			} 
+			
+			writeToLog("CAL INSERTS FAILED: ".$dxx);
+			writeToLog("CAL INSERTED : ".$daa);
+			writeToLog("CAL EXISTED : ".$dzz);
 
 							if($daa >=1 && $alr == 0){ /////////////////////CALENDAR HASH UPDATE
 								$alr ++;
@@ -1172,7 +1200,7 @@
 								$cal_res = mysqli_query($CONN, $up_uc);
 								
 									if($cal_res){
-											
+									    writeToLog("CAL HASHHISTORY UPDATED");
 										$is_cal = "SELECT `HashName` FROM `CurrentHash` WHERE `HashName` = 'Calendar'";
 										$res_cal = mysqli_query($CONN, $is_cal);
 											
@@ -1184,8 +1212,10 @@
 													
 													if($res_up){
 														//CALENDAR RECORD UPDATED	
+													    writeToLog("CAL HASH UPDATED");
 													}else{
 														//CALENDAR FAILED TO INSERT
+													    writeToLog("CAL HASH FAILED TO UPDATE");
 													}
 													
 											}else{
@@ -1195,8 +1225,10 @@
 													
 													if($res_in){
 														// CURRENT HASH UPDATED
+													    writeToLog("NEW CAL HASH");
 													}else{
 														// CURRENT HASH FAILED
+													    writeToLog("NEW CAL HASH FAILED");
 													}
 											}
 									}
@@ -1213,6 +1245,8 @@
 			$picURL = "";
 			$cap_name = "";
 			
+			
+			
 		
 			$cap_img_info = $infoDiv->find('div',2);
 			$preFix = "https://www.phillypolice.com";
@@ -1227,9 +1261,10 @@
 			foreach($cap_div->find('a') as $a){
 			   // $cap_name = $a->plaintext;
 			    $cap_name = str_replace("'", "\\'",$a->plaintext);
+			    writeToLog("CAPTAIN NAME ".$cap_name);
        		}
 			
-			
+       		
 			
 			$id_dis = "SELECT `CaptainName` FROM `DistrictInfo` WHERE `CaptainName` = '$cap_name' AND `CaptainURL` = '$pic_URL'";
 			$res_pd = mysqli_query($CONN, $id_dis);
@@ -1245,12 +1280,17 @@
 					
 						if($res_dis){
 							// record inserted in district info
+						    writeToLog("NEW CAPTAIN INFO ".$cap_name);
 						}else{
 							//record failed to insert
+						    
+						    writeToLog("QUERY FAILED: ".$in_dis);
+						    writeToLog("QUERY ERROR: ".mysqli_error($CONN));
 						}			
 								
 				}else{
 					//district record already exist
+				    writeToLog("DISTRICT CAPTIAN STIL THE SAME IN ".$DIS_N);
 				}
 			
 			
@@ -1259,14 +1299,15 @@
 	
 	///////////////////////////PSA Info //////////////////////////////////
 
-			$psa_CT = 0;
+			$psa_IN = 0;
+			$psa_UP = 0;
+			$psa_FL = 0;
+			
 			foreach($infoDiv->find('p.district-psa') as $psa){
 				foreach($psa->find('strong') as $p){
 				$lt_name = html_entity_decode($p->plaintext,ENT_QUOTES);
 				$arry = explode("-",$psa->plaintext); 	
 				$psa_area = $arry[0];
-				// echo $psa_area.'</br>';
-				// echo $p.'</br>';
 				
 					$is_psa = "SELECT `ID`,`DistrictNumber`,`PSAAreaNum`,`LieutenantName` FROM `PSA` WHERE `DistrictNumber` = '$DIS_N' 
 								AND `PSAAreaNum` = '$psa_area' AND `LieutenantName` = '$lt_name'";
@@ -1285,7 +1326,10 @@
 						          $res_psa = mysqli_query($CONN, $in_psa);
 						              
 						              if($res_psa){
-						                  $psa_CT ++;
+						                  $psa_IN ++;
+						              }else{
+						                  writeToLog("QUERY FAILED ".$in_psa);
+						                  writeToLog("QUERY ERROR ".mysqli_error($CONN));
 						              }
 						          
 						      }else{
@@ -1293,21 +1337,15 @@
 						          $res_psa1 = mysqli_query($CONN, $in_psa1);
 						          
 						              if($res_psa1){
-						                  $psa_CT ++;
+						                  $psa_IN ++;
+						              }else{
+						                  $psa_FL ++;
+						                  writeToLog("QUERY FAILED ".$in_psa1);
+						                  writeToLog("QUERY ERROR ".mysqli_error($CONN));
 						              }
 						      }
 						    
-						    
-						    
-							
-							
-// 								if($res_psa){
-// 									// insert the PAS record
-// 								}else{
-// 									// insert of PSA record failed
-// 								}
-								
-								
+						      
 								
 						}else if(mysqli_num_rows($res_is_chk) >=1){
 						    // PSA Already UPDATE GOOD
@@ -1317,21 +1355,20 @@
 						        $up = "UPDATE `PSA` SET `isCurrent` = 1 WHERE `ID` = '$idd'";
 						        $rus = mysqli_query($CONN, $up);
 						        
+						        if($rus){
+						            $psa_UP ++;
+						        }else{
+						            $psa_FL ++;
+						            writeToLog("QUERY FAILED ".$up);
+						            writeToLog("QUERY ERROR ".mysqli_error($CONN));
+						            
+						        }
+						        
 						      
 						        
 						    }
 						    
-						    
-						    
-						    
-						    
-						    
-						    
-						    
-						    
-						    
-							
-						    
+
 							
 									
 						}
@@ -1340,10 +1377,21 @@
 				
 									
        			}	
+       			
+       			writeToLog("PSA OBJECT INSERTED ".$psa_IN);
+       			writeToLog("PSA OBJECT UPDATED ".$psa_UP);
+       			writeToLog("PSA OBJECT FAILED ".$psa_FL);
 				
-       			if($psa_CT >= 1){
+       			if($psa_IN >= 1){
 				    $uop = "UPDATE `CurrentHash` SET `TimeStamp` = NOW(), `Hash` = '$HASH' WHERE `HashName` = 'PSA'";
-				    mysqli_query($CONN, $uop);
+				    $isg = mysqli_query($CONN, $uop);
+				    
+				    if($isg){
+				        writeToLog("PSA HASH UPDATED");
+				    }else{
+				        writeToLog("FAILED TO UPDATE HASH PSA");
+				        
+				    }
 				}
        		
 			
@@ -1418,6 +1466,7 @@
 	
 	
 	
+	
 		
 /////////////////////////////////////////////////////////////// END DISTRICT PAGE SCRAPER  //////////////////////////////////////////
 	
@@ -1425,7 +1474,8 @@
 	
             	$VIX_URL = "https://www.phillypolice.com/news/unsolved-crime-surveillance-videos/";	//SITE URL
             	
-            	
+            	writeToLog("STARTING TO SCRAPE USCVIDEOS.......");
+            	writeToLog("GOING TO: ".$VIX_URL);
             	$curl = curl_init($VIX_URL);
             	curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
             	curl_setopt($curl, CURLOPT_USERAGENT, getRandomUserAgent());
@@ -1438,8 +1488,7 @@
             	}
             	
             	$HTTP_REQUEST_COUNT ++;
-            	$info = curl_getinfo($curl,CURLINFO_CONTENT_LENGTH_DOWNLOAD);
-            	$HTTP_DATA_CONTENT_COUNT = $info + $HTTP_DATA_CONTENT_COUNT;
+
             	curl_close($curl);
 	
 	
@@ -1478,7 +1527,9 @@
 								$vid_title = $crd_title->getElementByTagName('a')->getAttribute("data-title");
 								
 									
-								$ref = strip_tags($desc);
+								$repx = strip_tags($desc);
+								//$ref = mysqli_real_escape_string($CONN, htmlentities(mb_convert_encoding($repx,"ISO-8859-1","UTF-8")));
+								$ref = utf8_encode(mysqli_real_escape_string($CONN, iconv("UTF-8", "ISO-8859-1//TRANSLIT", $repx)));
 
 								$is_ne = "SELECT `ID`,`DistrictNumber` FROM `NewsStory` WHERE `TubeURL` LIKE '%$vid_id%'";
 								$res_ne = mysqli_query($CONN, $is_ne);
@@ -1502,6 +1553,8 @@
 								                    $ucc ++; // video added successfully
 								                }else{
 								                    $uxx ++; //video faile to insert
+								                    writeToLog("QUERY FAILED : ".$in_vid);
+								                    writeToLog("QUERY ERROR : ".mysqli_error($CONN));
 								                }
 								            }
 								            
@@ -1532,6 +1585,8 @@
 								                    $ucc ++; // video added successfully
 								                }else{
 								                    $uxx ++; //video faile to insert
+								                    writeToLog("QUERY FAILED : ".$in_vid);
+								                    writeToLog("QUERY ERROR : ".mysqli_error($CONN));
 								                }
 								            }
 								            
@@ -1551,6 +1606,10 @@
 								
 							}
 					}				
+					
+					writeToLog("NUMBERS OF QURIES FAILED : ".$uxx);
+					writeToLog("NUMBERS OF QURIES ADDED : ".$ucc);
+					writeToLog("ALREADY EXIST : ".$uaa);
 					
 					
 					writeToLog("HTTP REQUEST COUNT: ".$HTTP_REQUEST_COUNT);
@@ -1576,6 +1635,7 @@
 														$ress_in = mysqli_query($CONN, $in_rec);
 															if($ress_in){
 																// NEW CURRENT HASH UPDATED
+															    writeToLog("USCVideos Hash UPDATED");
 															}else{
 																// NEW USC HASH FAILED TO INSERT
 															}
