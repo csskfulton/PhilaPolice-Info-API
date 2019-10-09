@@ -1241,7 +1241,10 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                     $title = $row['VideoTitle'];
                     if(preg_match('/(DC )(\d{2}( )\d{2}( )\d{6})/is',$title,$top)){
                         $dcNUM = $top[0];
-                        $ucVid->setDCNumber($dcNUM);
+                        $stt = str_replace(" ","-",$dcNUM);
+                        $fin = str_replace("DC-","DC# ",$stt);
+                        
+                        $ucVid->setDCNumber($fin);
                     }else{
                         $dcNUM = "0";
                         $ucVid->setDCNumber($dcNUM);
@@ -1278,6 +1281,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                 }
                 
                 echo json_encode(array("Videos"=>$array,"TotalCount"=>$cat['ROWS'],"error"=>"false"));
+               // writeToLog( json_encode(array("Videos"=>$array,"TotalCount"=>$cat['ROWS'],"error"=>"false")));
             }
             
         }
@@ -2063,6 +2067,8 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 								$is_usmur_id = $data['USMurderID'];
 								$obj_news_id = $data['NewsID'];
 								$obj_vid_id = $data['VideoID'];
+								$srt = $data['Start'];
+								$end = $data['End'];
 								
 								$news = array();
 								$news_array = array();
@@ -2099,7 +2105,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 													}else{
 															
 														$s_vals = join(',', $news);
-														$news_story = "SELECT * FROM `NewsStory` WHERE `ID` IN ($s_vals) LIMIT 0,5";
+														$news_story = "SELECT * FROM `NewsStory` WHERE `ID` IN ($s_vals) LIMIT $srt,$end";
 														$res = mysqli_query($CONN, $news_story);
 														
 															while($n_row = mysqli_fetch_array($res)){
@@ -2148,7 +2154,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 									
 									else if($isUSM_List == "true"){
 									       
-									    $sql = "SELECT `ID`,`USMurderID` FROM `Bookmarks` WHERE `DeviceID` = '$device' AND `USMurderID` != 0 ORDER BY `TimeStamp` DESC LIMIT 0,5";
+									    $sql = "SELECT `ID`,`USMurderID` FROM `Bookmarks` WHERE `DeviceID` = '$device' AND `USMurderID` != 0 ORDER BY `TimeStamp` DESC";
 									    $sql_c = "SELECT COUNT(`DeviceID`) AS ROWS FROM `Bookmarks` WHERE `USMurderID` != 0 AND `DeviceID` = '$device'";
 									    $res = mysqli_query($CONN, $sql);
 									    $res1 = mysqli_query($CONN, $sql_c);
@@ -2173,7 +2179,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 									    }else{
 									        
 									        $vals = join(',', $usm_array);
-									        $usm_story = "SELECT * FROM `UnsolvedMurders` WHERE `ID` IN ($vals) LIMIT 0,5";
+									        $usm_story = "SELECT * FROM `UnsolvedMurders` WHERE `ID` IN ($vals) LIMIT $srt,$end";
 									        $rex = mysqli_query($CONN, $usm_story);
 									        
 									        
@@ -2247,7 +2253,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 													}else{
 															
 														$v_vals = join(',', $videos);
-														$vid_story = "SELECT * FROM `UCVideos` WHERE `ID` IN ($v_vals) LIMIT 0,5";
+														$vid_story = "SELECT * FROM `UCVideos` WHERE `ID` IN ($v_vals) LIMIT $srt,$end";
 														$res_v = mysqli_query($CONN, $vid_story);
 														
 															while($v_row = mysqli_fetch_array($res_v)){
@@ -2281,7 +2287,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 												
 												
 												echo json_encode(array("Bookmarks"=>array("UCVideos"=>$videos_array),"TotalCount"=>$count['ROWS']),JSON_NUMERIC_CHECK);
-												writeToLog(json_encode(array("Bookmarks"=>array("UCVideos"=>$videos_array),"TotalCount"=>$count['ROWS']),JSON_NUMERIC_CHECK));
+												//writeToLog(json_encode(array("Bookmarks"=>array("UCVideos"=>$videos_array),"TotalCount"=>$count['ROWS']),JSON_NUMERIC_CHECK));
 												
 												
 										}else{
