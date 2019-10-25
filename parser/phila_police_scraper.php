@@ -357,6 +357,22 @@
 					}
 					
 						if(mysqli_num_rows($answ) <= 0){
+						    
+						    if(strpos($title,'â€“') >=1){
+						        $title =  str_replace('â€“',"",$title);
+						    }
+						    
+						    if(strpos($title,'Â') >=1){
+						        $title =  str_replace('Â',"",$title);
+						    }
+						    
+						    if(strpos($title,'â€') >=1){
+						        $title =  str_replace('â€',"",$title);
+						    }
+						    
+						    if(strpos($title,'™') >=1){
+						        $title =  str_replace('™',"",$title);
+						    }
 							
 							$in_rec = "INSERT INTO `NewsStory` (`DistrictNumber`,`Title`,`URL`,`Description`,`GUID`,`PubDate`,`Category`,`ImageURL`,`TubeURL`,`ScrapeHash`,`StoryAuthor`)
 											VALUES('$DIS_NUM','$title','$link','$lgTxT','$obj_id','$pubDate','$category','$imgURL','$tubURL','$HASH','$author')";

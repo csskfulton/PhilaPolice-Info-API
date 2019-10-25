@@ -149,6 +149,13 @@
 			    $mt2 = '/(Missing Tender Age)/is';
 			    $ftd = '/(From the )(\d+)(\w+)( District)/is';
 			    
+			    
+			    
+			    if(preg_match('/[^\x{0000}-\x{007F}]/u',$title)){
+			        $title = preg_replace('/[^\x{0000}-\x{007F}]/u', '', $title);
+			    }
+			    
+			    
 			    if(preg_match($sfc,$title,$match)){
 			        $pt1 = str_replace($match[0],"",$title);
 			        if($istrue == "true"){
@@ -512,6 +519,10 @@
 			function cleanUpHTML($ret){ // USED TO TRIM (HTML) THE DESCRIPTION OF THE NEW STORY
 			    
 			    $fire = $ret;
+
+			    if(strpos($fire,"Â") >=1){
+			        $fire = str_replace("Â","",$fire);
+			    }
 			    
 			    if(strpos($fire,"&#8217;") >=1){
 			        $fire = str_replace("&#8217;","'",$fire);
@@ -1111,8 +1122,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
             }
         }
         
-        
-        //$district = $_GET['d'];
+
         $array = array();
         $query = "SELECT SQL_CALC_FOUND_ROWS * FROM `NewsStory` WHERE `DistrictNumber` = $district ORDER BY `TimeStamp` DESC LIMIT $srt,$end";
         $cquery = "SELECT FOUND_ROWS() AS ROWS";
@@ -1121,21 +1131,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
         $cresult = mysqli_query($CONN, $cquery);
         
         $ct = mysqli_fetch_array($cresult);
-        while($row = mysqli_fetch_array($result)){ 
-            
-//             $captionURL = $row['ImageURL'];
-//             $sel = "SELECT `LocalImageURL` FROM `Images` WHERE `RemoteImageURL` = '$captionURL'";
-//             $r_Q = mysqli_query($CONN, $sel);
-            
-//             if(mysqli_num_rows($r_Q) >=1){
-//                 $rowz = mysqli_fetch_array($r_Q);
-//                 $pre = $rowz['LocalImageURL'];
-//                 $captionURL = $IMG_DIR.$pre;
-//                 $newzObj->setImageURL($IMG_DIR.$pre);
-                
-//             }
-            
-            
+        while($row = mysqli_fetch_array($result)){           
             
             $newzObj = new NewsObject();
             $newzObj->setImageURL($row['ImageURL']);
@@ -1168,7 +1164,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
         }
         
         echo json_encode(array("Articles"=>$array,"TotalCount"=>$ct['ROWS']));
-        //writeToLog(json_encode(array("Articles"=>$array,"TotalCount"=>$ct['ROWS'])));
+        writeToLog(json_encode(array("Articles"=>$array,"TotalCount"=>$ct['ROWS'])));
    
     }else{
         
@@ -1217,7 +1213,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
             
             
             $array = array();
-            //$query = "SELECT SQL_CALC_FOUND_ROWS * FROM `UCVideos` WHERE `PoliceDivision` = '$div' AND `VideoID` != '0' AND `VideoDate` > DATE_FORMAT(NOW(), '%b %e, %Y') ORDER BY STR_TO_DATE( `VideoDate` , '%b %e, %Y' ) DESC LIMIT $start,$end";
+            
             if(!empty($district)){
                 $query = "SELECT SQL_CALC_FOUND_ROWS * FROM `UCVideos` WHERE `VideoID` != '0' AND `DistrictNumber` = '$district'  ORDER BY  `TimeStamp` DESC LIMIT $start,$end";
                 
@@ -2512,7 +2508,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 			
 			
 			else{
-			    header("HTTP/1.0 404 Not Found");
+			   // header("HTTP/1.0 404 Not Found");
 				exit();
 			}
 		
