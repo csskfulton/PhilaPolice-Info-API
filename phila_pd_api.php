@@ -1278,6 +1278,8 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                 
                 echo json_encode(array("Videos"=>$array,"TotalCount"=>$cat['ROWS'],"error"=>"false"));
                // writeToLog( json_encode(array("Videos"=>$array,"TotalCount"=>$cat['ROWS'],"error"=>"false")));
+            }else{
+               echo json_encode(array("Videos"=>$array,"TotalCount"=>$cat['ROWS'],"error"=>"false"));
             }
             
         }
@@ -1772,6 +1774,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 				$dis_arr = $data['Districts'];
 				$is_Vid = $data['UC_Videos'];
 				$hash_T = $data['HashTag'];
+				$isSVChk = $data['ServiceCheck'];
 				$hash = 0;
 
 
@@ -1785,28 +1788,30 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 								if(!is_null($hash_T) && !is_null($dis_arr)){
 									
 									$ob_ay = array();
-									$oj_ary1 = array();
 									$tall = join("', '", $dis_arr);
-									$gq = "SELECT SQL_CALC_FOUND_ROWS * FROM `NewsStory` WHERE `ScrapeHash` = '$hash_T' AND `DistrictNumber` IN ('$tall')";
-									$gqq = "SELECT SQL_CALC_FOUND_ROWS * FROM `UCVideos` WHERE `HashTag` = '$hash_T'";
+									if($isSVChk == "true"){
+									    $gq = "SELECT SQL_CALC_FOUND_ROWS * FROM `NewsStory` WHERE `ScrapeHash` = '$hash_T' AND `DistrictNumber` IN ('$tall') LIMIT 0,1";
+									    
+									}else{
+									    $gq = "SELECT SQL_CALC_FOUND_ROWS * FROM `NewsStory` WHERE `ScrapeHash` = '$hash_T' AND `DistrictNumber` IN ('$tall')";
+									    
+									}
+									
 									$gq1 = "SELECT FOUND_ROWS() AS ROWS";
-									$gqq1 = "SELECT FOUND_ROWS() AS ROWS";
 									$timeSTP = "";
 									
 									$rqq = mysqli_query($CONN, $gq);
 									$rq2 = mysqli_query($CONN, $gq1);
 									$nob = mysqli_fetch_array($rq2);
 									
-									$rqqq = mysqli_query($CONN, $gqq);
-									$rqq2 = mysqli_query($CONN, $gqq1);
-									$vob = mysqli_fetch_array($rqq2);
+									
 										
 										if(mysqli_num_rows($rqq) >=1){
 												
 											while($rop = mysqli_fetch_array($rqq)){
 												$dist = $rop['DistrictNumber'];
 												$title = $rop['Title'];
-												$desc = utf8_encode($rop['Description']);
+												$desc = cleanUpHTML(utf8_encode(trim($rop['Description'])));
 												$s_date = date('M j, g:i A',strtotime($rop['PubDate']));
 												$timeSTP = date('M j, g:i A',strtotime($rop['TimeStamp']));
 												$cat = $rop['Category'];
@@ -1834,196 +1839,11 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
 											/// NO NEWS STORIES
 										}
 										
-										if(mysqli_num_rows($rqqq) >=1){
-											
-											while($rog = mysqli_fetch_array($rqqq)){
-												$id = $rog['ID'];
-												$vidT = $rog['VideoTitle'];
-												$des = $rog['Description'];
-												$vID = $rog['VideoID'];
-												$vimgURL = $rog['VideoImageURL'];
-												$vidDate = $rog['VideoDate'];
-												$Pdiv = $rog['PoliceDivision'];
-												$crimeT = $rog['CrimeType'];
-												
-												$ucc_obj = array("ID"=>$id,"VideoTitle"=>$vidT,"Description"=>$des,"VideoID"=>$vID,"VideoImageURL"=>$vimgURL,
-																	"VideoDate"=>$vidDate,"PoliceDivision"=>$Pdiv,"CrimeType"=>$crimeT);
-												
-												array_push($oj_ary1, $ucc_obj);
-											}
-											
-										}else{
-											// NO VIDEO RECORDS
-										}
 										
-										
-										echo json_encode(array("NewsStories"=>$ob_ay,"NewsTotalCount"=>$nob['ROWS'],"VideoObjects"=>$oj_ary1,"VideoTotalCount"=>$vob['ROWS'],"TimeStamp"=>$timeSTP));
+										echo json_encode(array("NewsStories"=>$ob_ay,"NewsTotalCount"=>$nob['ROWS'],"TimeStamp"=>$timeSTP));
 										
 								}
 								
-									if($is_Vid == "false"){
-											
-										$query = "SELECT `Hash` FROM `CurrentHash` WHERE `HashName` = 'NewsStory'";
-										$r_hash = mysqli_query($CONN, $query);
-										
-											if(mysqli_num_rows($r_hash) >=1){
-													
-												$var = mysqli_fetch_array($r_hash);
-												$hash = $var['Hash'];
-											
-											}else{
-													
-												$hash = "";
-											}
-								
-											$tall = join("', '", $dis_arr);
-											$sql = "SELECT SQL_CALC_FOUND_ROWS * FROM `NewsStory` WHERE `ScrapeHash` = '$hash' AND `DistrictNumber` IN ('$tall')";
-											$sql1 = "SELECT FOUND_ROWS() AS ROWS";
-											$res1 = mysqli_query($CONN, $sql);
-											$res2 = mysqli_query($CONN, $sql1);
-											$ct = mysqli_fetch_array($res2);
-											$obj_array = array();	
-											$timeSTP = "";
-											
-												while($row = mysqli_fetch_array($res1)){
-														
-													$dist = $row['DistrictNumber'];
-													$title = $row['Title'];
-													$desc = utf8_encode($row['Description']);
-													$s_date = date('M j, g:i A',strtotime($row['PubDate']));
-													$timeSTP = date('M j, g:i A',strtotime($rop['TimeStamp']));
-													$cat = $row['Category'];
-													$img = $row['ImageURL'];
-													
-													$sel = "SELECT `LocalImageURL` FROM `Images` WHERE `RemoteImageURL` = '$img'";
-													$r_Q = mysqli_query($CONN, $sel);
-												if(mysqli_num_rows($r_Q) >=1){
-												    $roww = mysqli_fetch_array($r_Q);
-												    $pre = $roww['LocalImageURL'];
-												    $img = $PROTO1."images/".$pre;
-												}
-													
-													$news_id = $row['ID'];
-													$vid_URL = $row['TubeURL'];
-													$author = $row['StoryAuthor'];
-													
-													$n_obj = array("NewsID"=>$news_id,"District"=>$dist,"Title"=>$title,"Description"=>$desc,"Author"=>$author,
-																		"PubDate"=>$s_date,"Category"=>$cat,"ImageURL"=>$img,"TubeURL"=>$vid_URL);
-												
-													array_push($obj_array,$n_obj);
-												
-												}
-									
-											
-												echo json_encode(array("NewsTotalCount"=>$ct['ROWS'],"NewsObjects"=>$obj_array,"VideoTotalCount"=>"0","VideoObjects"=>"0","TimeStamp"=>$timeSTP));
-										
-										
-										
-										
-										
-									}else if($is_Vid == "true"){
-											
-										$query2 = "SELECT `Hash` FROM `CurrentHash` WHERE `HashName` = 'UCVideos'";
-										$query3 = "SELECT `Hash` FROM `CurrentHash` WHERE `HashName` = 'NewsStory'";
-										$uc_hash = 0;
-										$ns_hash = 0;
-										$obj_array = array();
-										$obj_array1 = array();
-										$r_hash2 = mysqli_query($CONN, $query2);
-										$r_hash3 = mysqli_query($CONN, $query3);
-											
-											if(mysqli_num_rows($r_hash2) >=1){
-													
-												$var2 = mysqli_fetch_array($r_hash2);
-												$uc_hash = $var2['Hash'];
-											
-											}else{
-													
-												$uc_hash = "";
-											}
-											
-											
-											if(mysqli_num_rows($r_hash3) >=1 ){
-													
-												$var3 = mysqli_fetch_array($r_hash3);
-												$ns_hash = $var3['Hash'];
-											
-											}else{
-												
-												$ns_hash = "";
-											}
-											
-											$tall = join("', '", $dis_arr);
-											$sql = "SELECT SQL_CALC_FOUND_ROWS * FROM `NewsStory` WHERE `ScrapeHash` = '$ns_hash' AND `DistrictNumber` IN ('$tall')";
-											$sql1 = "SELECT FOUND_ROWS() AS ROWS";
-											$res1 = mysqli_query($CONN, $sql);
-											$res2 = mysqli_query($CONN, $sql1);
-											$ct = mysqli_fetch_array($res2);
-												
-											
-												while($row = mysqli_fetch_array($res1)){
-														
-													$dist = $row['DistrictNumber'];
-													$title = $row['Title'];
-													$desc = utf8_encode($row['Description']);
-													$s_date = date('M j, g:i A',strtotime($row['PubDate']));
-													$cat = $row['Category'];
-													$img = $row['ImageURL'];
-													
-													$sel = "SELECT `LocalImageURL` FROM `Images` WHERE `RemoteImageURL` = '$img'";
-													$r_Q = mysqli_query($CONN, $sel);
-												if(mysqli_num_rows($r_Q) >=1){
-												    $rowx = mysqli_fetch_array($r_Q);
-												    $pre = $rowx['LocalImageURL'];
-												    $img = $PROTO1."images/".$pre;
-												}
-													
-													$news_id = $row['ID'];
-													$vid_URL = $row['TubeURL'];
-													$author = $row['StoryAuthor'];
-													
-													$n_obj = array("NewsID"=>$news_id,"District"=>$dist,"Title"=>$title,"Description"=>$desc,"Author"=>$author,
-																		"PubDate"=>$s_date,"Category"=>$cat,"ImageURL"=>$img,"TubeURL"=>$vid_URL);
-												
-													array_push($obj_array,$n_obj);
-												
-												}
-
-
-												$qvid = "SELECT * FROM `UCVideos` WHERE `HashTag` = '$uc_hash'";
-												$sql5 = "SELECT FOUND_ROWS() AS ROWS";
-												$res5 = mysqli_query($CONN, $qvid);
-												$res6 = mysqli_query($CONN, $sql5);
-												$ct1 = mysqli_fetch_array($res6);
-											
-													while($row1 = mysqli_fetch_array($res5)){
-														
-														$vidT = $row1['VideoTitle'];
-														$des = $row1['Description'];
-														$vID = $row1['VideoID'];
-														$vimgURL = $row1['VideoImageURL'];
-														$vidDate = $row1['VideoDate'];
-														$Pdiv = $row1['PoliceDivision'];
-														$crimeT = $row1['CrimeType'];
-														
-														$ucc_obj = array("VideoTitle"=>$vidT,"Description"=>$des,"VideoID"=>$vID,"VideoImageURL"=>$vimgURL,
-																			"VideoDate"=>$vidDate,"PoliceDivision"=>$Pdiv,"CrimeType");
-														
-														array_push($obj_array1, $ucc_obj);	
-														
-																		
-													}
-											
-											
-													echo json_encode(array("NewsTotalCount"=>$ct['ROWS'],"NewsObjects"=>$obj_array,"VideoTotalCount"=>$ct1['ROWS'],"VideoObjects"=>$obj_array1));
-											
-											
-									}
-									
-								
-									
-										
-									
 								
 							}else if(mysqli_num_rows($res) <=0 ) {
 									
