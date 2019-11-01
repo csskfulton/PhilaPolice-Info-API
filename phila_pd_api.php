@@ -1069,14 +1069,20 @@
 		        
 		        $result2 = mysqli_query($CONN, $query2)or die('Bad query2');
 		        while($row2 = mysqli_fetch_array($result2)){
+		            
+		            $d_date = date('Y-m-d',strtotime($row2['MeetDate']));
+		            $t_date = date('Y-m-d');
+		            
+		            if($t_date < $d_date){
+		                $calObj = new CalendarObject();
+		                $calObj->setTimeStamp($row2['TimeStamp']);
+		                $calObj->setDistrictNumber($row2['DistrictNumber']);
+		                $calObj->setTitle($row2['Title']);
+		                $calObj->setMeetDate($row2['MeetDate']);
+		                $calObj->setMeetLocation(trimAdd($row2['MeetLocation']));
+		                array_push($array2, $calObj);
+		            }
 
-		            $calObj = new CalendarObject();
-		            $calObj->setTimeStamp($row2['TimeStamp']);
-		            $calObj->setDistrictNumber($row2['DistrictNumber']);
-		            $calObj->setTitle($row2['Title']);
-		            $calObj->setMeetDate($row2['MeetDate']);
-		            $calObj->setMeetLocation(trimAdd($row2['MeetLocation']));
-		            array_push($array2, $calObj);
 		            
 		            
 		        }
