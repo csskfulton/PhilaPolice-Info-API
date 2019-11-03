@@ -104,21 +104,38 @@
 			    
 			    $nam = $add;
 			    
-			    $patt = "/(LT)( )(LT)(\.)/is";
-			    $patt1 = "/(LT)( )(Lt)(\.)/is";
-			    $patt2 = "/(LT)( )/is";
+			    $patt = "/(LT Lt. )/is";
+			    $patt1 = "/(LT )/is";
 			    
 			    if(preg_match($patt, $add)){
-			        $nam = str_replace("LT LT. ","Lt. ",$add);
-			        
-			    }
-			    
-			    if(preg_match($patt1, $add)){
 			        $nam = str_replace("LT Lt. ","Lt. ",$add);
-			        
+			        return $nam;
+			    }else if(preg_match($patt1, $add)){
+			        $nam = str_replace("LT ","Lt. ",$add);
+			        return $nam;
+			    }else{
+			        return $nam;
 			    }
 			    
-			    return $nam;
+			    
+			}
+			
+			function covWound($str){
+			    
+			    if($str == "multi"){
+			        return $str = "the body multiple times";
+			    }else if($str == "abdom"){
+			        return $str = "abdomen";
+			    }else if($str == "multi/head"){
+			        return $str = "head multiple times";
+			    }else if($str == "multi tors"){
+			        return $str = "torso multiple times";
+			    }else if($str == "head/multi"){
+			        return $str = "head multiple times";
+			    }else{
+			        return $str;
+			    }
+			    
 			}
 			
 			function trimTitle($title,$istrue){
@@ -500,14 +517,25 @@
 			    
 			    $dNum = $zig;
 			    
-			    if($dNum == "1"){
+			    
+			    if($dNum == "1" || $dNum == "01"){
 			        $dNum = "1st";
-			    }else if($dNum == "2"){
+			    }else if($dNum == "2" || $dNum == "02"){
 			        $dNum = "2nd";
-			    }else if($dNum == "3"){
+			    }else if($dNum == "3" || $dNum == "03"){
 			        $dNum = "3rd";
 			    }else if($dNum == "22"){
 			        $dNum = "22nd";
+			    }else if($dNum == "07"){
+			        $dNum = "7th";
+			    }else if($dNum == "08"){
+			        $dNum = "8th";
+			    }else if($dNum == "05"){
+			        $dNum = "5th";
+			    }else if($dNum == "06"){
+			        $dNum = "6th";
+			    }else if($dNum == "09"){
+			        $dNum = "9th";
 			    }else{
 			        $dNum .= "th";
 			    }
@@ -1359,7 +1387,7 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                         $Frest = substr($dcNum, 6, 7);
                         $DCN = $Fdate."-".$Fdistrict."-".$Frest;
                         $shootObj->setDCNumber($DCN);
-                        $newDate = date("D. M j, Y", strtotime($row['CrimeDate']));
+                        $newDate = date("l F j, Y", strtotime($row['CrimeDate']));
                         $shootObj->setCrimeDate($newDate);
                         $race = $row['Race'];
                         if($race == "B"){
@@ -1377,7 +1405,8 @@ else if($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['DistrictNews'] == "true" |
                         }
                         
                         $shootObj->setAge($row['Age']);
-                        $shootObj->setWound($row['Wound']);
+                        
+                        $shootObj->setWound(covWound($row['Wound']));
                         $isOFF = $row['isOfficerInvolved'];
                         if($isOFF == "0" || $isOFF == 0){
                             $isOFF = "false";
